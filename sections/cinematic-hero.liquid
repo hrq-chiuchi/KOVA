@@ -1,0 +1,217 @@
+{% liquid
+  assign media_class = 'cinematic-hero__media'
+  assign has_video = false
+  if section.settings.video != blank
+    assign has_video = true
+  endif
+%}
+
+<section
+  class="cinematic-hero full-width cinematic-hero--{{ section.settings.content_position }} cinematic-hero--{{ section.settings.text_alignment }}"
+  style="--hero-min-height: {{ section.settings.section_height }}svh; --hero-overlay: {{ section.settings.overlay_strength | divided_by: 100.0 }}; --hero-background: {{ section.settings.background }}; --hero-foreground: {{ section.settings.foreground }}; --hero-accent: {{ section.settings.accent }};"
+  data-motion-scope
+>
+  <div class="cinematic-hero__backdrop" aria-hidden="true"></div>
+
+  {% if has_video %}
+    <div class="cinematic-hero__media-wrap" data-parallax data-motion-speed="{{ section.settings.animation_intensity }}">
+      {{ section.settings.video | video_tag: autoplay: true, loop: true, muted: true, controls: false, preload: 'metadata', class: media_class }}
+    </div>
+  {% elsif section.settings.image != blank %}
+    <picture class="cinematic-hero__media-wrap" data-parallax data-motion-speed="{{ section.settings.animation_intensity }}">
+      {% if section.settings.mobile_image != blank %}
+        <source
+          media="(max-width: 767px)"
+          srcset="{{ section.settings.mobile_image | image_url: width: 540 }} 540w, {{ section.settings.mobile_image | image_url: width: 900 }} 900w"
+          sizes="100vw"
+        >
+      {% endif %}
+      {{ section.settings.image
+        | image_url: width: 2400
+        | image_tag:
+          widths: '750, 1100, 1500, 2000, 2400',
+          sizes: '100vw',
+          loading: 'eager',
+          fetchpriority: 'high',
+          class: media_class,
+          alt: section.settings.image.alt
+      }}
+    </picture>
+  {% endif %}
+
+  <div class="cinematic-hero__overlay" aria-hidden="true"></div>
+
+  <div class="cinematic-hero__content"{% if section.settings.animation_enabled %} data-reveal="hero"{% endif %}>
+    {% if section.settings.eyebrow != blank %}
+      <p class="cinematic-hero__eyebrow eyebrow" data-reveal-item="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+
+    <h1 class="cinematic-hero__title">
+      {% assign heading_lines = section.settings.heading | newline_to_br | split: '<br />' %}
+      {% for line in heading_lines %}
+        <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip }}</span></span>
+      {% endfor %}
+    </h1>
+
+    <div class="cinematic-hero__footer" data-reveal-item="detail">
+      {% if section.settings.body != blank %}
+        <div class="cinematic-hero__body">{{ section.settings.body }}</div>
+      {% endif %}
+      {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+        <a class="button button--accent" href="{{ section.settings.button_link }}">{{ section.settings.button_label | escape }}</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="cinematic-hero__signal" aria-hidden="true">
+    <span>AD / 001</span>
+    <span>Scroll to explore</span>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cinematic-hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    min-height: max(42rem, var(--hero-min-height));
+    overflow: clip;
+    background: var(--hero-background);
+    color: var(--hero-foreground);
+  }
+
+  .cinematic-hero__backdrop {
+    position: absolute;
+    z-index: -3;
+    inset: 0;
+    background:
+      radial-gradient(circle at 75% 24%, color-mix(in srgb, var(--hero-accent) 28%, transparent), transparent 28%),
+      linear-gradient(128deg, var(--ad-color-neutral-850), var(--hero-background) 62%);
+  }
+
+  .cinematic-hero__media-wrap {
+    position: absolute;
+    z-index: -2;
+    inset: -12% 0;
+    display: block;
+  }
+
+  .cinematic-hero__media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cinematic-hero__overlay {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(90deg, rgb(0 0 0 / calc(var(--hero-overlay) + 0.18)), rgb(0 0 0 / calc(var(--hero-overlay) * 0.35)) 68%, rgb(0 0 0 / calc(var(--hero-overlay) + 0.08)));
+  }
+
+  .cinematic-hero__content {
+    display: flex;
+    min-height: inherit;
+    width: min(100% - (2 * var(--ad-page-padding)), var(--ad-container-width));
+    margin-inline: auto;
+    padding-block: calc(var(--ad-header-height) + var(--ad-space-700)) var(--ad-space-800);
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cinematic-hero--bottom .cinematic-hero__content { justify-content: flex-end; }
+  .cinematic-hero--center .cinematic-hero__content { align-items: center; text-align: center; }
+  .cinematic-hero--right .cinematic-hero__content { align-items: flex-end; text-align: right; }
+
+  .cinematic-hero__eyebrow {
+    margin-block-end: var(--ad-space-400);
+    color: var(--hero-accent);
+  }
+
+  .cinematic-hero__title {
+    max-width: 11ch;
+    font-family: var(--font-display-family);
+    font-size: var(--ad-text-display);
+    font-weight: var(--font-display-weight);
+    letter-spacing: -0.075em;
+    line-height: 0.78;
+    text-transform: uppercase;
+  }
+
+  .cinematic-hero__footer {
+    display: flex;
+    max-width: 50rem;
+    margin-block-start: clamp(2rem, 6vh, 5rem);
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ad-space-500);
+  }
+
+  .cinematic-hero--center .cinematic-hero__footer { align-items: center; flex-direction: column; }
+  .cinematic-hero--right .cinematic-hero__footer { margin-inline-start: auto; }
+
+  .cinematic-hero__body {
+    max-width: 32rem;
+    font-size: var(--ad-text-lead);
+  }
+
+  .cinematic-hero__signal {
+    position: absolute;
+    inset-inline: var(--ad-page-padding);
+    inset-block-end: var(--ad-space-300);
+    display: flex;
+    justify-content: space-between;
+    color: color-mix(in srgb, var(--hero-foreground) 68%, transparent);
+    font-size: var(--ad-text-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 47.99rem) {
+    .cinematic-hero {
+      min-height: max(38rem, var(--hero-min-height));
+    }
+
+    .cinematic-hero__content {
+      padding-block-end: var(--ad-space-700);
+    }
+
+    .cinematic-hero__title {
+      font-size: clamp(3.25rem, 15vw, 4.5rem);
+      letter-spacing: -0.065em;
+    }
+
+    .cinematic-hero__footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Cinematic hero",
+  "tag": "section",
+  "class": "section-cinematic-hero",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobile image" },
+    { "type": "video", "id": "video", "label": "Video" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Independent supply / 2026" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "ENGINEERED\nFOR AFTER DARK" },
+    { "type": "richtext", "id": "body", "label": "Body", "default": "<p>Independent objects, apparel and machinery for people who stay moving after dark.</p>" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Enter the supply" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "select", "id": "content_position", "label": "Vertical position", "options": [{ "value": "middle", "label": "Middle" }, { "value": "bottom", "label": "Bottom" }], "default": "bottom" },
+    { "type": "select", "id": "text_alignment", "label": "Text alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "range", "id": "section_height", "label": "Section height", "min": 70, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "color", "id": "background", "label": "Background", "default": "#080808" },
+    { "type": "color", "id": "foreground", "label": "Foreground", "default": "#f4f3ed" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" },
+    { "type": "range", "id": "overlay_strength", "label": "Overlay strength", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 35 },
+    { "type": "checkbox", "id": "animation_enabled", "label": "Enable entrance animation", "default": true },
+    { "type": "range", "id": "animation_intensity", "label": "Parallax intensity", "min": 0, "max": 20, "step": 2, "default": 8 }
+  ],
+  "presets": [{ "name": "Cinematic hero" }]
+}
+{% endschema %}

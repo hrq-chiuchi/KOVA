@@ -1,0 +1,29 @@
+{
+  "color": {
+    "$type": "color",
+    "background": {
+      "primary": { "$value": "{color.neutral.1000}", "$description": "Default storefront canvas." },
+      "elevated": { "$value": "{color.neutral.850}", "$description": "Raised dark surface." },
+      "inverse": { "$value": "{color.neutral.0}", "$description": "Light inverse surface." }
+    },
+    "text": {
+      "primary": { "$value": "{color.neutral.0}", "$description": "Default text on dark surfaces." },
+      "muted": { "$value": "{color.neutral.200}", "$description": "Secondary metadata text." },
+      "inverse": { "$value": "{color.neutral.1000}", "$description": "Text on light surfaces." }
+    },
+    "action": {
+      "primary": { "$value": "{color.acid.500}", "$description": "Primary interactive emphasis." },
+      "critical": { "$value": "{color.signal.500}", "$description": "Destructive or error emphasis." }
+    },
+    "border": {
+      "subtle": { "$value": "#f4f3ed33", "$description": "Low-contrast boundary on dark surfaces." },
+      "strong": { "$value": "{color.neutral.0}", "$description": "High-contrast boundary." }
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "page": { "$value": "{space.400}", "$description": "Default page edge inset." },
+    "sectionBlock": { "$value": "{space.800}", "$description": "Default vertical section rhythm." },
+    "contentGap": { "$value": "{space.500}", "$description": "Default gap between related content groups." }
+  }
+}

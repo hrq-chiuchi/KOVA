@@ -1,0 +1,33 @@
+{% doc %}
+  Renders the canonical editorial product card for collection rails.
+
+  @param {product} product - Product to render.
+  @param {number} [index] - One-based product index.
+  @param {string} [sizes] - Responsive image sizes attribute.
+{% enddoc %}
+
+<article class="product-card" data-reveal-card>
+  <a class="product-card__media" href="{{ product.url }}" aria-label="{{ product.title | escape }}">
+    {% if product.featured_image %}
+      {{ product.featured_image
+        | image_url: width: 1200
+        | image_tag:
+          widths: '360, 540, 720, 960, 1200',
+          sizes: sizes,
+          loading: 'lazy',
+          class: 'product-card__image',
+          alt: product.featured_image.alt | default: product.title
+      }}
+    {% else %}
+      {{ 'product-1' | placeholder_svg_tag: 'product-card__placeholder' }}
+    {% endif %}
+    <span class="product-card__index" aria-hidden="true">{{ index | prepend: '0' | slice: -2, 2 }}</span>
+    {% unless product.available %}
+      <span class="product-card__badge">Sold out</span>
+    {% endunless %}
+  </a>
+  <div class="product-card__details">
+    <h3 class="product-card__title"><a href="{{ product.url }}">{{ product.title | escape }}</a></h3>
+    <p class="product-card__price">{{ product.price | money }}</p>
+  </div>
+</article>

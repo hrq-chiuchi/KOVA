@@ -1,0 +1,45 @@
+{
+  "color": {
+    "$type": "color",
+    "neutral": {
+      "0": { "$value": "#f4f3ed", "$description": "Warm off-white used at the lightest end of the palette." },
+      "200": { "$value": "#c8c7c0", "$description": "Quiet neutral for secondary text and rules." },
+      "700": { "$value": "#343434", "$description": "Raised dark surface." },
+      "850": { "$value": "#191919", "$description": "Primary elevated dark surface." },
+      "1000": { "$value": "#080808", "$description": "Near-black foundation." }
+    },
+    "acid": {
+      "500": { "$value": "#dfff00", "$description": "High-energy signal accent." }
+    },
+    "signal": {
+      "500": { "$value": "#ff4f2e", "$description": "Urgent status accent reserved for errors and critical states." }
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "0": { "$value": { "value": 0, "unit": "px" } },
+    "50": { "$value": { "value": 4, "unit": "px" } },
+    "100": { "$value": { "value": 8, "unit": "px" } },
+    "200": { "$value": { "value": 12, "unit": "px" } },
+    "300": { "$value": { "value": 16, "unit": "px" } },
+    "400": { "$value": { "value": 24, "unit": "px" } },
+    "500": { "$value": { "value": 32, "unit": "px" } },
+    "600": { "$value": { "value": 48, "unit": "px" } },
+    "700": { "$value": { "value": 72, "unit": "px" } },
+    "800": { "$value": { "value": 104, "unit": "px" } },
+    "900": { "$value": { "value": 144, "unit": "px" } }
+  },
+  "border": {
+    "width": {
+      "$type": "dimension",
+      "hairline": { "$value": { "value": 1, "unit": "px" } },
+      "strong": { "$value": { "value": 2, "unit": "px" } }
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "none": { "$value": { "value": 0, "unit": "px" } },
+    "sm": { "$value": { "value": 2, "unit": "px" } },
+    "pill": { "$value": { "value": 999, "unit": "px" } }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "component": {
+    "header": {
+      "height": { "$type": "dimension", "$value": { "value": 72, "unit": "px" }, "$description": "Global navigation height." }
+    },
+    "productCard": {
+      "mediaRatio": { "$type": "number", "$value": 0.8, "$description": "Four-by-five editorial media ratio." },
+      "minimumWidth": { "$type": "dimension", "$value": { "value": 280, "unit": "px" }, "$description": "Minimum usable rail card width." }
+    },
+    "control": {
+      "minimumTarget": { "$type": "dimension", "$value": { "value": 44, "unit": "px" }, "$description": "Minimum pointer and touch target." }
+    }
+  }
+}

@@ -9,12 +9,37 @@
  */
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "hero": {
+      "type": "cinematic-hero",
+      "settings": {
+        "eyebrow": "Independent supply / 2026",
+        "heading": "ENGINEERED\nFOR AFTER DARK",
+        "body": "<p>Independent objects, apparel and machinery for people who stay moving after dark.</p>",
+        "button_label": "Enter the supply",
+        "button_link": "shopify://collections/all",
+        "content_position": "bottom",
+        "text_alignment": "left",
+        "section_height": 100,
+        "background": "#080808",
+        "foreground": "#f4f3ed",
+        "accent": "#dfff00",
+        "overlay_strength": 35,
+        "animation_enabled": true,
+        "animation_intensity": 8
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "eyebrow": "Current transmission",
+        "heading": "Field equipment",
+        "link_label": "View all objects",
+        "product_limit": 6,
+        "background": "#f4f3ed",
+        "foreground": "#080808",
+        "accent": "#dfff00"
+      }
     }
   },
-  "order": [
-    "main"
-  ]
+  "order": ["hero", "featured"]
 }

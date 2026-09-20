@@ -1,0 +1,58 @@
+/* Synchronized from design-system/tokens/*.tokens.json. Canonical values live in JSON. */
+:root {
+  --ad-color-neutral-0: #f4f3ed;
+  --ad-color-neutral-200: #c8c7c0;
+  --ad-color-neutral-700: #343434;
+  --ad-color-neutral-850: #191919;
+  --ad-color-neutral-1000: #080808;
+  --ad-color-acid-500: #dfff00;
+  --ad-color-signal-500: #ff4f2e;
+
+  --ad-space-50: 0.25rem;
+  --ad-space-100: 0.5rem;
+  --ad-space-200: 0.75rem;
+  --ad-space-300: 1rem;
+  --ad-space-400: 1.5rem;
+  --ad-space-500: 2rem;
+  --ad-space-600: 3rem;
+  --ad-space-700: 4.5rem;
+  --ad-space-800: 6.5rem;
+  --ad-space-900: 9rem;
+
+  --ad-border-hairline: 1px;
+  --ad-border-strong: 2px;
+  --ad-radius-none: 0;
+  --ad-radius-sm: 2px;
+  --ad-radius-pill: 999px;
+
+  --ad-duration-fast: 180ms;
+  --ad-duration-base: 420ms;
+  --ad-duration-reveal: 900ms;
+  --ad-duration-cinematic: 1400ms;
+  --ad-ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ad-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --ad-text-label: 0.6875rem;
+  --ad-text-body: 1rem;
+  --ad-text-lead: clamp(1.125rem, 1.6vw, 1.375rem);
+  --ad-text-title: clamp(2.75rem, 7vw, 6.75rem);
+  --ad-text-display: clamp(4.25rem, 13vw, 11.5rem);
+
+  --ad-color-background-primary: var(--ad-color-neutral-1000);
+  --ad-color-background-elevated: var(--ad-color-neutral-850);
+  --ad-color-background-inverse: var(--ad-color-neutral-0);
+  --ad-color-text-primary: var(--ad-color-neutral-0);
+  --ad-color-text-muted: var(--ad-color-neutral-200);
+  --ad-color-text-inverse: var(--ad-color-neutral-1000);
+  --ad-color-action-primary: var(--ad-color-acid-500);
+  --ad-color-action-critical: var(--ad-color-signal-500);
+  --ad-color-border-subtle: rgb(244 243 237 / 20%);
+  --ad-color-border-strong: var(--ad-color-neutral-0);
+
+  --ad-page-padding: clamp(1rem, 2.3vw, 2rem);
+  --ad-section-space: clamp(5rem, 10vw, 9rem);
+  --ad-content-gap: clamp(1.5rem, 4vw, 3rem);
+  --ad-header-height: 4.5rem;
+  --ad-control-minimum: 2.75rem;
+  --ad-container-width: 112rem;
+}

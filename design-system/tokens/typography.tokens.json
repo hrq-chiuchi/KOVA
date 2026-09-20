@@ -1,0 +1,23 @@
+{
+  "typography": {
+    "size": {
+      "$type": "dimension",
+      "label": { "$value": { "value": 11, "unit": "px" }, "$description": "Dense uppercase metadata." },
+      "body": { "$value": { "value": 16, "unit": "px" }, "$description": "Default reading size." },
+      "lead": { "$value": { "value": 22, "unit": "px" }, "$description": "Introductory copy." },
+      "title": { "$value": { "value": 48, "unit": "px" }, "$description": "Section display starting point before fluid scaling." },
+      "display": { "$value": { "value": 128, "unit": "px" }, "$description": "Large-screen hero display target." }
+    },
+    "lineHeight": {
+      "$type": "number",
+      "tight": { "$value": 0.84 },
+      "heading": { "$value": 0.95 },
+      "body": { "$value": 1.5 }
+    },
+    "tracking": {
+      "$type": "dimension",
+      "tight": { "$value": { "value": -4, "unit": "px" } },
+      "label": { "$value": { "value": 1.5, "unit": "px" } }
+    }
+  }
+}
