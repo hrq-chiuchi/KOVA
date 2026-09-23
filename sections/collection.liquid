@@ -67,7 +67,7 @@
             <div class="collection-page__grid">
               {% for product in collection.products %}
                 {% assign card_index = paginate.current_offset | plus: forloop.index %}
-                {% render 'product-card', product: product, index: card_index, sizes: '(max-width: 767px) 50vw, 40vw', quick_add: true %}
+                {% render 'product-card', product: product, index: card_index, sizes: '(max-width: 767px) 50vw, 40vw', quick_add: true, heading_tag: 'h2' %}
               {% endfor %}
             </div>
           {% else %}

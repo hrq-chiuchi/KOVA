@@ -61,6 +61,12 @@ button {
   outline-offset: 4px;
 }
 
+/* Shopify injects the hCaptcha badge with styles that suppress the focus ring on its policy links. */
+#shop-hcaptcha-badge-container a:focus-visible {
+  outline: 2px solid var(--color-accent) !important;
+  outline-offset: 2px;
+}
+
 .skip-link {
   position: fixed;
   z-index: 1000;

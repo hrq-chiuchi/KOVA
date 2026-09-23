@@ -5,10 +5,12 @@
   @param {number} [index] - One-based product index.
   @param {string} [sizes] - Responsive image sizes attribute.
   @param {boolean} [quick_add] - Show add action for single-variant products.
+  @param {string} [heading_tag] - Title heading element, `h2` or `h3` (default) to fit the page outline.
 {% enddoc %}
 
 {% liquid
   assign alternate_image = blank
+  assign heading_tag = heading_tag | default: 'h3'
   if product.featured_image
     for image in product.images
       if image.id != product.featured_image.id
@@ -20,7 +22,7 @@
 %}
 
 <article class="product-card" data-reveal-card>
-  <a class="product-card__media{% if alternate_image != blank %} product-card__media--alternate{% endif %}" href="{{ product.url }}" aria-label="{{ product.title | escape }}" data-webgl-reveal>
+  <a class="product-card__media{% if alternate_image != blank %} product-card__media--alternate{% endif %}" href="{{ product.url }}" tabindex="-1" aria-hidden="true" data-webgl-reveal>
     {% if product.featured_image %}
       {{ product.featured_image
         | image_url: width: 1200
@@ -50,8 +52,9 @@
   </a>
   <div class="product-card__details">
     <div>
-      <h3 class="product-card__title"><a href="{{ product.url }}">{{ product.title | escape }}</a></h3>
+      <{{ heading_tag }} class="product-card__title"><a href="{{ product.url }}">{{ product.title | escape }}</a></{{ heading_tag }}>
       <p class="product-card__price">
+        {% unless product.available %}<span class="visually-hidden">Sold out.</span>{% endunless %}
         {% if product.price_varies %}From {% endif %}{{ product.price | money }}
         {% if product.compare_at_price > product.price %}<s>{{ product.compare_at_price | money }}</s>{% endif %}
       </p>

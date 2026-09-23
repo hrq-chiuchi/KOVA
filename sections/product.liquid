@@ -28,6 +28,16 @@
 
     <div class="product-page__gallery" aria-label="{{ product.title | escape }} media">
       {% for media in product.media %}
+        {% liquid
+          # The primary image is the likely LCP element, so it loads eagerly at high priority.
+          if forloop.first
+            assign media_loading = 'eager'
+            assign media_priority = 'high'
+          else
+            assign media_loading = 'lazy'
+            assign media_priority = 'auto'
+          endif
+        %}
         <figure class="product-page__media{% if forloop.first %} product-page__media--primary{% endif %}" data-media-id="{{ media.id }}">
           {% case media.media_type %}
             {% when 'image' %}
@@ -36,7 +46,8 @@
                 | image_tag:
                   widths: '480, 720, 960, 1200, 1600, 1800',
                   sizes: '(max-width: 767px) 100vw, 52vw',
-                  loading: 'lazy',
+                  loading: media_loading,
+                  fetchpriority: media_priority,
                   alt: media.alt | default: product.title
               }}
             {% when 'video' %}
@@ -265,6 +276,8 @@
   .product-purchase__quantity input { border-inline: 0; }
   .product-purchase__add { width: 100%; }
   .product-purchase__payment .shopify-payment-button { margin: 0; }
+  .product-purchase__payment .shopify-payment-button__button--unbranded { min-height: var(--ad-control-minimum); border: var(--ad-border-hairline) solid currentcolor; border-radius: var(--ad-radius-pill); background: transparent; color: var(--ad-color-text-primary); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-purchase__payment .shopify-payment-button__button--unbranded:hover:not([disabled]) { background: var(--ad-color-text-primary); color: var(--ad-color-text-inverse); }
   .product-purchase__details { border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
   .product-purchase__details details { border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
   .product-purchase__details summary { padding-block: var(--ad-space-300); cursor: pointer; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
