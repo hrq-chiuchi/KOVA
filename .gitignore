@@ -15,3 +15,6 @@ node_modules/
 ## Release files
 release
 *.zip
+
+# Source brand imagery (uploaded to Shopify Files)
+BRAND/
