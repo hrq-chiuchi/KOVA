@@ -96,6 +96,9 @@
       this.activeItem = null;
       this.introQueue = [];
       this.observer = null;
+      // Targets waiting to come near the viewport before their textures are decoded and uploaded.
+      this.pending = new Set();
+      this.prepareObserver = null;
       this.handleResize = () => this.requestRender();
     }
 
@@ -106,7 +109,13 @@
       root.querySelectorAll?.('[data-webgl-reveal]').forEach((target) => targets.push(target));
       if (!targets.length) return;
       if (!this.ensureContext()) return;
-      targets.forEach((target) => this.add(target));
+      targets.forEach((target) => this.queue(target));
+    }
+
+    queue(target) {
+      if (this.items.has(target) || this.pending.has(target)) return;
+      this.pending.add(target);
+      this.prepareObserver?.observe(target);
     }
 
     ensureContext() {
@@ -134,6 +143,17 @@
       return this.createResources();
     }
     createObserver() {
+      this.prepareObserver?.disconnect();
+      this.prepareObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          this.prepareObserver?.unobserve(entry.target);
+          this.pending.delete(entry.target);
+          this.add(entry.target);
+        });
+      }, { rootMargin: '50% 0px' });
+      this.pending.forEach((target) => this.prepareObserver.observe(target));
+
       this.observer?.disconnect();
       this.observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -426,6 +446,11 @@
     }
 
     destroy(root = document) {
+      for (const target of Array.from(this.pending)) {
+        if (root !== document && target !== root && !root.contains?.(target)) continue;
+        this.prepareObserver?.unobserve(target);
+        this.pending.delete(target);
+      }
       for (const [target, item] of Array.from(this.items.entries())) {
         if (root !== document && target !== root && !root.contains?.(target)) continue;
         this.observer?.unobserve(target);
@@ -438,7 +463,7 @@
         this.releaseTexture(item.textureB);
         this.items.delete(target);
       }
-      if (!this.items.size) this.dispose();
+      if (!this.items.size && !this.pending.size) this.dispose();
     }
 
     refresh() {
@@ -451,6 +476,7 @@
       cancelAnimationFrame(this.raf);
       this.raf = 0;
       this.observer?.disconnect();
+      this.prepareObserver?.disconnect();
       this.introQueue = [];
       this.items.forEach((item) => {
         item.tween?.kill();
@@ -479,6 +505,9 @@
       this.activeItem = null;
       this.observer?.disconnect();
       this.observer = null;
+      this.prepareObserver?.disconnect();
+      this.prepareObserver = null;
+      this.pending.clear();
       this.introQueue = [];
       this.abort?.abort();
       this.parkCanvas();
