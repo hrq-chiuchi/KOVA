@@ -1,0 +1,235 @@
+{% liquid
+  assign layer_count = 0
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+%}
+
+<kinetic-hero
+  class="kinetic-hero full-width"
+  data-section-id="{{ section.id }}"
+  data-threshold="{{ section.settings.pointer_threshold }}"
+  style="--hero-bg: {{ section.settings.background }}; --hero-fg: {{ section.settings.foreground }}; --hero-accent: {{ section.settings.accent }}; --hero-height: {{ section.settings.section_height }}svh;"
+>
+  <div class="kinetic-hero__stage" data-kinetic-stage aria-hidden="true">
+    {% for block in section.blocks %}
+      {% if block.settings.image != blank %}
+        {% assign layer_count = layer_count | plus: 1 %}
+        <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};" {{ block.shopify_attributes }}>
+          <picture>
+            {% if block.settings.mobile_image != blank %}
+              <source media="(max-width: 47.99rem)" srcset="{{ block.settings.mobile_image | image_url: width: 900 }}">
+            {% endif %}
+            {{ block.settings.image
+              | image_url: width: 1600
+              | image_tag:
+                widths: '480, 720, 960, 1200, 1600',
+                sizes: '(max-width: 767px) 66vw, 34vw',
+                loading: 'eager',
+                class: 'kinetic-hero__image',
+                alt: block.settings.alt
+            }}
+          </picture>
+        </figure>
+      {% endif %}
+    {% endfor %}
+
+    {% if layer_count == 0 %}
+      {% for product in collections.all.products limit: 7 %}
+        {% if product.featured_image %}
+          {% assign layer_count = layer_count | plus: 1 %}
+          <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};">
+            {{ product.featured_image
+              | image_url: width: 1400
+              | image_tag:
+                widths: '480, 720, 960, 1200, 1400',
+                sizes: '(max-width: 767px) 66vw, 34vw',
+                loading: 'eager',
+                class: 'kinetic-hero__image',
+                alt: product.featured_image.alt | default: product.title
+            }}
+          </figure>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% if layer_count < 5 %}
+      {% assign missing_layers = 5 | minus: layer_count %}
+      {% for index in (1..missing_layers) %}
+        {% assign layer_count = layer_count | plus: 1 %}
+        <figure class="kinetic-hero__layer kinetic-hero__layer--placeholder" data-kinetic-layer style="--layer-index: {{ layer_count }};">
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'kinetic-hero__placeholder' }}
+          <span>KOVA / {{ layer_count | prepend: '0' }}</span>
+        </figure>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="kinetic-hero__content section-shell" data-reveal="hero">
+    <p class="eyebrow" data-reveal-item="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    <h1 class="kinetic-hero__title">
+      {% for line in heading_lines %}
+        <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+      {% endfor %}
+    </h1>
+    <div class="kinetic-hero__footer">
+      <div class="kinetic-hero__copy" data-reveal-item="detail">{{ section.settings.body }}</div>
+      {% if section.settings.button_label != blank %}
+        <a class="button button--accent" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}" data-reveal-item="detail">
+          {{ section.settings.button_label | escape }}
+        </a>
+      {% endif %}
+      <p class="kinetic-hero__instruction" data-reveal-item="detail"><span aria-hidden="true">↘</span> Move to reshuffle / tap on touch</p>
+    </div>
+  </div>
+</kinetic-hero>
+
+{% stylesheet %}
+  .kinetic-hero {
+    position: relative;
+    display: block;
+    min-height: max(42rem, var(--hero-height));
+    overflow: clip;
+    background:
+      radial-gradient(circle at 72% 34%, color-mix(in srgb, var(--hero-accent) 16%, transparent), transparent 34%),
+      var(--hero-bg);
+    color: var(--hero-fg);
+    isolation: isolate;
+  }
+
+  .kinetic-hero::after {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    background: linear-gradient(90deg, rgb(0 0 0 / 72%) 0%, rgb(0 0 0 / 16%) 52%, rgb(0 0 0 / 46%) 100%);
+    content: '';
+    pointer-events: none;
+  }
+
+  .kinetic-hero__stage {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .kinetic-hero__layer {
+    position: absolute;
+    inset: 50% auto auto 69%;
+    width: clamp(13rem, 27vw, 29rem);
+    aspect-ratio: 4 / 5;
+    margin: 0;
+    overflow: hidden;
+    border: var(--ad-border-hairline) solid rgb(244 243 237 / 40%);
+    background: var(--ad-color-background-elevated);
+    box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 38%);
+    transform: translate(-50%, -50%) rotate(calc((var(--layer-index) - 3) * 1.8deg));
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .kinetic-hero__layer picture,
+  .kinetic-hero__image,
+  .kinetic-hero__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .kinetic-hero__image,
+  .kinetic-hero__placeholder { object-fit: cover; }
+
+  .kinetic-hero__layer--placeholder {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, var(--ad-color-background-elevated), color-mix(in srgb, var(--hero-accent) 22%, var(--ad-color-background-primary)));
+  }
+
+  .kinetic-hero__layer--placeholder span {
+    position: absolute;
+    inset: auto var(--ad-space-300) var(--ad-space-300);
+    font-size: var(--ad-text-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  .kinetic-hero__placeholder { opacity: 0.18; }
+
+  .kinetic-hero__content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-height: max(42rem, var(--hero-height));
+    padding-block: calc(var(--ad-header-height) + var(--ad-space-600)) var(--ad-space-500);
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .kinetic-hero__title {
+    width: min(9ch, 76vw);
+    margin: auto 0;
+    font-family: var(--font-display-family);
+    font-size: clamp(4.1rem, 11.7vw, 12rem);
+    font-weight: var(--font-display-weight);
+    letter-spacing: -0.075em;
+    line-height: 0.77;
+    text-transform: uppercase;
+  }
+
+  .kinetic-hero__footer {
+    display: grid;
+    grid-template-columns: minmax(12rem, 24rem) auto 1fr;
+    align-items: end;
+    gap: var(--ad-content-gap);
+  }
+
+  .kinetic-hero__copy { max-width: 32rem; color: color-mix(in srgb, var(--hero-fg) 78%, transparent); }
+  .kinetic-hero__copy > * { margin: 0; }
+  .kinetic-hero__instruction { margin: 0; justify-self: end; font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  @media (max-width: 47.99rem) {
+    .kinetic-hero { min-height: max(42rem, var(--hero-height)); }
+    .kinetic-hero::after { background: linear-gradient(180deg, rgb(0 0 0 / 24%), rgb(0 0 0 / 58%) 64%, rgb(0 0 0 / 88%)); }
+    .kinetic-hero__layer { inset: 43% auto auto 57%; width: min(68vw, 20rem); }
+    .kinetic-hero__content { min-height: max(42rem, var(--hero-height)); padding-block-end: var(--ad-space-400); }
+    .kinetic-hero__title { width: 100%; margin-block-start: auto; font-size: clamp(3.8rem, 20vw, 7rem); line-height: 0.78; }
+    .kinetic-hero__footer { grid-template-columns: 1fr auto; margin-block-start: var(--ad-space-500); }
+    .kinetic-hero__copy { grid-column: 1 / -1; max-width: 24rem; }
+    .kinetic-hero__instruction { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kinetic-hero__layer { will-change: auto; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Kinetic hero",
+  "tag": "section",
+  "class": "section-kinetic-hero",
+  "max_blocks": 7,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "KOVA / independent supply" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "BUILT FOR\nAFTER DARK" },
+    { "type": "richtext", "id": "body", "label": "Body", "default": "<p>Limited-run apparel and objects engineered for motion, noise and late hours.</p>" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop current release" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "range", "id": "section_height", "label": "Section height", "min": 75, "max": 120, "step": 5, "unit": "%", "default": 100 },
+    { "type": "range", "id": "pointer_threshold", "label": "Image change distance", "min": 24, "max": 120, "step": 8, "unit": "px", "default": 56 },
+    { "type": "color", "id": "background", "label": "Background", "default": "#080808" },
+    { "type": "color", "id": "foreground", "label": "Text", "default": "#f4f3ed" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Stack image",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "image_picker", "id": "mobile_image", "label": "Mobile image" },
+        { "type": "text", "id": "alt", "label": "Alternative text" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Kinetic hero" }]
+}
+{% endschema %}

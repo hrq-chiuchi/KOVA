@@ -10,36 +10,95 @@
 {
   "sections": {
     "hero": {
-      "type": "cinematic-hero",
+      "type": "kinetic-hero",
       "settings": {
-        "eyebrow": "Independent supply / 2026",
-        "heading": "ENGINEERED\nFOR AFTER DARK",
-        "body": "<p>Independent objects, apparel and machinery for people who stay moving after dark.</p>",
-        "button_label": "Enter the supply",
+        "eyebrow": "KOVA / Independent supply",
+        "heading": "BUILT FOR\nAFTER DARK",
+        "body": "<p>Limited-run apparel and objects engineered for motion, noise and late hours.</p>",
+        "button_label": "Shop current release",
         "button_link": "shopify://collections/all",
-        "content_position": "bottom",
-        "text_alignment": "left",
         "section_height": 100,
+        "pointer_threshold": 56,
         "background": "#080808",
         "foreground": "#f4f3ed",
-        "accent": "#dfff00",
-        "overlay_strength": 35,
-        "animation_enabled": true,
-        "animation_intensity": 8
+        "accent": "#dfff00"
       }
     },
-    "featured": {
-      "type": "featured-collection",
+    "current_release": {
+      "type": "editorial-product-grid",
       "settings": {
-        "eyebrow": "Current transmission",
-        "heading": "Field equipment",
-        "link_label": "View all objects",
-        "product_limit": 6,
-        "background": "#f4f3ed",
-        "foreground": "#080808",
-        "accent": "#dfff00"
+        "eyebrow": "Release 001 / Available now",
+        "heading": "CURRENT\nTRANSMISSION",
+        "intro": "<p>Three pieces from the first KOVA field test. Built as a compact uniform for heat, movement and signal.</p>",
+        "content_mode": "products",
+        "product_limit": 3,
+        "layout": "staggered",
+        "tone": "inverse",
+        "accent": "#dfff00",
+        "link_label": "Shop the full index",
+        "link_url": "shopify://collections/all"
+      }
+    },
+    "night_uniform": {
+      "type": "editorial-product-grid",
+      "blocks": {
+        "uniform_01": {
+          "type": "story",
+          "settings": { "kicker": "Uniform / 01", "title": "Layer system", "note": "Outerwear study entering production." }
+        },
+        "uniform_02": {
+          "type": "story",
+          "settings": { "kicker": "Uniform / 02", "title": "Low-light knit", "note": "Material and fit tests underway." }
+        },
+        "uniform_03": {
+          "type": "story",
+          "settings": { "kicker": "Uniform / 03", "title": "Carry module", "note": "Utility object. Release date pending." }
+        }
+      },
+      "block_order": ["uniform_01", "uniform_02", "uniform_03"],
+      "settings": {
+        "eyebrow": "Next system / Preview",
+        "heading": "NIGHT\nUNIFORM",
+        "intro": "<p>A modular layer study. Campaign imagery and final product records arrive with the next catalogue handoff.</p>",
+        "content_mode": "editorial",
+        "product_limit": 3,
+        "layout": "aligned",
+        "tone": "dark",
+        "accent": "#ff4f2e",
+        "link_label": "",
+        "link_url": ""
+      }
+    },
+    "field_objects": {
+      "type": "editorial-product-grid",
+      "blocks": {
+        "object_01": {
+          "type": "story",
+          "settings": { "kicker": "Object / 01", "title": "Signal case", "note": "Protective shell study." }
+        },
+        "object_02": {
+          "type": "story",
+          "settings": { "kicker": "Object / 02", "title": "Night marker", "note": "Reflective field accessory." }
+        },
+        "object_03": {
+          "type": "story",
+          "settings": { "kicker": "Object / 03", "title": "Transit vessel", "note": "Daily carry prototype." }
+        }
+      },
+      "block_order": ["object_01", "object_02", "object_03"],
+      "settings": {
+        "eyebrow": "Field objects / In development",
+        "heading": "HARD\nGOODS",
+        "intro": "<p>Small tools and carry systems sharing the same night-use language. Non-purchasable until product data is ready.</p>",
+        "content_mode": "editorial",
+        "product_limit": 3,
+        "layout": "staggered",
+        "tone": "inverse",
+        "accent": "#dfff00",
+        "link_label": "",
+        "link_url": ""
       }
     }
   },
-  "order": ["hero", "featured"]
+  "order": ["hero", "current_release", "night_uniform", "field_objects"]
 }

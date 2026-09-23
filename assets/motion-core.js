@@ -37,7 +37,8 @@
         const { desktop, reduceMotion } = context.conditions;
         const hero = scope.querySelector('[data-reveal="hero"]');
         const sectionReveals = Array.from(scope.querySelectorAll('[data-reveal="section"]'));
-        const cards = Array.from(scope.querySelectorAll('[data-reveal-card]'));
+        const cards = Array.from(scope.querySelectorAll('[data-reveal-card]'))
+          .filter((card) => !card.querySelector('[data-webgl-reveal]'));
         const parallaxTargets = Array.from(scope.querySelectorAll('[data-parallax]'));
 
         if (reduceMotion) {
