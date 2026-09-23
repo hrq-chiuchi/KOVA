@@ -281,5 +281,20 @@ Corrections made during implementation:
 - Collection pages rendered after publication with 16, 4, 3, 5, 3, 2, and 3 product cards for Drop 001, Carry Systems, Limited Editions, Field Objects, Outerwear, Apparel, and Worn Accessories, with zero horizontal overflow on each.
 - All ten `custom` metafield definitions and the three KOVA metaobject definitions report `PUBLIC_READ` storefront access, so the next PDP phase can read them from Liquid and the Storefront API.
 
-Not verified: PDP rendering of the new metafield and metaobject content, because the product template does not consume it yet; that is the next phase. Checkout completion, the Theme Editor UI, and performance remain unmeasured.
+Not verified at the time: PDP rendering of the new metafield and metaobject content (realized in Phase 4 below). Checkout completion, the Theme Editor UI, and performance remain unmeasured.
 
+## Phase 4 product storytelling and homepage log
+
+**2026-09-23 — Implementation:** `sections/product.liquid` now consumes the custom-data layer. The identity column shows `functional_descriptor`, `positioning`, and the edition drop code and quantity in place of the synthetic object index. The purchase column adds disclosure panels for features, a label/value specification list parsed from `technical_specifications`, the fit profile, the material system (falling back to the section's care copy when no profile exists), compatible products as plain title/price links, and the edition release note. Package information joins delivery and returns, and `reference_guide` renders as a PDF link. Linked colour options render a decorative swatch chip beside the readable value text; `assets/theme.js` reads only input values, so variant matching is unchanged. The homepage's two placeholder grids were switched to the real Outerwear and Field Objects collections, the lead grid was pinned to three products that neither collection repeats, and the unused Skeleton `hello-world` section was removed.
+
+**2026-09-23 — Bug found (catalogue data, not yet fixed):** `custom.feature_list` is double-encoded on 15 of 16 products. Each list holds one entry whose text is a JSON array string (for example `["Twelve indexed storage zones", …]`) rather than five entries, so the Features panel prints the raw array. Only `Night Transit Set 03`, written through the Admin API, holds a proper five-entry list. The likely cause is the Phase 3 CSV import encoding the list value a second time. The theme renders the list natively and intentionally does not decode strings, because that would hide the data defect; the fix is a `metafieldsSet` rewrite of the 15 values.
+
+**2026-09-23 — Verification against the live development preview:**
+
+- Theme Check: 48 files, no offenses. No `Liquid error` on the homepage or on the Night Shift Cargo Pant, Sector 05 Field Flask, Night Transit Set 03, Nullfold Card Wallet, and Static-5 Panel Cap PDPs.
+- Cargo pant: descriptor `Articulated Modular Cargo Trouser`, index `KVA-D001-NS / 240 units`, fit `Relaxed Straight`, material `Field Ripstop 220`, edition `Night Shift 240`, five specification rows, two compatible products with prices, apparel size-guide PDF link, and two swatch chips.
+- The flask and wallet render no fit panel; the bundle has no material profile and correctly falls back to the section's care copy.
+- Homepage grids render Night Shift Cargo Pant / After Dark Utility Backpack / Dead Channel Utility Hoodie, Relay Modular Vest / Blacksite Shell Jacket / Ghostline Packable Poncho, and Night Transit Set 03 / Nullfold Card Wallet / Sector 05 Field Flask, with no placeholder cards.
+- Headless Chromium screenshots of the cargo pant PDP at 1440px and 390px showed the new identity content, swatches, collapsed panels, and guide link without horizontal overflow.
+
+Observed, not changed: several product descriptions repeat the positioning sentence and contain their own materials and care paragraphs, which now overlap the metaobject-driven panels. That is catalogue copy, to be trimmed in a content pass. Not verified: keyboard traversal of the new panels, screen-reader output, Theme Editor behaviour, and performance.

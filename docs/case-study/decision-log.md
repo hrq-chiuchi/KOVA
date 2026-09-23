@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010's placeholder categories are now superseded for the product rail by the real Drop 001 catalogue, while the two editorial category placeholders remain.
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections.
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -111,6 +111,8 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Tradeoff / reconsideration:** A shared localized canvas permits one active GPU transition at a time; hover takes priority and queued viewport reveals resume afterward. Reconsider per-card contexts only if simultaneous transitions become an explicit requirement, or Three.js if later art direction requires scene graphs, cameras, model assets, post-processing chains, or shared 3D materials.
 
 ## D-010 — Keep placeholder categories non-purchasable
+
+**Status:** Superseded 2026-09-23. The Drop 001 catalogue supplied real Outerwear and Field Objects collections, so both placeholder grids now run in product mode. Editorial-block mode remains in the section schema for future pre-release stories.
 
 **Context:** Only three temporary products exist, but the Round 2 homepage needs three intentional category stories.
 
