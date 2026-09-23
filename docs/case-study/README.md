@@ -2,7 +2,7 @@
 
 ## Evidence policy
 
-This is a working evidence record, not a retrospective success story. Claims distinguish source inspection, project setup records, reference-derived principles, local CLI/static-browser verification, and future live-Shopify work. Phase 1 passed the checks recorded below, including synthetic Theme Editor lifecycle events; the actual Theme Editor UI and real catalogue/media remain unverified. No Lighthouse, Core Web Vitals, usability, conversion, animation-frame-rate, Figma-artifact, or live-store outcome claim is made.
+This is a working evidence record, not a retrospective success story. Claims distinguish source inspection, project setup records, reference-derived principles, static-fixture verification, and Shopify CLI development-preview verification. Phase 2 was exercised against the store's three current products on the local development theme. The actual Theme Editor UI, an available-variant add-to-cart transaction, production deployment, Lighthouse, Core Web Vitals, usability, conversion, animation-frame-rate, Figma-artifact, and live-store outcome remain unverified.
 
 ## Context and challenge
 
@@ -125,12 +125,47 @@ Evidence captured from source:
 
 These results came from a controlled static browser fixture, which was removed after the checks, not a live Shopify storefront. They verify the exercised layout, interaction, accessibility-tree, dependency-loading, reduced-motion, and synthetic lifecycle paths only; they are not performance or usability measurements.
 
+## Phase 2 development and verification log
+
+**2026-09-20 — Implementation:** The Phase 1 homepage sections were cleanly replaced by a kinetic image-stack hero and three editorial category grids. The first category consumes the current catalogue; the other two are visibly non-purchasable placeholders until the next content handoff. One shared WebGL canvas gives eligible product media a queued viewport glitch reveal and repeatable first-to-second-image hover transitions while product cards remain in normal document flow. The global shell gained a centered KOVA header, modal navigation, progressively refreshed cart drawer, collection filters/sorting, a three-part product purchase layout, related-product endpoint, full cart, newsletter/localization-aware footer, and a viewport declaration.
+
+Meaningful implementation boundaries:
+
+- `assets/kinetic-hero.js` uses `gsap.quickTo()` to carry the full stack across the hero with depth-based lag, explicitly establishes percentage centering, primes follower tweens, synchronizes them immediately on every pointer entry, keeps distance-based promotions at the current pointer, restores the authored right-side rest state on leave, supports touch advance, cleans up scoped listeners, and supplies a static reduced-motion branch.
+- `assets/webgl-product-reveal.js` owns one WebGL context/program/buffer, caps targets and total texture memory, queues one-time `IntersectionObserver` intros, temporarily mounts the canvas as an absolute child of the active media element, runs a fresh bidirectional texture transition on every pointer entry and leave, renders only active transitions on demand, handles context loss, and returns presentation to canonical DOM images after every animation.
+- `assets/theme.js` keeps navigation, cart, product option/quantity state, recommendations, and Shopify section events separate from decorative motion.
+- `templates/index.json` composes one real-product category and two explicitly pending editorial categories; merchant media can replace every fallback without changing code.
+- The obsolete cinematic hero, featured rail, and product-rail runtime were removed after the homepage caller migrated.
+
+**2026-09-20 — Shopify CLI development-preview verification:**
+
+- Shopify CLI synchronized the changed theme to development theme `164481368323`.
+- The homepage rendered five hero layers, three editorial sections, three real product cards, three WebGL-ready targets, and no horizontal overflow.
+- Desktop pointer checks moved all five hero layers from the authored right-side rest to both far-left and far-right coordinates; a promoted front layer remained inside the local stack instead of moving against the pointer. Pointer leave returned every layer to the right-side composition. A 390×844 emulation matched the mobile breakpoint, rendered two 173px product columns, kept the 359px hero title within its 359px box, and had no horizontal overflow. Touch input advanced the hero stack.
+- Navigation opened with focus on Close. Escape closed the dialog, cleared body lock and `aria-expanded`, and restored trigger focus.
+- Reduced-motion emulation created zero ScrollTriggers and zero WebGL-ready targets while leaving the hero visible.
+- WebGL context loss removed all ready classes and left DOM product images visible.
+- Synthetic section unload removed all three prepared product targets and restored primary DOM images. Two repeated load events returned exactly three prepared targets, confirming idempotent initialization with the new observers and pointer listeners.
+- The WebGL intro showed block pixelation, horizontal signal displacement, and color-channel separation before handing presentation back to opaque primary DOM images. Fine-pointer hover transitioned to each product's second image, held that DOM image after completion, reversed to the primary image on leave, and retained `transform: none` on the product cards.
+- The collection rendered the three real products, native filter/sort controls, two desktop columns, two mobile columns, and no overflow.
+- A real product rendered seven media items and two option groups. Changing Color updated the hidden variant ID and URL; quantity increment changed from 1 to 2. All tested variants were sold out, so successful add-to-cart was unavailable.
+
+- Product recommendations requested successfully but the current catalogue returned no related products.
+- The empty cart page and drawer rendered. Section Rendering refresh replaced drawer contents and reopened the dialog.
+- `node --check` passed for the four authored JavaScript files. Shopify Theme Check passed after the implementation fixes recorded in source.
+
+**2026-09-21 — Product-media interaction refinement:** The prior smooth wipe was replaced with an original block-glitch shader inspired by signal degradation rather than a copied interaction. Live development-preview checks exercised active and completed intro states, both directions of the first/second-image hover transition, the CSS hover fallback under reduced-motion emulation, repeated Theme Editor lifecycle events, and forced WebGL context loss. Three product cards loaded two responsive DOM images each; reduced motion created no prepared WebGL targets, while context loss removed all prepared/animating classes and restored primary-image opacity.
+
+**2026-09-21 — Static product-media correction:** The viewport-fixed compositor and intersection-triggered intro were removed. The shared canvas is now hidden at page level, mounted inside the active media box only for fine-pointer hover, and parked again after the DOM-image handoff. Live development-preview measurements confirmed `position: static` and `transform: none` on the product card, `position: relative` on its media, and `position: absolute` on the active canvas. During an 80px scroll while the shader was active, media and canvas each moved exactly −80px; after completion the canvas returned to `body` with `display: none`. Hover settled on DOM opacities `[0, 1]`, and pointer leave restored `[1, 0]`.
+
+**2026-09-21 — Interaction replay correction:** The hero follower tweens now receive an explicit centered baseline and are synchronized to the entry coordinate before ordinary lag begins. Replaying the same pointer path after a fresh load and after leave/return produced identical entry coordinates and a maximum final-coordinate delta of `0`. The localized WebGL compositor regained a one-time queued viewport intro without restoring any card translation or fixed positioning: during an active reveal, an 80px page scroll moved both media and canvas by exactly −80px. Three complete pointer entry/leave cycles each mounted the canvas, ran the shader, settled on DOM opacities `[0, 1]`, reversed through the shader, and restored `[1, 0]`.
+
 ### Known unknowns and risks
 
-- Real catalogue content, imagery, brand assets, settings combinations, and merchant workflows remain unverified.
-- Synthetic section unload/load/repeated-load behavior is verified; the actual Shopify Theme Editor UI has not been exercised.
-- The corrected mobile heading fit the tested fixture; different merchant copy, fonts, and media can still expose composition issues.
-- Vendored animation code and production media may affect page cost; no performance baseline exists.
+- Add-to-cart and cart-line creation are now verified against the real catalogue for a single-variant product, a multi-variant product, and the native bundle (see the Phase 3 log). Checkout completion and payment are still unverified.
+- Synthetic section lifecycle events are verified; the actual Shopify Theme Editor UI has not been exercised.
+- The homepage hero and the two editorial category placeholders still use temporary theme-owned art. The product catalogue, collections, and product data are now real, so those sections can be repointed at Drop 001 collections in the next phase.
+- WebGL context loss and reduced motion are verified; performance on low-end physical devices and production media weights is not measured.
 - Token CSS is committed beside canonical JSON, but no automated generator or synchronization check exists.
 - Figma correspondence cannot be tested until supported tooling and an actual Figma target exist.
 
@@ -149,3 +184,102 @@ Capture only after the event occurs:
 ## Metrics
 
 **Current status: not measured.** There are no recorded Lighthouse, LCP, CLS, INP, JavaScript-size, image-weight, animation-FPS, accessibility-audit, conversion, or usability values. Future measurements must include enough context to be reproducible; absent data must remain absent rather than inferred.
+
+## Catalog architecture — Implemented and verified against the live store
+
+The first KOVA catalogue is a 15-product image-backed release plus one Shopify-native bundle: 16 products and 62 variants, all active and published to Online Store and Shop. Naming, product data, and Shopify features are intentionally distributed so the catalogue can support materially different product-detail stories instead of one overloaded schema.
+
+| Family | Product | Functional descriptor | Positioning | Intended Shopify demonstrations |
+| --- | --- | --- | --- | --- |
+| Carry | After Dark Utility Backpack | 30L modular field pack | A weather-resistant load system built for overnight movement, modular carry, and urban field use. | Color and harness variants, three-image media set, capacity/dimension specs, modular compatibility, reference guide |
+| Carry | Lowlight Courier 14 | 14L shoulder transit bag | A low-profile messenger built to keep daily hardware indexed, compressed, and close at hand. | Color variants, compartment specifications, laptop compatibility, cross-sell accessories |
+| Carry | Driftline Hip Rig | 4L convertible waist pack | A compact carry module that shifts between waist and cross-body use without breaking stride. | Strap-length variants, carry-mode features, related carry products |
+| Carry | Gridlink Pouch Array | Three-piece modular organizer set | A nested pouch system for separating tools, cables, and small field objects inside any KOVA load platform. | Product set, modular compatibility, component list, compare-at set pricing |
+| Outerwear | Blacksite Shell Jacket | Three-layer storm field shell | A protective outer layer cut for hard weather, concealed storage, and low-light movement. | Size/color variants, swatches, fit/material/care content, limited edition |
+| Outerwear | Relay Modular Vest | Adjustable load-bearing vest | A wearable storage layer balancing modular attachment, ventilation, and an engineered silhouette. | Size/color variants, fit profile, load compatibility, construction details |
+| Outerwear | Ghostline Packable Poncho | Packable storm cover | A fast-deploy shell that covers the wearer and a small pack while collapsing into its own field sack. | Dual-size option, packed dimensions, care and weather specifications |
+| Apparel | Night Shift Cargo Pant | Articulated modular cargo trouser | A relaxed technical trouser designed for kneeling, carrying, and long movement after dark. | Six sizes, two colors, swatches, three-image media set, size/fit guide |
+| Apparel | Dead Channel Utility Hoodie | Heavyweight hardware hoodie | A dense oversized layer combining fleece comfort with indexed storage and removable field details. | Size/color variants, material story, care, selective compare-at pricing |
+| Headwear | Static-5 Panel Cap | Water-resistant signal cap | A low-profile five-panel built to shed light weather and hold a visible marker in dark conditions. | Color swatches, one-size fit data, accessory cross-sell |
+| Headwear | Veil-02 Air Hood | Ventilated extended balaclava | A close field layer that manages coverage and airflow without interrupting peripheral vision. | Two fit sizes, thermal/ventilation specifications, compatibility notes |
+| Handwear | Touchpoint Field Glove | Articulated utility glove | A reinforced full-finger glove tuned for grip, dexterity, and repeated hardware contact. | Four sizes, hand-measurement fit guidance, care and material specifications |
+| Objects | Signal Carabiner System | Gated key and tether assembly | A compact retention system for keys, tags, and light-duty equipment that needs to stay indexed. | Finish variants, safety disclaimer, compatibility and accessory cross-sell |
+| Objects | Sector 05 Field Flask | 950 ml carry vessel | A squared hydration vessel with a glove-friendly cap and external retention strap. | Capacity/weight dimensions, care, material and shipping data |
+| Objects | Nullfold Card Wallet | Six-slot technical card case | A slim stitched carry object for cards, folded currency, and one tethered essential. | Construction detail, dimensions, complementary key system |
+| Objects | Night Transit Set 03 | Three-object after-dark carry set | A coordinated hard-goods loadout combining hydration, retention, and slim essential storage. | Shopify-native fixed bundle of Sector 05 Field Flask, Signal Carabiner System, and Nullfold Card Wallet |
+
+`Gridlink Pouch Array` is the customer-facing fixed set represented by the supplied `general-use` image. `Night Transit Set 03` is a genuine Shopify-native component bundle: `productBundleCreate` was available on this store, the bundle product carries `requiresComponents: true`, and its single variant resolves three component variants while transacting as one cart line.
+
+### Lean custom-data model
+
+Native product fields remain authoritative for title, description, vendor, category, product type, tags, options, variants, media, SKU, inventory, price, compare-at price, weight, status, and SEO. Custom data is limited to information Shopify does not model structurally:
+
+| Definition | Type | Use |
+| --- | --- | --- |
+| `custom.functional_descriptor` | Single-line text | Short subtitle directly below the product name |
+| `custom.positioning` | Multi-line text | One-sentence product role |
+| `custom.feature_list` | List of single-line text | Scannable product-specific feature set |
+| `custom.technical_specifications` | Multi-line text | Compact label/value specification block; avoids one metafield per measurement |
+| `custom.material_system` | Metaobject reference | Reusable material, construction, finish, hardware, and care profile |
+| `custom.fit_profile` | Metaobject reference | Reusable silhouette, layering, and sizing guidance for wearable products |
+| `custom.edition_profile` | Metaobject reference | Reusable drop code, edition quantity, and release note |
+| `custom.package_information` | Multi-line text | Packed dimensions, package weight, and packaging notes |
+| `custom.compatible_products` | List of product references | Explicit modular compatibility, distinct from recommendation merchandising |
+| `custom.reference_guide` | File reference | Downloadable sizing or loadout documentation where it adds utility |
+
+Three reusable metaobject types keep shared copy centralized:
+
+- `Material system`: display name, composition, construction, finish, hardware, and care.
+- `Fit profile`: display name, silhouette, layering guidance, and sizing note.
+- `Edition profile`: display name, drop code, edition quantity, and release note.
+
+Complementary products use Shopify's Search & Discovery metafield (`shopify--discovery--product_recommendation.complementary_products`), so the native `/recommendations/products.json?intent=complementary` endpoint serves the curated cross-sell without a duplicate custom field. Related products stay algorithmic: Shopify returns an empty `intent=related` set on a catalogue with no order history, which is platform behaviour rather than missing data. Color is a product option linked to the standard `shopify.color-pattern` metafield, so option values render real swatches (`Black #0B0B0C`, `Ash Gray #6E7176`). The supplied imagery depicts one dark colourway only: `Ash Gray` therefore carries no variant media and zero inventory instead of being assigned misleading photography.
+
+### Catalog implementation record
+
+| Surface | Implemented state |
+| --- | --- |
+| Products | 16 active, published to Online Store and Shop; 15 built from the supplied imagery plus the native bundle |
+| Variants | 62 with unique `KVA-` SKUs, per-variant weights, cost per item, and tracked inventory at `Shop location` |
+| Options | `Size`, `Color`, `Harness`, `Strap`, `Finish`; 7 products expose linked colour swatches |
+| Variant media | Assigned on the produced black colourway for all 8 optioned colour/finish products |
+| Inventory | 356 units; deliberate zero stock on the unproduced `Ash Gray` colourway, so sold-out states are real |
+| Compare-at pricing | Only where a set or drop genuinely prices below its parts: Gridlink Pouch Array, Dead Channel Utility Hoodie, Night Transit Set 03 |
+| Categories | Shopify Standard Product Taxonomy on all 16 products |
+| Custom data | 10 product metafield definitions, 3 reusable metaobject definitions, 24 metaobject entries |
+| Reference guides | 3 generated PDFs in Files, attached to 15 products via `custom.reference_guide` |
+| Collections | 7 published smart collections driven by the tag taxonomy |
+| Recommendations | Curated complementary sets on all 16 products |
+
+## Phase 3 catalog development and verification log
+
+**2026-09-21 — Implementation:** The 19 supplied product images were uploaded to Shopify Files. Ten product metafield definitions, three reusable metaobject definitions, and 24 metaobject entries were created, then the catalogue was imported and completed. Three legacy demonstration products inherited from the store (workwear shorts and two graphic tees) were archived, so the catalogue contains only KOVA objects.
+
+Access path: the product CSV import, metafield definitions, and metaobject definitions were created through the Shopify admin UI. Because the admin's own GraphQL endpoint accepts only hashed persisted operations, the remaining structural work — metaobject entries, profile references, compatibility and complementary references, inventory, colour swatch links, file uploads, collections, and the native bundle — was written through a legacy custom app token against Admin GraphQL `2025-07`. The token is session-scoped and is not stored in the repository.
+
+Corrections made during implementation:
+
+- The first CSV pass silently dropped seven products because `Option2 LinkedTo` pointed at `product.metafields.shopify.color-pattern` before that definition existed on the store. The colour products were re-imported without the linkage, and swatches were attached afterwards through `productOptionUpdate`.
+- Shopify's CSV preview reported an invalid product category for the hydration vessel; category IDs were replaced with full taxonomy breadcrumbs and all 16 products now resolve a category.
+- Two inventory CSV attempts failed on header validation (`Option1 Value`, then `On hand`); inventory was set through `inventorySetQuantities` instead, which also made the per-size distribution explicit.
+- The metaobject definition form requires a complete field row before saving, which left a stray `temporary` field on `material_system`. It was deleted through `metaobjectDefinitionUpdate`.
+- The `custom.edition_profile` definition was lost to a relay timeout during the UI pass and was recreated through `metafieldDefinitionCreate`.
+- API-created collections are unpublished by default. All seven returned 404 on the storefront until `publishablePublish` was applied.
+
+**2026-09-21 — Bug found and fixed:** `assets/theme.js` disabled add-to-cart on every single-variant product. `updateVariant()` matched option inputs to build a variant, but a product with only a default variant renders no option inputs, so the match failed and the button fell through to the `Unavailable` branch. The previous catalogue hid this because every product was multi-variant and sold out. Reproduced on Sector 05 Field Flask, Nullfold Card Wallet, and Gridlink Pouch Array (`disabled: true`, label `UNAVAILABLE`) while the multi-variant Static-5 Panel Cap was unaffected. The matcher now falls back to the sole variant when no option inputs exist; all four single-variant PDPs render `ADD TO BAG` and `disabled: false`, and `node --check` passes.
+
+**2026-09-21 — Verification against the live development preview and Admin API:**
+
+- Admin API audit of all 16 products: every product active and published, category set, SEO title and description present, and the five core content metafields populated. 62 variants carry SKU, weight, and cost per item.
+- Custom data coverage: material system on 15 products, fit profile on the 8 wearables, edition profile on all 16, compatible products on 15, reference guide on 15, curated complementary products on 16.
+- Inventory: 356 units across the catalogue. Every `Ash Gray` variant is deliberately zero.
+- Colour swatches: all 7 colour products report `linkedMetafield shopify.color-pattern` with `#0B0B0C` and `#6E7176`, and option values render as `Black` and `Ash Gray` rather than raw CSV values.
+- Night Shift Cargo Pant PDP rendered three media items, a six-value Size group, a two-value Color group, `$238.00`, and an enabled add-to-cart control.
+- **First successful commerce transaction in this project:** `POST /cart/add.js` with the in-stock `XS / Black` cargo variant returned 200 and produced cart line `Night Shift Cargo Pant - XS / Black x1` totalling `23800`. Selecting `Ash Gray` on the cap PDP correctly disabled the button with `SOLD OUT`. The test cart was cleared to `item_count: 0`.
+- The native bundle transacted as a single line: adding Night Transit Set 03 produced one cart line at `16900` against a `$188.00` compare-at price, and the cart was cleared afterwards.
+- Complementary recommendations resolved through the storefront endpoint: the backpack returned Gridlink Pouch Array, Sector 05 Field Flask, and Signal Carabiner System; the cargo pant returned Signal Carabiner System, Nullfold Card Wallet, and Touchpoint Field Glove; the flask returned Signal Carabiner System and Night Transit Set 03. `intent=related` returned an empty set, as expected without order history.
+- Collection pages rendered after publication with 16, 4, 3, 5, 3, 2, and 3 product cards for Drop 001, Carry Systems, Limited Editions, Field Objects, Outerwear, Apparel, and Worn Accessories, with zero horizontal overflow on each.
+- All ten `custom` metafield definitions and the three KOVA metaobject definitions report `PUBLIC_READ` storefront access, so the next PDP phase can read them from Liquid and the Storefront API.
+
+Not verified: PDP rendering of the new metafield and metaobject content, because the product template does not consume it yet; that is the next phase. Checkout completion, the Theme Editor UI, and performance remain unmeasured.
+

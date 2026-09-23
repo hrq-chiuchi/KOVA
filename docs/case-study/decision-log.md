@@ -1,6 +1,6 @@
 # Decision log
 
-All entries were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. The actual Shopify Theme Editor UI and live catalogue/media remain pending. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted.
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010's placeholder categories are now superseded for the product rail by the real Drop 001 catalogue, while the two editorial category placeholders remain.
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -97,3 +97,75 @@ All entries were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001
 **Reasoning:** This keeps progress honest and preserves a clear later path without fabricated evidence.
 
 **Tradeoff / reconsideration:** Code and future design assets may diverge until synchronized. Reconsider immediately when official tooling and a target Figma file become available; record the exact sync method and mismatches.
+
+## D-009 — Use one bounded WebGL reveal context
+
+**Context:** Round 2 requires a technically expressive product-image treatment without making discovery depend on GPU support or allocating one context per card. A viewport-fixed compositor made static product media appear attached to scrolling, while removing the compositor's viewport entry entirely discarded the requested reveal. The catalogue also provides useful second product images for hover inspection.
+
+**Options considered:** one canvas/context per card; a Three.js scene manager; one shared raw-WebGL canvas localized to the active media element; a viewport-fixed compositor; CSS-only crossfade; copying a reference site's exact pixel-blur treatment.
+
+**Decision:** Use one page-level raw-WebGL canvas with one program and buffer. Up to 12 eligible targets own primary and optional secondary textures within a shared 96 MiB budget. An `IntersectionObserver` queues one-time glitch reveals, but never changes product-card opacity, transform, or document positioning. Fine-pointer entry and leave each start a fresh bidirectional transition when a secondary image exists. Every transition temporarily mounts the canvas as an absolute child of the active media box. Frames are requested only during the transition; the canvas is cleared and parked after completion. DOM media remains canonical and takes over after completion, on reduced motion, texture failure, shader failure, context loss, or teardown.
+
+**Reasoning:** The effect needs one textured quad and a small fragment shader. Raw WebGL avoids a framework payload; localizing the shared canvas to the active card preserves normal document scrolling without multiplying contexts. Serializing viewport intros preserves the single-context budget.
+
+**Tradeoff / reconsideration:** A shared localized canvas permits one active GPU transition at a time; hover takes priority and queued viewport reveals resume afterward. Reconsider per-card contexts only if simultaneous transitions become an explicit requirement, or Three.js if later art direction requires scene graphs, cameras, model assets, post-processing chains, or shared 3D materials.
+
+## D-010 — Keep placeholder categories non-purchasable
+
+**Context:** Only three temporary products exist, but the Round 2 homepage needs three intentional category stories.
+
+**Options considered:** duplicate products across categories; invent purchasable products; leave sections empty; render branded editorial placeholders.
+
+**Decision:** The first category reads the real catalogue. The next two use explicit editorial mode with theme-owned placeholder art and “pending/in development” copy, no product links, prices, quick-add controls, or fabricated inventory.
+
+**Reasoning:** This preserves a complete composition without creating false commerce state. Merchant image blocks and product/collection settings provide the clean replacement path for the next content handoff.
+
+**Tradeoff / reconsideration:** Placeholder art limits final crop and shader tuning. Replace it as soon as approved category media and product data are available.
+
+## D-011 — Distribute Shopify depth instead of flattening the catalogue
+
+**Context:** The KOVA handoff contains 15 image-backed product concepts across apparel, carry, accessories, and utility objects. The portfolio needs rich PDP possibilities, but giving every product the same maximal field set would create redundant merchant work and undifferentiated pages.
+
+**Options considered:** one universal long-form product schema; a separate metafield for every possible measurement; native Shopify fields plus a small shared custom-data layer with selective product population.
+
+**Decision:** Keep Shopify's native product, variant, inventory, media, category, pricing, and SEO fields authoritative. Add ten product metafields for descriptor, positioning, features, compact specifications, reusable material/fit/edition profiles, package information, compatible products, and an optional reference file. Model shared material, fit, and edition records as metaobjects. Populate only the fields that improve a product's actual story. Use Search & Discovery for recommendation merchandising and Shopify Bundles only when its native component-bundle capability is available.
+
+**Reasoning:** This gives apparel, carry systems, and hard goods different PDP data without creating dozens of product-specific fields or encoding structured commerce facts in theme settings.
+
+**Tradeoff / reconsideration:** A compact multi-line specification field is less queryable than one metafield per measurement. Promote a measurement to its own typed metafield only when collection filtering, automation, or repeated cross-product use proves the need.
+
+## D-012 — Write structural catalog data through the Admin GraphQL API
+
+**Context:** The catalogue needed 24 metaobject entries, ~70 metafield values, colour swatch links, file uploads, seven collections and a native bundle. The Shopify admin UI was usable but slow and fragile under automation: stale DOM nodes between observations, controls inside shadow roots, and relay RPC timeouts that lost one metafield definition outright. The admin's own GraphQL endpoint accepts only hashed persisted operations, so session cookies alone cannot drive arbitrary mutations.
+
+**Options considered:** continue clicking through the admin for every field; create an app in the Dev Dashboard and install it; enable legacy custom app development on the store and use an Admin API token.
+
+**Decision:** With explicit user approval, legacy custom app development was enabled and a `KOVA Catalog Ops` custom app was installed with product, inventory, file, metaobject, publication and location scopes. Structural data is written through Admin GraphQL `2025-07`. The token lives only in the session that used it and is never committed; no credential appears in the repository.
+
+**Reasoning:** Deterministic, inspectable mutations with real user errors beat hundreds of UI interactions, and the same queries double as the verification evidence for this phase.
+
+**Tradeoff / reconsideration:** Shopify marks the custom-app store flag as irreversible, and the installed app remains an access surface. As of 2026-09-23 the app is intentionally retained because more products will be added in later phases. Uninstall it when catalogue work is finished; if ongoing programmatic access becomes permanent, move to a Dev Dashboard app with a narrower scope set.
+
+## D-013 — Ship one produced colourway and keep the second honest
+
+**Context:** The brief asks for colour variants and swatches, but the supplied imagery shows a single dark colourway for every object. Assigning that photography to a second colour would misrepresent the product, which the project rules prohibit.
+
+**Options considered:** ship black only and drop colour variants; invent recoloured imagery; ship a second colourway with no media and no stock.
+
+**Decision:** Seven products carry a `Color` option linked to the standard `shopify.color-pattern` metafield, giving real swatches for `Black` (`#0B0B0C`) and `Ash Gray` (`#6E7176`). Black variants hold inventory and variant-specific media. `Ash Gray` variants hold zero inventory and no media, so the storefront shows a genuine sold-out state.
+
+**Reasoning:** This demonstrates linked swatches, variant media and sold-out handling on real data without fabricating product photography.
+
+**Tradeoff / reconsideration:** Half of the colour variants are unbuyable, so conversion-shaped demos are limited. Load stock and variant media for `Ash Gray` as soon as approved imagery exists.
+
+## D-014 — Use native Shopify primitives for sets, cross-sell and documents
+
+**Context:** Sets, cross-sell and downloadable documents can each be faked with custom metafields, which would look complete while bypassing the platform behaviour the portfolio is meant to demonstrate.
+
+**Options considered:** model everything as custom metafields; use a third-party bundles or upsell app; use the native primitives where the store supports them.
+
+**Decision:** `Night Transit Set 03` is a real component bundle created with `productBundleCreate`, so inventory derives from its components and it checks out as one line. Cross-sell uses Shopify's Search & Discovery metafield so `/recommendations/products.json?intent=complementary` serves it. Reference guides are real PDFs in Shopify Files attached through `custom.reference_guide`. `Gridlink Pouch Array` stays a single fixed-price product because it is one manufactured set, not three purchasable objects.
+
+**Reasoning:** Native primitives keep merchant editing, inventory maths and the recommendation endpoints intact, and they prove the capability rather than imitating it.
+
+**Tradeoff / reconsideration:** `intent=related` stays empty until the store has order history, and bundle pricing must be maintained against component prices. Revisit if a component price changes or if the set needs customer-selectable options.

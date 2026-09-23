@@ -83,45 +83,56 @@ Required invariants:
 
 ## Component and section contracts
 
-These contracts describe inspected Phase 1 source. Shopify Theme Check and relevant static desktop/mobile browser paths passed, including synthetic section lifecycle events; real catalogue/media and the actual Theme Editor UI remain pending.
+These contracts describe the current Round 2 source. They were exercised through the Shopify CLI development theme with the store's three current products. Actual Theme Editor UI manipulation, successful add-to-cart with an available variant, and production performance remain pending.
 
 ### Editorial product card — Commerce component
 
-- **Surface:** `snippets/product-card.liquid`
-- **Purpose:** reusable product discovery inside the featured rail.
-- **Anatomy:** linked responsive media or placeholder; editorial index; conditional sold-out badge; linked title; formatted price.
-- **Data/accessibility:** Shopify image widths and `sizes`, lazy loading, image alt fallback to product title, escaped labels, and normal product links. Decorative indexing is hidden from assistive technology.
-- **Motion boundary:** `data-reveal-card` is an enhancement hook only; product navigation and content do not depend on GSAP.
+- **Surface:** `snippets/product-card.liquid`.
+- **Anatomy:** linked responsive primary media, optional second product image, editorial index, availability badge, title, price/compare-at price, and either single-variant quick add or an options link.
+- **Fallback:** normal product links and DOM images remain canonical. Cards with a second image crossfade to it on hover when WebGL is unavailable; reduced motion keeps this state change effectively immediate.
 
-### Header and mobile navigation — Section + primitive behavior
+### Header, navigation, and cart drawer — Sections + primitive behavior
 
-- **Surface:** `sections/header.liquid` with the `afterdark-header` custom element in `assets/theme.js`.
-- **Anatomy:** brand/home link, desktop primary navigation, optional search, account, cart count, mobile menu trigger, native modal dialog, close action, and mobile navigation.
-- **Merchant controls:** brand mark, menu, search visibility, and customer-account menu.
-- **Lifecycle/accessibility:** an `AbortController` owns listeners; disconnect aborts them and clears scroll lock. The dialog updates `aria-expanded`, moves focus to Close on open, restores prior focus on close, exposes current-page state, and closes from its backdrop.
+- **Surfaces:** `sections/header.liquid`, `sections/cart-drawer.liquid`, and `assets/theme.js`.
+- **Header:** centered merchant logo/wordmark, menu on the left, search/account/bag on the right, transparent homepage state, and blurred scrolled/non-home state.
+- **Navigation:** native modal dialog; opening moves focus to Close, Escape/backdrop/Close dismiss it, `aria-expanded` is synchronized, and focus returns to the trigger.
+- **Cart:** the normal `/cart` link remains the fallback. JavaScript progressively opens a modal drawer, refreshes it through the Section Rendering API, updates quantities through `/cart/change.js`, and updates the header count.
 
-### Cinematic hero — Authored section
+### Kinetic hero — Authored section + motion behavior
 
-- **Surface:** `sections/cinematic-hero.liquid`.
-- **Anatomy:** backdrop, optional video or responsive desktop/mobile image, contrast overlay, eyebrow, line-wrapped heading, body, CTA, and decorative signal.
-- **Merchant controls:** media, copy, CTA, content position, alignment, viewport height, colors, overlay strength, entrance toggle, and parallax intensity.
-- **Responsive/art direction:** full-bleed media, controlled overlay, oversized fluid title, mobile image source, and stacked mobile footer. Heading reveal and desktop parallax remain decorative.
+- **Surfaces:** `sections/kinetic-hero.liquid` and `assets/kinetic-hero.js`.
+- **Media fallback:** merchant image blocks, then current product media, then theme-owned placeholder art; five layers are always present.
+- **Interaction:** desktop pointer movement uses reusable `gsap.quickTo()` setters to carry the entire layered stack across the hero, with faster response at the front and restrained lag behind it; distance-based promotions stay at the pointer instead of jumping against its direction. Pointer leave returns the stack to its right-side resting composition. Coarse-pointer input advances on a non-interactive tap. Reduced motion retains a static readable stack.
+- **Merchant controls:** up to seven desktop/mobile image pairs, copy, CTA, height, pointer threshold, and section colors.
 
-### Featured collection rail — Section + commerce composition
+### Editorial product grid — Section
 
-- **Surface:** `sections/featured-collection.liquid` with the `product-rail` custom element in `assets/theme.js`.
-- **Anatomy:** eyebrow/heading, previous/next controls, focusable named track, product cards or Theme Editor placeholders, and optional collection CTA.
-- **Merchant controls:** collection, copy, item limit, and section colors.
-- **Interaction:** CSS overflow and scroll snap are canonical. Buttons scroll by one measured card and update disabled state on scroll/resize; mobile hides buttons while native horizontal scrolling remains available.
+- **Surface:** `sections/editorial-product-grid.liquid`.
+- **Modes:** real product data from a manual product list, selected collection, or `collections.all`; or explicitly non-purchasable editorial placeholders.
+- **Composition:** aligned or staggered three-card desktop layouts become dense two-column mobile layouts. The homepage uses one real-product release and two clearly pending editorial categories.
+
+### WebGL product reveal — Motion behavior
+
+- **Surface:** `assets/webgl-product-reveal.js` with one page-level canvas in `layout/theme.liquid`; the canvas is temporarily mounted inside the active media element.
+- **Budget:** one context, one program/buffer, at most 12 media targets, two textures per target, 96 MiB total estimated texture storage, and DPR capped at 1.5 desktop and 1 mobile.
+- **Runtime:** Product cards remain in normal document flow with no card-level fade, translation, fixed layer, or sticky layer. An `IntersectionObserver` queues a one-time block-glitch reveal when each media target enters the viewport; the canvas is an absolute child of the active media box, so it scrolls exactly with the card. Every fine-pointer entry and leave runs a fresh bidirectional block-glitch transition between the first and second product images. Rendering is request-driven only during a transition; the canvas is then cleared and returned to its page-level parking position while the corresponding canonical DOM image takes over.
+- **Failure handling:** shader/program/texture/CORS failure leaves DOM media visible. Context loss restores the primary DOM media immediately. Section unload deletes textures, tweens, observer registrations, queued intros, and pointer listeners; context resources are disposed when no targets remain.
+
+### Commerce templates — Sections
+
+- **Collection:** `sections/collection.liquid` provides a sticky desktop filter/sort column, native GET filtering, two product columns, compact mobile controls, pagination, and empty state.
+- **Product:** `sections/product.liquid` provides identity, bounded two-column media gallery, sticky purchase panel, option buttons, quantity controls, native payment button, accordions, and variant URL/state updates.
+- **Recommendations:** `sections/product-recommendations.liquid` progressively loads related products through Shopify's recommendation endpoint.
+- **Cart/footer:** `sections/cart.liquid` provides editable lines, order note, totals, and checkout; `sections/footer.liquid` provides navigation, newsletter, optional localization, payment methods, and the KOVA wordmark.
 
 ### Lifecycle contract
 
-1. A section opts into decorative motion with `data-motion-scope`; hooks such as `data-reveal`, `data-reveal-card`, and `data-parallax` stay declarative.
-2. `AfterdarkMotion.init(root)` destroys any prior record for that scope before creating a `gsap.matchMedia()` context; the scope map prevents orphaned duplicate contexts.
-3. Desktop/mobile and `prefers-reduced-motion` conditions share one scoped setup. Reduced motion clears animation properties and returns before reveals or parallax are created.
-4. `AfterdarkMotion.destroy(root)` reverts matching media contexts. `shopify:section:load` initializes, `shopify:section:unload` destroys, and `shopify:section:select` refreshes ScrollTrigger.
-5. UI custom elements independently abort event listeners and disconnect observers in `disconnectedCallback`; commerce/navigation behavior does not depend on motion initialization.
-6. Fonts and window load request a ScrollTrigger refresh. Static normal/reduced-motion paths and synthetic section unload/load/repeated-load events passed; the actual Shopify Theme Editor UI remains to be exercised.
+1. A section opts into decorative motion with `data-motion-scope`; hooks remain declarative and commerce-independent.
+2. `AfterdarkMotion.init(root)` destroys any prior scope before creating a `gsap.matchMedia()` context.
+3. `AfterdarkWebGL.init(root)` reuses the page context and ignores existing targets; `destroy(root)` deletes only resources owned by that root.
+4. `prefers-reduced-motion` creates no reveal ScrollTriggers or WebGL textures and leaves the DOM hierarchy visible.
+5. `shopify:section:load` initializes both layers; unload destroys both; select and load/font events refresh layout-dependent state.
+6. Repeated section load is idempotent: the exercised homepage remained at three motion scopes, three WebGL targets, and nine ScrollTriggers after reloading the same section twice.
 
 ## Controlled art direction
 
@@ -139,29 +150,30 @@ Nightkidz is a quality reference, not a template. The transferable principles ar
 
 ## Inventory
 
-Statuses below use local CLI/static-fixture evidence and do not imply a live-store test.
+Statuses below use Shopify CLI Theme Check and the live local Shopify CLI development preview; they do not imply production performance or actual Theme Editor UI verification.
 
 | System item | Classification | Code surface | Status |
 | --- | --- | --- | --- |
 | Skeleton theme shell, Liquid routing, JSON-template structure | Foundation | `layout/`, `templates/` | **Locally verified:** Theme Check reported no offenses |
-| Responsive image and metadata helpers | Primitive | `snippets/image.liquid`, `snippets/meta-tags.liquid` | **Locally verified:** Theme Check reported no offenses; real media pending |
+| Responsive image and metadata helpers | Primitive | `snippets/image.liquid`, `snippets/meta-tags.liquid` | **Implemented:** exercised with the store's current product media |
 | DTCG canonical token hierarchy | Token | `design-system/tokens/*.tokens.json` | **Implemented; manual JSON/CSS synchronization remains** |
-| Token custom properties | Token | `assets/tokens.css` | **Locally verified in static fixture** |
-| Global visual/accessibility foundation | Foundation | `assets/theme.css` | **Locally verified in desktop/mobile and reduced-motion fixtures** |
-| Runtime settings bridge and display/body fonts | Foundation | `snippets/css-variables.liquid`, `config/settings_schema.json` | **Locally verified:** Theme Check reported no offenses; live settings pending |
-| Theme shell asset assembly and skip-link/main landmark | Foundation | `layout/theme.liquid` | **Locally verified:** Theme Check reported no offenses |
-| Navigation and product-rail lifecycle | Primitive behavior | `assets/theme.js` | **Locally verified:** syntax, dialog, focus, body lock, rail controls, and synthetic section-event paths passed |
-| Vendored GSAP 3.13 and ScrollTrigger | Motion dependency | `assets/gsap.min.js`, `assets/ScrollTrigger.min.js` | **Locally verified:** both loaded in the static fixture |
-| Scoped motion lifecycle and reduced-motion branch | Motion behavior | `assets/motion-core.js` | **Locally verified:** normal/reduced paths and idempotent synthetic unload/load passed; actual Theme Editor UI pending |
-| Editorial product card | Commerce component | `snippets/product-card.liquid` | **Locally verified with fixture cards; real Shopify products/media pending** |
-| Global header and modal mobile navigation | Section | `sections/header.liquid` | **Locally verified in mobile fixture; live Shopify menu/account data pending** |
-| Cinematic hero | Section | `sections/cinematic-hero.liquid` | **Locally verified at 1440×900 and 390×844 fixture viewports; real media pending** |
-| Native horizontal featured collection rail | Section | `sections/featured-collection.liquid` | **Locally verified:** overflow, sizing, button advance, and control state passed in fixture |
-| Hero + featured collection homepage composition | Template | `templates/index.json` | **Locally verified in static fixture; live Shopify rendering pending** |
-| Broader product, collection, cart, search, editorial system | Components / sections / templates | To be decided within Shopify conventions | **Deferred beyond the named Phase 1 surfaces** |
+| Token custom properties | Token | `assets/tokens.css` | **Implemented** |
+| Global visual/accessibility foundation | Foundation | `assets/theme.css` | **Locally verified:** desktop, 390×844 mobile, and reduced-motion paths |
+| Header and modal navigation | Section | `sections/header.liquid`, `assets/theme.js` | **Locally verified:** scroll state, focus entry/return, Escape cleanup, mobile/desktop layouts |
+| Progressive cart drawer | Section / commerce component | `sections/cart-drawer.liquid`, `assets/theme.js` | **Locally verified:** empty state, Section Rendering refresh, open/close; available-item mutation pending |
+| Kinetic image-stack hero | Section / motion behavior | `sections/kinetic-hero.liquid`, `assets/kinetic-hero.js` | **Locally verified:** deterministic first and repeated pointer entry, full-width pointer following, directional layer promotion, right-side rest, touch advance, fallback layers, reduced-motion static state |
+| Editorial category grid | Section | `sections/editorial-product-grid.liquid` | **Locally verified:** three homepage instances, real-product and placeholder modes |
+| Single-context WebGL reveal | Motion behavior | `assets/webgl-product-reveal.js` | **Locally verified:** static document-flow cards, localized absolute canvas, queued viewport glitch reveal, three repeatable bidirectional hover cycles, request-driven rendering, DOM-image handoff, reduced-motion and context-loss fallbacks |
+| Editorial product card | Commerce component | `snippets/product-card.liquid` | **Locally verified:** responsive primary/alternate media, current catalogue prices/availability, WebGL hover enhancement, and CSS fallback |
+| Collection browsing | Section | `sections/collection.liquid` | **Locally verified:** current products, filter/sort controls, desktop/mobile layouts |
+| Product purchase surface | Section | `sections/product.liquid`, `assets/theme.js` | **Locally verified:** real media/options, linked colour swatches, variant and quantity state, genuine sold-out state on the unproduced colourway, and a successful add-to-cart on single-variant, multi-variant, and bundle products after the single-variant matcher fix |
+| Product recommendations | Section | `sections/product-recommendations.liquid` | **Implemented:** curated complementary sets resolve through the recommendation endpoint; `intent=related` stays empty until the store has order history |
+| Catalog custom-data model | Foundation (Shopify custom data) | Shopify metafield/metaobject definitions; recorded in `docs/case-study/README.md` | **Implemented:** 10 product metafield definitions, 3 reusable metaobject definitions, 24 entries, all `PUBLIC_READ` for storefront consumption |
+| Drop 001 catalogue and collections | Templates / merchandising | Shopify products, collections, files | **Locally verified:** 16 published products, 62 variants, 7 published smart collections rendering 16/4/3/5/3/2/3 cards with no horizontal overflow |
+| Cart page and global footer | Sections | `sections/cart.liquid`, `sections/footer.liquid` | **Locally verified:** empty cart, newsletter/localization rendering conditions, desktop/mobile layout |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |
 
-Shopify CLI Theme Check inspected 47 files and reported 0 offenses. `node --check` passed for `assets/theme.js` and `assets/motion-core.js`. The Skeleton `text` and `group` theme blocks remain baseline infrastructure and are not yet approved as final AFTERDARK SUPPLY blocks. Basic product, collection, cart, search, and footer presentation remains outside this Phase 1 implementation claim.
+Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks remain baseline infrastructure and are not yet approved as final KOVA blocks.
 
 ## Figma synchronization plan — Unavailable now
 
