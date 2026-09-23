@@ -31,6 +31,8 @@
         "heading": "CURRENT\nTRANSMISSION",
         "intro": "<p>Three pieces from the first KOVA field test. Built as a compact uniform for heat, movement and signal.</p>",
         "content_mode": "products",
+        "collection": "drop-001",
+        "products": ["night-shift-cargo-pant", "after-dark-utility-backpack", "dead-channel-utility-hoodie"],
         "product_limit": 3,
         "layout": "staggered",
         "tone": "inverse",
@@ -41,62 +43,34 @@
     },
     "night_uniform": {
       "type": "editorial-product-grid",
-      "blocks": {
-        "uniform_01": {
-          "type": "story",
-          "settings": { "kicker": "Uniform / 01", "title": "Layer system", "note": "Outerwear study entering production." }
-        },
-        "uniform_02": {
-          "type": "story",
-          "settings": { "kicker": "Uniform / 02", "title": "Low-light knit", "note": "Material and fit tests underway." }
-        },
-        "uniform_03": {
-          "type": "story",
-          "settings": { "kicker": "Uniform / 03", "title": "Carry module", "note": "Utility object. Release date pending." }
-        }
-      },
-      "block_order": ["uniform_01", "uniform_02", "uniform_03"],
       "settings": {
-        "eyebrow": "Next system / Preview",
+        "eyebrow": "Outerwear / Available now",
         "heading": "NIGHT\nUNIFORM",
-        "intro": "<p>A modular layer study. Campaign imagery and final product records arrive with the next catalogue handoff.</p>",
-        "content_mode": "editorial",
+        "intro": "<p>A modular layer system: storm shell, load-bearing vest and packable cover, cut for weather and low-light movement.</p>",
+        "content_mode": "products",
+        "collection": "outerwear",
         "product_limit": 3,
         "layout": "aligned",
         "tone": "dark",
         "accent": "#ff4f2e",
-        "link_label": "",
-        "link_url": ""
+        "link_label": "Shop outerwear",
+        "link_url": "shopify://collections/outerwear"
       }
     },
     "field_objects": {
       "type": "editorial-product-grid",
-      "blocks": {
-        "object_01": {
-          "type": "story",
-          "settings": { "kicker": "Object / 01", "title": "Signal case", "note": "Protective shell study." }
-        },
-        "object_02": {
-          "type": "story",
-          "settings": { "kicker": "Object / 02", "title": "Night marker", "note": "Reflective field accessory." }
-        },
-        "object_03": {
-          "type": "story",
-          "settings": { "kicker": "Object / 03", "title": "Transit vessel", "note": "Daily carry prototype." }
-        }
-      },
-      "block_order": ["object_01", "object_02", "object_03"],
       "settings": {
-        "eyebrow": "Field objects / In development",
+        "eyebrow": "Field objects / Available now",
         "heading": "HARD\nGOODS",
-        "intro": "<p>Small tools and carry systems sharing the same night-use language. Non-purchasable until product data is ready.</p>",
-        "content_mode": "editorial",
+        "intro": "<p>Small tools and carry objects sharing the same night-use language.</p>",
+        "content_mode": "products",
+        "collection": "field-objects",
         "product_limit": 3,
         "layout": "staggered",
         "tone": "inverse",
         "accent": "#dfff00",
-        "link_label": "",
-        "link_url": ""
+        "link_label": "Shop field objects",
+        "link_url": "shopify://collections/field-objects"
       }
     }
   },
