@@ -1,0 +1,132 @@
+{% liquid
+  assign kova = product.metafields.custom
+  assign statement = kova.positioning.value
+  if statement == blank
+    assign statement = product.description | strip_html | truncatewords: 24
+  endif
+
+  # The trimmed catalogue description often repeats the positioning sentence; show it only when it adds copy.
+  assign description_text = product.description | strip_html | strip
+  assign statement_text = statement | strip
+  assign show_description = false
+  if product.description != blank and description_text != statement_text
+    assign show_description = true
+  endif
+
+  # Prefer a second product image; with a single image, the figure becomes a cropped detail of it.
+  assign figure = blank
+  assign figure_is_detail = false
+  for media in product.media
+    if media.media_type == 'image' and forloop.index > 1
+      assign figure = media
+      break
+    endif
+  endfor
+  if figure == blank and product.featured_media
+    assign figure = product.featured_media
+    assign figure_is_detail = true
+  endif
+  assign figure_number = product.media.size | at_most: 2 | at_least: 1
+%}
+
+<section
+  id="field-manual"
+  class="field-manual full-width field-manual--{{ section.settings.tone }}"
+  data-motion-scope
+  aria-labelledby="FieldManualHeading-{{ section.id }}"
+>
+  <div class="field-manual__inner section-shell">
+    <header class="field-manual__header" data-reveal="section">
+      <p class="eyebrow">{{ section.settings.eyebrow | escape }} / {{ product.type | default: 'Field object' | escape }}</p>
+      <h2 id="FieldManualHeading-{{ section.id }}" class="field-manual__statement">
+        <span data-reveal-line-wrap><span data-reveal-line>{{ statement | escape }}</span></span>
+      </h2>
+    </header>
+
+    <div class="field-manual__body">
+      {% if figure != blank %}
+        <figure class="field-manual__figure{% if figure_is_detail %} field-manual__figure--detail{% endif %}">
+          <div class="field-manual__figure-media">
+            {{ figure
+              | image_url: width: 1600
+              | image_tag:
+                widths: '480, 720, 960, 1200, 1600',
+                sizes: '(max-width: 767px) 100vw, 42vw',
+                loading: 'lazy',
+                alt: figure.alt | default: product.title
+            }}
+          </div>
+          <figcaption class="field-manual__caption">
+            <span>Fig. {{ figure_number | prepend: '0' }}</span>
+            <span>{% if figure_is_detail %}Detail{% else %}{{ figure.alt | default: product.title | escape }}{% endif %}</span>
+          </figcaption>
+        </figure>
+      {% endif %}
+
+      <div class="field-manual__copy">
+        {% if show_description %}
+          <div class="field-manual__description">{{ product.description }}</div>
+        {% endif %}
+
+        {% if kova.feature_list.value != blank %}
+          <h3 class="field-manual__subheading">{{ section.settings.features_heading | escape }}</h3>
+          <ol class="field-manual__features">
+            {% for feature in kova.feature_list.value %}
+              <li>
+                <span class="field-manual__feature-index" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+                <span>{{ feature | escape }}</span>
+              </li>
+            {% endfor %}
+          </ol>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .field-manual { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .field-manual--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .field-manual__inner { padding-block: var(--ad-section-space); }
+  .field-manual__header { margin-block-end: var(--ad-space-800); }
+  .field-manual__statement { max-width: 22ch; margin: var(--ad-space-300) 0 0; font-family: var(--font-display-family); font-size: clamp(2rem, 4.8vw, 5.25rem); text-wrap: balance; font-weight: var(--font-display-weight); letter-spacing: -0.055em; line-height: 0.92; text-transform: uppercase; }
+  .field-manual__statement [data-reveal-line-wrap] { display: block; }
+  .field-manual__body { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--ad-content-gap); align-items: start; }
+  .field-manual__figure { position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-400)); margin: 0; }
+  .field-manual__figure-media { aspect-ratio: 4 / 5; overflow: hidden; background: var(--ad-color-background-elevated); }
+  .field-manual__figure-media img { width: 100%; height: 100%; object-fit: cover; }
+  /* Art-direction exception: a single-image product gets an enlarged, off-centre crop so the figure reads as a detail, not a repeat of the gallery. */
+  .field-manual__figure--detail .field-manual__figure-media img { object-position: 38% 42%; transform: scale(1.7); transform-origin: 38% 42%; }
+  .field-manual__caption { display: flex; margin-block-start: var(--ad-space-200); justify-content: space-between; gap: var(--ad-space-300); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .field-manual__caption span:last-child { text-align: end; opacity: 0.64; }
+  .field-manual__description { max-width: 38rem; margin-block-end: var(--ad-space-600); font-size: var(--ad-text-lead); line-height: 1.5; }
+  .field-manual__description > * { margin: 0; }
+  .field-manual__description > * + * { margin-block-start: var(--ad-space-300); }
+  .field-manual__description h3 { margin-block-start: var(--ad-space-500); font-size: var(--ad-text-label); letter-spacing: 0.14em; text-transform: uppercase; }
+  .field-manual__subheading { margin: 0 0 var(--ad-space-300); font-size: var(--ad-text-label); letter-spacing: 0.14em; text-transform: uppercase; }
+  .field-manual__features { margin: 0; padding: 0; border-block-start: var(--ad-border-hairline) solid currentcolor; list-style: none; }
+  .field-manual__features li { display: grid; grid-template-columns: 4.5rem 1fr; padding-block: var(--ad-space-400); align-items: baseline; border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 28%, transparent); font-family: var(--font-display-family); font-size: clamp(1.35rem, 2.3vw, 2.25rem); font-weight: var(--font-display-weight); letter-spacing: -0.035em; line-height: 1.02; text-transform: uppercase; }
+  .field-manual__feature-index { font-family: var(--font-primary--family); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; opacity: 0.56; }
+
+  @media (max-width: 47.99rem) {
+    .field-manual__header { margin-block-end: var(--ad-space-600); }
+    .field-manual__body { grid-template-columns: 1fr; }
+    .field-manual__figure { position: static; }
+    .field-manual__features li { grid-template-columns: 2.75rem 1fr; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product field manual",
+  "tag": "div",
+  "class": "section-product-field-manual",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Field manual" },
+    { "type": "text", "id": "features_heading", "label": "Features heading", "default": "Build notes" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "inverse", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
+  ],
+  "presets": [{ "name": "Product field manual" }]
+}
+{% endschema %}

@@ -1,0 +1,86 @@
+{% liquid
+  assign edition = product.metafields.custom.edition_profile.value
+  assign quantity = edition.edition_quantity.value
+%}
+
+{% if edition != blank %}
+  <section
+    class="product-edition full-width"
+    data-motion-scope
+    style="--edition-accent: {{ section.settings.accent }};"
+    aria-labelledby="EditionHeading-{{ section.id }}"
+  >
+    <div class="product-edition__inner section-shell">
+      <div class="product-edition__mark" data-reveal="section">
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        <h2 id="EditionHeading-{{ section.id }}" class="product-edition__figure">
+          {% if quantity != blank %}
+            <span data-reveal-line-wrap><span data-reveal-line>{{ quantity }}</span></span>
+            <span class="product-edition__unit">Units / {{ edition.name.value | escape }}</span>
+          {% else %}
+            <span class="product-edition__code" data-reveal-line-wrap><span data-reveal-line>{{ edition.drop_code.value | default: edition.name.value | escape }}</span></span>
+            <span class="product-edition__unit">{{ edition.name.value | escape }}</span>
+          {% endif %}
+        </h2>
+      </div>
+
+      {% comment %} Decorative unit band: one gradient, never one node per unit, so large editions stay cheap. {% endcomment %}
+      <div class="product-edition__band" aria-hidden="true"></div>
+
+      <dl class="product-edition__record">
+        {% if edition.drop_code.value != blank %}
+          <div><dt>Drop code</dt><dd>{{ edition.drop_code.value | escape }}</dd></div>
+        {% endif %}
+        <div><dt>Edition</dt><dd>{{ edition.name.value | escape }}</dd></div>
+        {% if quantity != blank %}
+          <div><dt>Run</dt><dd>{{ quantity }} units</dd></div>
+        {% endif %}
+        <div>
+          <dt>Status</dt>
+          <dd>{% if product.available %}In release{% else %}Sold out{% endif %}</dd>
+        </div>
+      </dl>
+
+      {% if edition.release_note.value != blank %}
+        <p class="product-edition__note">{{ edition.release_note.value | escape }}</p>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .product-edition { position: relative; overflow: hidden; background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .product-edition__inner { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.6fr); grid-template-areas: 'mark record' 'band band' 'note note'; column-gap: var(--ad-content-gap); padding-block: var(--ad-section-space); }
+  .product-edition__mark { grid-area: mark; }
+  .product-edition__figure { display: grid; margin: var(--ad-space-300) 0 0; font-family: var(--font-display-family); font-weight: var(--font-display-weight); line-height: 0.8; text-transform: uppercase; }
+  .product-edition__figure [data-reveal-line-wrap] { display: block; color: var(--edition-accent); font-size: clamp(6rem, 22vw, 20rem); letter-spacing: -0.075em; }
+  .product-edition__figure .product-edition__code { font-size: clamp(3rem, 11vw, 10.5rem); letter-spacing: -0.06em; }
+  .product-edition__unit { margin-block-start: var(--ad-space-300); font-size: clamp(1.25rem, 2.6vw, 2.5rem); letter-spacing: -0.03em; line-height: 1; }
+  .product-edition__record { grid-area: record; align-self: end; margin: 0; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .product-edition__record > div { display: flex; padding-block: var(--ad-space-300); justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-edition__record dt { color: var(--ad-color-text-muted); }
+  .product-edition__record dd { margin: 0; font-weight: 700; text-align: end; }
+  /* Art-direction exception: a full-bleed tick band suggests a numbered run without encoding real per-unit data. */
+  .product-edition__band { grid-area: band; height: clamp(3rem, 7vw, 5.5rem); margin-block: var(--ad-space-700) var(--ad-space-500); margin-inline: calc(var(--ad-page-padding) * -1); background: repeating-linear-gradient(90deg, var(--edition-accent) 0 1px, transparent 1px 7px); opacity: 0.8; mask-image: linear-gradient(90deg, transparent, currentcolor 12%, currentcolor 88%, transparent); }
+  .product-edition__note { grid-area: note; max-width: 40rem; margin: 0; color: var(--ad-color-text-muted); font-size: var(--ad-text-lead); line-height: 1.5; }
+
+  @media (max-width: 47.99rem) {
+    .product-edition__inner { grid-template-columns: 1fr; grid-template-areas: 'mark' 'band' 'record' 'note'; }
+    .product-edition__band { margin-block: var(--ad-space-500); }
+    .product-edition__note { margin-block-start: var(--ad-space-500); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product edition",
+  "tag": "div",
+  "class": "section-product-edition",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Edition record" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "presets": [{ "name": "Product edition" }]
+}
+{% endschema %}

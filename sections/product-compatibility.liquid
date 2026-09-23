@@ -1,0 +1,83 @@
+{% assign compatible = product.metafields.custom.compatible_products.value %}
+
+{% if compatible != blank %}
+  <section
+    class="product-compatibility full-width product-compatibility--{{ section.settings.tone }}"
+    data-motion-scope
+    aria-labelledby="CompatibilityHeading-{{ section.id }}"
+  >
+    <div class="product-compatibility__inner section-shell">
+      <header class="product-compatibility__header" data-reveal="section">
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        <h2 id="CompatibilityHeading-{{ section.id }}" class="section-heading">
+          <span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span>
+        </h2>
+      </header>
+
+      {% assign item_count = compatible.size | at_most: section.settings.product_limit %}
+      <div class="product-compatibility__grid" style="--compat-columns: {{ item_count | plus: 1 }};">
+        {% comment %} Art-direction exception: the current object anchors the row so compatibility reads as one system. {% endcomment %}
+        <figure class="product-compatibility__anchor">
+          <div class="product-compatibility__anchor-media">
+            {% if product.featured_media %}
+              {{ product.featured_media
+                | image_url: width: 900
+                | image_tag:
+                  widths: '360, 540, 720, 900',
+                  sizes: '(max-width: 767px) 50vw, 25vw',
+                  loading: 'lazy',
+                  alt: ''
+              }}
+            {% endif %}
+            <span class="product-compatibility__anchor-label">This object</span>
+          </div>
+          <figcaption>{{ product.title | escape }}</figcaption>
+        </figure>
+        {% for item in compatible limit: section.settings.product_limit %}
+          <div class="product-compatibility__item">
+            <span class="product-compatibility__join" aria-hidden="true">+</span>
+            {% render 'product-card', product: item, index: forloop.index, sizes: '(max-width: 767px) 50vw, 25vw', quick_add: true %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .product-compatibility { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .product-compatibility--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .product-compatibility__inner { padding-block: var(--ad-section-space); }
+  .product-compatibility__header { margin-block-end: var(--ad-space-700); }
+  .product-compatibility__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .product-compatibility__grid { display: grid; grid-template-columns: repeat(var(--compat-columns, 4), minmax(0, 1fr)); gap: clamp(1.5rem, 3vw, 3rem); }
+  .product-compatibility__anchor { margin: 0; }
+  .product-compatibility__anchor-media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; outline: 2px solid var(--color-accent); outline-offset: -2px; background: var(--ad-color-background-elevated); }
+  .product-compatibility__anchor-media img { width: 100%; height: 100%; object-fit: cover; }
+  .product-compatibility__anchor-label { position: absolute; inset: var(--ad-space-200) auto auto var(--ad-space-200); padding: var(--ad-space-100) var(--ad-space-200); background: var(--color-accent); color: var(--ad-color-text-inverse); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-compatibility__anchor figcaption { margin-block-start: var(--ad-space-300); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-compatibility__item { position: relative; min-width: 0; }
+  .product-compatibility__join { position: absolute; z-index: 1; inset-block-start: 40%; inset-inline-start: calc(clamp(1.5rem, 3vw, 3rem) / -2); translate: -50% -50%; font-family: var(--font-display-family); font-size: clamp(1.5rem, 2.4vw, 2.5rem); font-weight: var(--font-display-weight); line-height: 1; }
+
+  @media (max-width: 47.99rem) {
+    .product-compatibility__header { margin-block-end: var(--ad-space-500); }
+    .product-compatibility__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ad-space-500) var(--ad-space-300); }
+    .product-compatibility__join { display: none; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product compatibility",
+  "tag": "div",
+  "class": "section-product-compatibility",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "System compatibility" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Works with" },
+    { "type": "range", "id": "product_limit", "label": "Product limit", "min": 1, "max": 3, "step": 1, "default": 3 },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "inverse", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
+  ],
+  "presets": [{ "name": "Product compatibility" }]
+}
+{% endschema %}

@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 (2026-09-23).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -183,4 +183,16 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** One source per fact avoids drift between the description and the metaobject, and it keeps the PDP free of repetition and orphaned headings.
 
 **Tradeoff / reconsideration:** Channels that show only the description (Shop app, Google Shopping) lose material and care detail. Reconsider if channel conversion depends on that copy; the fix would then be a channel-specific description feed, not re-duplicating the storefront copy. The originals were backed up before the change.
+
+## D-016 — Split the PDP into a buying fold and storytelling sections
+
+**Context:** After Phase 4, almost all product content lived in accordions next to the purchase controls. For a portfolio PDP, that hid the strongest material: edition runs, compatibility, and build notes. The user asked for real sections below the fold, including an FAQ and customer reviews.
+
+**Options considered:** keep everything in accordions; move everything into long-form sections; keep quick-reference accordions in the buying fold and give narrative content its own sections.
+
+**Decision:** Keep Specifications, Fit, Material, and Delivery as accordions beside the buy button. Move positioning, description, and features into a field-manual section; edition data into an edition-record section; and compatibility into a works-with section. Add an FAQ section built from merchant blocks and a reviews section. Reviews render only from Shopify's standard `reviews` metafields and `@app` blocks: no authored, sample, or placeholder reviews ship with the theme, and the section shows an honest empty state until a review app provides data.
+
+**Reasoning:** Quick facts stay next to the decision point, while the storytelling sections can use art-directed type, figures, and data-led layouts. Each content item keeps one home, so nothing repeats across the page.
+
+**Tradeoff / reconsideration:** The page is longer, and a merchant who removes the field-manual section also removes the description from the PDP; the main section's jump link can be turned off for that case. Reconsider the reviews rule only if the store installs a review provider whose data does not use the standard metafields.
 

@@ -20,9 +20,100 @@
       "type": "product-recommendations",
       "settings": {
         "heading": "Related equipment",
-        "product_limit": 4
+        "product_limit": 4,
+        "tone": "dark"
+      }
+    },
+    "field_manual": {
+      "type": "product-field-manual",
+      "settings": {
+        "eyebrow": "Field manual",
+        "features_heading": "Build notes",
+        "tone": "inverse"
+      }
+    },
+    "edition": {
+      "type": "product-edition",
+      "settings": {
+        "eyebrow": "Edition record",
+        "accent": "#dfff00"
+      }
+    },
+    "compatibility": {
+      "type": "product-compatibility",
+      "settings": {
+        "eyebrow": "System compatibility",
+        "heading": "Works with",
+        "product_limit": 3,
+        "tone": "inverse"
+      }
+    },
+    "faq": {
+      "type": "product-faq",
+      "blocks": {
+        "drop_code": {
+          "type": "question",
+          "settings": {
+            "question": "What does the drop code mean?",
+            "answer": "<p>Every KOVA object carries a drop code. <strong>KVA-D001</strong> marks Drop 001, the first field release. Numbered editions add a suffix and a fixed unit count, shown in the edition record above.</p>"
+          }
+        },
+        "colourways": {
+          "type": "question",
+          "settings": {
+            "question": "Why do some colourways show as sold out?",
+            "answer": "<p>Some colourways are listed before they are produced. They stay sold out, with no stock and no photography, until they exist, so nothing is sold against images of a different colour.</p>"
+          }
+        },
+        "works_with": {
+          "type": "question",
+          "settings": {
+            "question": "What does “Works with” mean?",
+            "answer": "<p>It lists the KOVA objects this piece is built to index with, such as carry systems that accept it or accessories that clip to it. Where a compatibility or fit guide exists, it is linked as a PDF beside the purchase controls.</p>"
+          }
+        },
+        "sizing": {
+          "type": "question",
+          "settings": {
+            "question": "How do I choose a size?",
+            "answer": "<p>Wearables list their fit profile under <em>Fit</em> in the product details, with measurements in the size guide PDF. Objects without sizes list their dimensions under <em>Specifications</em>.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "drop_code",
+        "colourways",
+        "works_with",
+        "sizing"
+      ],
+      "settings": {
+        "eyebrow": "Field questions",
+        "heading": "FAQ",
+        "intro": "",
+        "show_policy_question": true,
+        "policy_question": "How do shipping and returns work?",
+        "policy_fallback": "<p>Dispatch timing and return eligibility are confirmed at checkout.</p>",
+        "tone": "dark"
+      }
+    },
+    "reviews": {
+      "type": "product-reviews",
+      "settings": {
+        "eyebrow": "Customer reviews",
+        "heading": "Field reports",
+        "empty_title": "No field reports yet",
+        "empty_text": "<p>Customer reviews will appear here once this object has been in the field.</p>",
+        "tone": "inverse"
       }
     }
   },
-  "order": ["main", "recommendations"]
+  "order": [
+    "main",
+    "field_manual",
+    "edition",
+    "compatibility",
+    "faq",
+    "reviews",
+    "recommendations"
+  ]
 }

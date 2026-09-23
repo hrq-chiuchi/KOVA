@@ -340,3 +340,17 @@ Findings:
 - After a section re-render, `document` gained one `shopify:section:load`/`unload`/`reorder` listener and one `scroll` listener. Tracing them to source showed they come from Shopify's `storefront-modules` bundle, not the theme; the theme's own handlers stayed at exactly one each. This is platform behaviour in design mode and was left alone.
 - Mouse input could not be delivered into the preview frame, because the editor's selection overlay received it. Hover was therefore exercised with synthetic pointer events, which do not set the CSS `:hover` state that picks the resting image after a card hover. Real-cursor hover was verified outside the editor in Phase 2.
 
+## Phase 5 product storytelling log
+
+**2026-09-23 — Implementation (D-016):** The PDP is split into a buying fold and a storytelling sequence. The first fold keeps identity, media, options, purchase, and quick-reference panels for Specifications, Fit, Material, and Delivery, plus a "Read the field manual" jump link. Positioning, description, features, compatibility, and edition content moved out of the accordions into five template sections, alternating tone in this order: field manual (light), edition record (dark), works with (light), FAQ (dark), reviews (light), then recommendations (now dark). Each section is `enabled_on` the product template, has a preset for the Theme Editor, uses the shared motion-core reveal attributes, and renders nothing when a product lacks its data. FAQ answers were written only from facts the catalogue already records: drop codes, the unproduced colourway, compatibility, and fit/spec locations. The drop-code answer was narrowed to "numbered editions" after a check showed that `Relay Modular Vest` sits in Limited Editions without a suffix. The store has no shipping or refund policy pages, so the shipping question uses the existing checkout-confirmation wording. The shared product card now stacks its action under the title below 30rem, fixing a pre-existing overlap in two-up grids at 390px.
+
+**2026-09-23 — Verification against the development preview:**
+
+- Theme Check: 53 files, no offenses. No `Liquid error` on the Night Shift Cargo Pant, Sector 05 Field Flask, Night Transit Set 03, Blacksite Shell Jacket, and Nullfold Card Wallet PDPs. Each rendered the seven template sections in order.
+- Data coverage checked through the storefront Liquid console: every product has an edition profile and at least one compatible product. Three editions are numbered: Blacksite 180, Night Shift 240, and Dead Channel 300. Thirteen products have a single image and receive the detail-crop figure. The bundle's description differs from its positioning and renders in full.
+- Full-page headless Chromium captures at 1440px and 390px, with reduced motion and with motion enabled, showed no horizontal overflow; with motion enabled, the scroll reveals completed.
+- Keyboard traversal (CDP, 140 Tab stops) at 1440px and 390px: 138 stops, all with a visible focus indicator, in reading order through the first-fold panels, compatibility cards, FAQ questions, and recommendations.
+- Lighthouse 12.8.2 (local dev proxy, mobile emulation): accessibility 100 on the cargo pant and flask PDPs; performance 47 and 49, LCP 6.9 s and 6.4 s, CLS 0.
+
+Not verified: behaviour in the actual Theme Editor for the new sections, a populated reviews state (no review app is installed), and production performance.
+

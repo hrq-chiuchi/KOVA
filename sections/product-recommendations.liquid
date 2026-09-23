@@ -1,5 +1,5 @@
 <product-recommendations
-  class="product-recommendations full-width"
+  class="product-recommendations full-width product-recommendations--{{ section.settings.tone }}"
   data-section-id="{{ section.id }}"
   data-product-id="{{ product.id }}"
   data-url="{{ routes.product_recommendations_url }}"
@@ -23,7 +23,8 @@
 </product-recommendations>
 
 {% stylesheet %}
-  .product-recommendations { display: block; background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .product-recommendations { display: block; background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .product-recommendations--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
   .product-recommendations:empty { display: none; }
   .product-recommendations__inner { padding-block: var(--ad-section-space); }
   .product-recommendations__header { margin-block-end: var(--ad-space-600); }
@@ -37,7 +38,8 @@
   "name": "Product recommendations",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Related equipment" },
-    { "type": "range", "id": "product_limit", "label": "Product limit", "min": 2, "max": 4, "step": 1, "default": 4 }
+    { "type": "range", "id": "product_limit", "label": "Product limit", "min": 2, "max": 4, "step": 1, "default": 4 },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "inverse", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
   ],
   "presets": [{ "name": "Product recommendations" }]
 }

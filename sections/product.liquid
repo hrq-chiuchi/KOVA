@@ -5,7 +5,6 @@
   assign fit = kova.fit_profile.value
   assign edition = kova.edition_profile.value
   assign guide = kova.reference_guide.value
-  assign compatible = kova.compatible_products.value
 %}
 
 <section class="product-page full-width">
@@ -16,14 +15,16 @@
       {% if kova.functional_descriptor.value != blank %}
         <p class="product-page__descriptor">{{ kova.functional_descriptor.value | escape }}</p>
       {% endif %}
-      {% if kova.positioning.value != blank %}
-        <p class="product-page__positioning">{{ kova.positioning.value | escape | newline_to_br }}</p>
-      {% endif %}
       {% if product.vendor != blank %}<p class="product-page__vendor">{{ product.vendor | escape }}</p>{% endif %}
       <p class="product-page__index">
         {% if edition.drop_code.value != blank %}{{ edition.drop_code.value | escape }}{% else %}Object {{ product.id | modulo: 100 | prepend: '0' | slice: -2, 2 }}{% endif %}
         {% if edition.edition_quantity.value != blank %}<span>/ {{ edition.edition_quantity.value }} units</span>{% endif %}
       </p>
+      {% if section.settings.show_manual_link %}
+        <a class="product-page__manual-link" href="#field-manual">
+          <span>Read the field manual</span><span aria-hidden="true">↓</span>
+        </a>
+      {% endif %}
     </aside>
 
     <div class="product-page__gallery" aria-label="{{ product.title | escape }} media">
@@ -122,22 +123,6 @@
       {% endform %}
 
       <div class="product-purchase__details">
-        {% if product.description != blank %}
-          <details open>
-            <summary>Description</summary>
-            <div class="product-purchase__richtext">{{ product.description }}</div>
-          </details>
-        {% endif %}
-        {% if kova.feature_list.value != blank %}
-          <details>
-            <summary>Features</summary>
-            <ul class="product-purchase__richtext product-purchase__features">
-              {% for feature in kova.feature_list.value %}
-                <li>{{ feature | escape }}</li>
-              {% endfor %}
-            </ul>
-          </details>
-        {% endif %}
         {% if kova.technical_specifications.value != blank %}
           <details>
             <summary>Specifications</summary>
@@ -186,25 +171,6 @@
             <div class="product-purchase__richtext">{{ section.settings.care_copy }}</div>
           </details>
         {% endif %}
-        {% if compatible != blank %}
-          <details>
-            <summary>Works with</summary>
-            <ul class="product-purchase__richtext product-purchase__compatible">
-              {% for item in compatible %}
-                <li>
-                  <a href="{{ item.url }}">{{ item.title | escape }}</a>
-                  <span>{{ item.price | money }}</span>
-                </li>
-              {% endfor %}
-            </ul>
-          </details>
-        {% endif %}
-        {% if edition.release_note.value != blank %}
-          <details>
-            <summary>Edition / {{ edition.name.value | escape }}</summary>
-            <div class="product-purchase__richtext"><p>{{ edition.release_note.value | escape }}</p></div>
-          </details>
-        {% endif %}
         <details>
           <summary>Delivery and returns</summary>
           <div class="product-purchase__richtext">
@@ -249,8 +215,8 @@
   .product-page__index { color: var(--ad-color-text-muted); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
   .product-page__index { margin-block-start: var(--ad-space-600); }
   .product-page__index span { margin-inline-start: var(--ad-space-100); }
+  .product-page__manual-link { display: inline-flex; margin-block-start: var(--ad-space-500); padding-block: var(--ad-space-200); gap: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid currentcolor; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
   .product-page__descriptor { margin: 0 0 var(--ad-space-300); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-  .product-page__positioning { max-width: 28rem; margin: 0 0 var(--ad-space-300); color: var(--ad-color-text-muted); }
   .product-page__gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ad-space-200); }
   .product-page__media { aspect-ratio: 4 / 5; overflow: hidden; background: var(--ad-color-background-elevated); }
   .product-page__media--primary { grid-column: 1 / -1; aspect-ratio: 5 / 6; }
@@ -284,16 +250,10 @@
   .product-purchase__richtext { padding-block-end: var(--ad-space-400); color: var(--ad-color-text-muted); }
   .product-purchase__richtext > * + * { margin-block-start: var(--ad-space-300); }
   .product-purchase__swatch { display: inline-block; width: 0.9em; height: 0.9em; margin-inline-end: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); vertical-align: -0.1em; }
-  .product-purchase__features,
-  .product-purchase__compatible { margin: 0; padding-inline-start: 0; list-style: none; }
-  .product-purchase__features li::before { content: '— '; }
-  .product-purchase__richtext.product-purchase__features > * + *,
-  .product-purchase__richtext.product-purchase__compatible > * + * { margin-block-start: var(--ad-space-100); }
   .product-purchase__specs { margin: 0; }
   .product-purchase__specs > div { display: grid; grid-template-columns: minmax(6rem, 0.4fr) 1fr; gap: var(--ad-space-200); }
   .product-purchase__specs dt { color: var(--ad-color-text-primary); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
   .product-purchase__specs dd { margin: 0; grid-column: 2; }
-  .product-purchase__compatible li { display: flex; justify-content: space-between; gap: var(--ad-space-200); }
   .product-purchase__guide { display: flex; min-height: var(--ad-control-minimum); padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
 
   @media (max-width: 74.99rem) {
@@ -315,6 +275,7 @@
 {
   "name": "Product",
   "settings": [
+    { "type": "checkbox", "id": "show_manual_link", "label": "Link to the product field manual section", "info": "Turn off if the template has no Product field manual section.", "default": true },
     { "type": "richtext", "id": "delivery_copy", "label": "Delivery and returns", "default": "<p>Dispatch timing and return eligibility are confirmed at checkout.</p>" },
     { "type": "richtext", "id": "care_copy", "label": "Care and material", "default": "<p>Follow the care instructions supplied with the object.</p>" }
   ],

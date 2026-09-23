@@ -97,4 +97,12 @@
   .product-card__choose { display: inline-grid; min-width: var(--ad-control-minimum); min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-200); place-items: center; border: var(--ad-border-hairline) solid currentcolor; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-decoration: none; text-transform: uppercase; }
   .product-card__form button:hover,
   .product-card__choose:hover { background: currentcolor; color: var(--ad-color-text-inverse); }
+
+  /* Narrow two-up cards stack the action under the title instead of crowding it. */
+  @media (max-width: 29.99rem) {
+    .product-card__details { flex-direction: column; gap: var(--ad-space-300); }
+    .product-card__form button,
+    .product-card__choose { min-width: 0; width: 100%; }
+    .product-card__form { width: 100%; }
+  }
 {% endstylesheet %}
