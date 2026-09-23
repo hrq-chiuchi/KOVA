@@ -174,7 +174,7 @@ Meaningful implementation boundaries:
 Capture only after the event occurs:
 
 1. A live Shopify preview with real products, responsive media, navigation/account settings, and representative merchant copy.
-2. The actual Shopify Theme Editor UI loading, unloading, selecting, and reordering sections, including duplicate-listener and duplicate-ScrollTrigger checks.
+2. ~~The actual Shopify Theme Editor UI loading, unloading, selecting, and reordering sections, including duplicate-listener and duplicate-ScrollTrigger checks.~~ Captured 2026-09-23 (Phase 4 Theme Editor log).
 3. No-JavaScript commerce/navigation behavior and live keyboard traversal beyond the fixture dialog path.
 4. Screenshots of meaningful iterations, including a mobile crop/composition and one controlled grid break.
 5. Concrete bugs involving section lifecycle, focus/state continuity, responsive media, or commerce boundaries.
@@ -316,7 +316,27 @@ Observed at the time: several product descriptions repeated the positioning sent
 - Fixed: the product-card media link duplicated the title link and failed Lighthouse's label-in-name audit. It is now `tabindex="-1"` and `aria-hidden`, and the sold-out state is announced beside the price. Collection-page cards take an `h2` title to keep heading order. The unbranded Buy it now button (white on `#1990c6`, contrast 3.59:1) now uses theme tokens. Shopify's injected hCaptcha badge suppressed the focus ring on its Privacy and Terms links, so a scoped rule restores it.
 - Fixed (performance): a V8 CPU profile of the PDP under 4× throttling attributed about 812 ms of self time to `loadTexture` in `assets/webgl-product-reveal.js`, which decoded and uploaded textures for every card at startup and forced offscreen lazy images to download. Cards now wait in a pending set until they come within half a viewport. After the change, `loadTexture` fell out of the top profile entries, and page transfer dropped by about 1.2–1.6 MB. Lighthouse's `bootup-time` attributes about 7 s to `ScrollTrigger.min.js`, but the CPU profile does not show that cost, so it was treated as an attribution artefact rather than a defect.
 - Fixed (LCP): the PDP's primary image, which is the LCP element, was `loading="lazy"`. It now loads eagerly with `fetchpriority="high"`. The homepage LCP is a kinetic-hero layer. All seven layers already load eagerly, and the top layer depends on script state, so the hero was left unchanged. Choosing a single high-priority layer is a follow-up.
-- Not verified, and why: the Shopify Theme Editor UI needs an authenticated admin browser session that this environment does not drive. Checkout completion would create a real order unless a test payment gateway is configured on the store, so it was not attempted.
+- Not verified, and why: checkout completion would create a real order unless a test payment gateway is configured on the store, so it was not attempted. The Theme Editor was verified afterwards; see the next entry.
 
 **2026-09-23 — Catalogue copy trimmed (D-015):** Descriptions were backed up, then 15 were rewritten through `productUpdate` to keep only their opening paragraph. The removed "Materials and construction" and "Care" sections were covered by each product's material profile, and "Field note" was identical boilerplate on every product. `Night Transit Set 03` was left unchanged: it has no material profile, and its "What is included" and "Why these three" sections are unique. The update returned no user errors. PDPs render the shortened description without Liquid errors, and the cargo pant PDP's Lighthouse accessibility score moved from 98 to 100 because the description's orphaned `h3` headings are gone.
+
+**2026-09-23 — Actual Theme Editor verification:** The user signed in to the Shopify admin in a visible Chromium window. That window was then driven over the Chrome DevTools Protocol against development theme `164481368323`, served by `shopify theme dev` from this repository at commit `57bf022`. A probe inside the preview frame recorded `shopify:section:*` events, page errors, ScrollTrigger count, motion scopes, and WebGL targets. Listener counts were read through `DOMDebugger.getEventListeners`. No change was saved: the edit session was discarded, and afterwards the dev theme's homepage rendered its original four sections in the original order.
+
+| Action in the editor | Observed |
+| --- | --- |
+| Load homepage | `Shopify.designMode` true; 4 sections, 3 ScrollTriggers, 3 motion scopes, 9 WebGL targets (0 prepared while offscreen), 7 hero layers, no hidden cards |
+| Select the Night Uniform grid | `section:select`; preview scrolled to it; 6 targets prepared as they neared the viewport; no errors |
+| Edit the eyebrow text | Text patched in place without a section reload |
+| Toggle Tone three times (three reloads) | `unload` → `load` → `select` each time; ScrollTrigger, motion-scope, target, and card counts identical after every cycle; heading lines revealed, 3 cards re-prepared |
+| Drag Field Objects above Night Uniform | `section:reorder`; DOM order updated; all 9 targets prepared; a synthetic hover on a moved card mounted the canvas, animated, and parked it back on `body` in both directions |
+| Hide and show the kinetic hero | `unload`, then `load`; 7 layers restored; `window`/`document` listener counts identical before and after; the hero element holds exactly one `pointerenter`/`pointermove`/`pointerleave` listener; a synthetic pointer sweep moved and re-stacked the layers, which settled back to rest |
+| Add an Editorial product grid | `section:load` with preset defaults, catalogue fallback products, a new motion scope, and one new ScrollTrigger |
+| Product template, Night Shift Cargo Pant | 8 panels, 5 features, 2 swatches, 4 recommendation cards; `Ash Gray` → `SOLD OUT` disabled, `Black` → `ADD TO BAG` enabled |
+| Hide and show Product recommendations | Re-fetched 4 cards, all WebGL-prepared, no errors |
+
+Findings:
+
+- No theme listener, ScrollTrigger, or WebGL target accumulated across reloads, reorders, or hide/show cycles.
+- After a section re-render, `document` gained one `shopify:section:load`/`unload`/`reorder` listener and one `scroll` listener. Tracing them to source showed they come from Shopify's `storefront-modules` bundle, not the theme; the theme's own handlers stayed at exactly one each. This is platform behaviour in design mode and was left alone.
+- Mouse input could not be delivered into the preview frame, because the editor's selection overlay received it. Hover was therefore exercised with synthetic pointer events, which do not set the CSS `:hover` state that picks the resting image after a card hover. Real-cursor hover was verified outside the editor in Phase 2.
 

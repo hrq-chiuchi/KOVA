@@ -83,7 +83,7 @@ Required invariants:
 
 ## Component and section contracts
 
-These contracts describe the current Round 2 source. They were exercised through the Shopify CLI development theme with the store's three current products. Actual Theme Editor UI manipulation, successful add-to-cart with an available variant, and production performance remain pending.
+These contracts describe the current Round 2 source. They were first exercised through the Shopify CLI development theme with the store's three original products. Add-to-cart with an available variant was verified in Phase 3, and the actual Theme Editor UI was exercised on 2026-09-23 (see the case study). Production performance remains unmeasured.
 
 ### Editorial product card — Commerce component
 
@@ -150,7 +150,7 @@ Nightkidz is a quality reference, not a template. The transferable principles ar
 
 ## Inventory
 
-Statuses below use Shopify CLI Theme Check and the live local Shopify CLI development preview; they do not imply production performance or actual Theme Editor UI verification.
+Statuses below use Shopify CLI Theme Check and the live local Shopify CLI development preview. The homepage sections and the product template were also exercised in the actual Theme Editor UI on 2026-09-23. None of this implies production performance.
 
 | System item | Classification | Code surface | Status |
 | --- | --- | --- | --- |
