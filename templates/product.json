@@ -11,10 +11,18 @@
   "sections": {
     "main": {
       "type": "product",
-      "settings": {}
+      "settings": {
+        "delivery_copy": "<p>Dispatch timing and return eligibility are confirmed at checkout.</p>",
+        "care_copy": "<p>Follow the care instructions supplied with the object.</p>"
+      }
+    },
+    "recommendations": {
+      "type": "product-recommendations",
+      "settings": {
+        "heading": "Related equipment",
+        "product_limit": 4
+      }
     }
   },
-  "order": [
-    "main"
-  ]
+  "order": ["main", "recommendations"]
 }

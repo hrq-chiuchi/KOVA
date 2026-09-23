@@ -1,35 +1,10 @@
-<afterdark-header class="site-header full-width">
+<afterdark-header
+  class="site-header full-width"
+  data-overlay="{% if request.page_type == 'index' %}true{% else %}false{% endif %}"
+  data-cart-json-url="{{ routes.cart_url }}.js"
+>
   <div class="site-header__inner">
-    <a class="site-header__brand" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} home">
-      <span>{{ section.settings.brand_mark | escape }}</span>
-      <small>Independent supply</small>
-    </a>
-
-    {% if section.settings.menu != blank %}
-      <nav class="site-header__nav" aria-label="Primary navigation">
-        {% for link in section.settings.menu.links %}
-          <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
-        {% endfor %}
-      </nav>
-    {% endif %}
-
-    <div class="site-header__actions">
-      {% if section.settings.show_search %}
-        <a class="site-header__utility" href="{{ routes.search_url }}">Search</a>
-      {% endif %}
-
-      {% if shop.customer_accounts_enabled %}
-        <shopify-account menu="{{ section.settings.customer_account_menu }}">
-          <span class="visually-hidden">Account</span>
-          {{ 'icon-account.svg' | inline_asset_content }}
-        </shopify-account>
-      {% endif %}
-
-      <a class="site-header__cart" href="{{ routes.cart_url }}">
-        <span>Cart</span>
-        <span class="site-header__cart-count" aria-label="{{ cart.item_count }} items">{{ cart.item_count | prepend: '0' | slice: -2, 2 }}</span>
-      </a>
-
+    <div class="site-header__left">
       <button
         class="site-header__menu-button"
         type="button"
@@ -38,26 +13,61 @@
         aria-haspopup="dialog"
         aria-controls="SiteMenu-{{ section.id }}"
       >
-        Menu
+        <span aria-hidden="true">☰</span> Menu
       </button>
+      {% if section.settings.menu != blank %}
+        <nav class="site-header__nav" aria-label="Primary navigation">
+          {% for link in section.settings.menu.links limit: 3 %}
+            <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+          {% endfor %}
+        </nav>
+      {% endif %}
+    </div>
+
+    <a class="site-header__brand" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} home">
+      {% if section.settings.logo != blank %}
+        {{ section.settings.logo | image_url: width: 500 | image_tag: widths: '180, 260, 360, 500', sizes: section.settings.logo_width | append: 'px', loading: 'eager', alt: shop.name }}
+      {% else %}
+        <span>{{ section.settings.brand_mark | default: shop.name | escape }}</span>
+      {% endif %}
+    </a>
+
+    <div class="site-header__actions">
+      {% if section.settings.show_search %}<a class="site-header__utility" href="{{ routes.search_url }}">Search</a>{% endif %}
+      {% if shop.customer_accounts_enabled %}
+        <shopify-account menu="{{ section.settings.customer_account_menu }}">
+          <span class="visually-hidden">Account</span>
+          {{ 'icon-account.svg' | inline_asset_content }}
+        </shopify-account>
+      {% endif %}
+      <a class="site-header__cart" href="{{ routes.cart_url }}" data-cart-open>
+        <span>Bag</span>
+        <span class="site-header__cart-count" data-cart-count aria-label="{{ cart.item_count }} items">{{ cart.item_count | prepend: '0' | slice: -2, 2 }}</span>
+      </a>
     </div>
   </div>
 
   <dialog id="SiteMenu-{{ section.id }}" class="site-menu" data-menu-dialog scroll-lock aria-labelledby="SiteMenuTitle-{{ section.id }}">
-    <div class="site-menu__top">
-      <p id="SiteMenuTitle-{{ section.id }}" class="eyebrow">Navigation / Index</p>
-      <button class="site-menu__close" type="button" data-menu-close>Close</button>
+    <div class="site-menu__panel">
+      <div class="site-menu__top">
+        <p id="SiteMenuTitle-{{ section.id }}" class="eyebrow">KOVA / Navigation</p>
+        <button class="site-menu__close" type="button" data-menu-close>Close</button>
+      </div>
+      <nav class="site-menu__nav" aria-label="Menu navigation">
+        {% for link in section.settings.menu.links %}
+          <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+            <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+          </a>
+        {% else %}
+          <a href="{{ routes.all_products_collection_url }}"><span>Shop all</span><span aria-hidden="true">01</span></a>
+          <a href="{{ routes.search_url }}"><span>Search</span><span aria-hidden="true">02</span></a>
+        {% endfor %}
+      </nav>
+      <div class="site-menu__utility">
+        <p>{{ section.settings.menu_note | escape }}</p>
+        <a href="{{ routes.search_url }}">Search the index ↗</a>
+      </div>
     </div>
-    <nav class="site-menu__nav" aria-label="Mobile navigation">
-      {% for link in section.settings.menu.links %}
-        <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-          <span>{{ link.title | escape }}</span>
-          <span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
-        </a>
-      {% endfor %}
-      <a href="{{ routes.search_url }}"><span>Search</span><span aria-hidden="true">→</span></a>
-    </nav>
-    <p class="site-menu__note">Objects, apparel and machinery for after dark.</p>
   </dialog>
 </afterdark-header>
 
@@ -68,11 +78,17 @@
     inset: 0 0 auto;
     display: block;
     height: var(--ad-header-height);
-    border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
-    background: rgb(8 8 8 / 74%);
+    border-block-end: var(--ad-border-hairline) solid transparent;
+    background: rgb(8 8 8 / 88%);
     color: var(--ad-color-text-primary);
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(18px);
+    transition: background-color var(--ad-duration-fast) var(--ad-ease-standard), border-color var(--ad-duration-fast) var(--ad-ease-standard);
   }
+
+  .site-header[data-overlay='true']:not([data-scrolled]) { background: transparent; backdrop-filter: none; }
+  .site-header[data-scrolled],
+  .site-header[data-overlay='false'] { border-color: var(--ad-color-border-subtle); }
+  .site-header a { color: inherit; text-decoration: none; }
 
   .site-header__inner {
     display: grid;
@@ -84,181 +100,70 @@
     gap: var(--ad-space-400);
   }
 
-  .site-header a { color: inherit; text-decoration: none; }
+  .site-header__left,
+  .site-header__actions,
+  .site-header__nav { display: flex; align-items: center; }
+  .site-header__left { min-width: 0; gap: var(--ad-space-500); }
+  .site-header__actions { justify-content: flex-end; gap: var(--ad-space-300); }
+  .site-header__nav { gap: var(--ad-space-400); }
 
   .site-header__brand {
     display: inline-flex;
-    width: max-content;
-    align-items: baseline;
-    gap: var(--ad-space-200);
+    max-width: min(34vw, 20rem);
+    justify-self: center;
     font-family: var(--font-display-family);
-    font-size: 1.05rem;
+    font-size: clamp(1.25rem, 2.4vw, 2rem);
     font-weight: var(--font-display-weight);
-    letter-spacing: -0.04em;
-  }
-
-  .site-header__brand small,
-  .site-header__nav,
-  .site-header__utility,
-  .site-header__cart,
-  .site-header__menu-button {
-    font-family: var(--font-primary--family);
-    font-size: var(--ad-text-label);
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: -0.055em;
+    line-height: 0.8;
+    text-align: center;
     text-transform: uppercase;
   }
 
-  .site-header__brand small { color: var(--ad-color-text-muted); font-size: 0.55rem; }
-
-  .site-header__nav {
-    display: flex;
-    align-items: center;
-    gap: var(--ad-space-500);
-  }
-
-  .site-header__nav a,
-  .site-header__utility {
-    position: relative;
-    padding-block: var(--ad-space-200);
-  }
-
-  .site-header__nav a::after,
-  .site-header__utility::after {
-    position: absolute;
-    inset: auto 0 0;
-    height: 1px;
-    background: currentcolor;
-    content: '';
-    scale: 0 1;
-    transform-origin: right;
-    transition: scale var(--ad-duration-fast) var(--ad-ease-standard);
-  }
-
-  .site-header__nav a:hover::after,
-  .site-header__nav a[aria-current='page']::after,
-  .site-header__utility:hover::after {
-    scale: 1 1;
-    transform-origin: left;
-  }
-
-  .site-header__actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--ad-space-300);
-  }
-
-  .site-header shopify-account svg { width: 1.25rem; }
-
+  .site-header__brand img { width: auto; max-width: 100%; max-height: calc(var(--ad-header-height) - 1.5rem); }
+  .site-header__menu-button,
+  .site-header__nav,
+  .site-header__utility,
   .site-header__cart {
-    display: flex;
-    align-items: center;
-    gap: var(--ad-space-100);
-  }
-
-  .site-header__cart-count {
-    display: inline-grid;
-    min-width: 1.6rem;
-    min-height: 1.6rem;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--color-accent);
-    color: var(--ad-color-text-inverse);
-    font-size: 0.58rem;
+    font-size: var(--ad-text-label);
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
   }
 
   .site-header__menu-button,
-  .site-menu__close {
-    border: 0;
-    background: transparent;
-  }
+  .site-menu__close { border: 0; background: transparent; }
+  .site-header__menu-button { display: inline-flex; min-height: var(--ad-control-minimum); padding: 0; align-items: center; gap: var(--ad-space-100); }
+  .site-header__menu-button span { font-size: 0.9rem; }
+  .site-header__nav a,
+  .site-header__utility { padding-block: var(--ad-space-200); }
+  .site-header shopify-account svg { width: 1.2rem; }
+  .site-header__cart { display: flex; align-items: center; gap: var(--ad-space-100); }
+  .site-header__cart-count { display: inline-grid; min-width: 1.65rem; min-height: 1.65rem; place-items: center; border-radius: 50%; background: var(--color-accent); color: var(--ad-color-text-inverse); font-size: 0.58rem; }
 
-  .site-header__menu-button { display: none; padding: var(--ad-space-200) 0; }
-
-  .site-menu {
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    max-height: none;
-    margin: 0;
-    padding: var(--ad-page-padding);
-    border: 0;
-    background: var(--ad-color-background-primary);
-    color: var(--ad-color-text-primary);
-  }
-
-  .site-menu::backdrop { background: rgb(0 0 0 / 70%); }
-
-  .site-menu__top {
-    display: flex;
-    min-height: var(--ad-header-height);
-    align-items: center;
-    justify-content: space-between;
-    border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
-  }
-
-  .site-menu__close {
-    min-width: var(--ad-control-minimum);
-    color: inherit;
-    font-size: var(--ad-text-label);
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .site-menu__nav {
-    display: flex;
-    margin-block-start: var(--ad-space-600);
-    flex-direction: column;
-  }
-
-  .site-menu__nav a {
-    display: flex;
-    padding-block: var(--ad-space-300);
-    align-items: center;
-    justify-content: space-between;
-    border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
-    font-family: var(--font-display-family);
-    font-size: clamp(2.5rem, 12vw, 5rem);
-    font-weight: var(--font-display-weight);
-    letter-spacing: -0.05em;
-    line-height: 0.95;
-    text-transform: uppercase;
-  }
-
-  .site-menu__nav a span:last-child {
-    font-family: var(--font-primary--family);
-    font-size: var(--ad-text-label);
-    letter-spacing: 0.12em;
-  }
-
-  .site-menu__note {
-    position: absolute;
-    inset: auto var(--ad-page-padding) var(--ad-space-500);
-    max-width: 28rem;
-    color: var(--ad-color-text-muted);
-  }
+  .site-menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: var(--ad-color-text-primary); }
+  .site-menu::backdrop { background: rgb(0 0 0 / 62%); backdrop-filter: blur(5px); }
+  .site-menu__panel { display: flex; width: min(46rem, 100%); height: 100%; padding: var(--ad-page-padding); flex-direction: column; background: rgb(16 16 16 / 93%); border-inline-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); backdrop-filter: blur(24px); }
+  .site-menu__top { display: flex; min-height: var(--ad-header-height); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .site-menu__close { min-width: var(--ad-control-minimum); color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .site-menu__nav { display: flex; margin-block: auto; flex-direction: column; }
+  .site-menu__nav a { display: flex; padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(2.75rem, 7vw, 6.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.88; text-transform: uppercase; }
+  .site-menu__nav a > span:last-child { font-family: var(--font-primary--family); font-size: var(--ad-text-label); letter-spacing: 0.12em; }
+  .site-menu__utility { display: flex; padding-block-start: var(--ad-space-400); justify-content: space-between; gap: var(--ad-space-300); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: 0.8rem; }
 
   @media (max-width: 61.99rem) {
-    .site-header__inner { grid-template-columns: 1fr auto; }
-    .site-header__nav {
-      position: absolute;
-      inset: var(--ad-header-height) 0 auto;
-      padding: var(--ad-space-200) var(--ad-page-padding);
-      overflow-x: auto;
-      background: var(--ad-color-background-primary);
-    }
-    .js .site-header__nav,
-    .site-header__utility { display: none; }
-    .js .site-header__menu-button { display: inline-block; }
-    .site-header__brand small { display: none; }
+    .site-header__nav { display: none; }
+    .site-header__left { gap: 0; }
   }
 
   @media (max-width: 34rem) {
+    .site-header__utility,
     .site-header shopify-account { display: none; }
-    .site-header__actions { gap: var(--ad-space-200); }
+    .site-header__actions { gap: var(--ad-space-100); }
     .site-header__cart > span:first-child { display: none; }
+    .site-header__menu-button { font-size: 0; }
+    .site-header__menu-button span { font-size: 1rem; }
+    .site-menu__utility { display: grid; }
   }
 {% endstylesheet %}
 
@@ -266,8 +171,11 @@
 {
   "name": "Header",
   "settings": [
-    { "type": "text", "id": "brand_mark", "label": "Brand mark", "default": "AFTERDARK SUPPLY" },
+    { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "range", "id": "logo_width", "label": "Logo width", "min": 80, "max": 300, "step": 10, "unit": "px", "default": 160 },
+    { "type": "text", "id": "brand_mark", "label": "Text brand mark", "default": "KOVA" },
     { "type": "link_list", "id": "menu", "label": "Menu" },
+    { "type": "text", "id": "menu_note", "label": "Menu note", "default": "Independent apparel and objects for after dark." },
     { "type": "checkbox", "id": "show_search", "label": "Show search", "default": true },
     { "type": "link_list", "id": "customer_account_menu", "label": "Customer account menu", "default": "customer-account-main-menu" }
   ]

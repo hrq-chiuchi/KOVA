@@ -1,52 +1,193 @@
-{% comment %}
-  This section is used in the product template to render product page with
-  media, content, and add-to-cart form.
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+%}
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/product
-{% endcomment %}
+<section class="product-page full-width">
+  <div class="product-page__inner section-shell">
+    <aside class="product-page__identity">
+      <p class="eyebrow">KOVA / {{ product.type | default: 'Field object' | escape }}</p>
+      <h1>{{ product.title | escape }}</h1>
+      {% if product.vendor != blank %}<p class="product-page__vendor">{{ product.vendor | escape }}</p>{% endif %}
+      <p class="product-page__index">Object {{ product.id | modulo: 100 | prepend: '0' | slice: -2, 2 }}</p>
+    </aside>
 
-<div class="product-images">
-  {% for image in product.images %}
-    {% render 'image', class: 'product-image', image: image %}
-  {% endfor %}
-</div>
-
-<div class="product-info">
-  <h1>{{ product.title }}</h1>
-  <p>{{ product.price | money }}</p>
-  <p>{{ product.description }}</p>
-</div>
-
-<div class="product-form">
-  {% form 'product', product %}
-    {% assign current_variant = product.selected_or_first_available_variant %}
-
-    <select name="id">
-      {% for variant in product.variants %}
-        <option
-          value="{{ variant.id }}"
-          {% if variant == current_variant %}
-            selected="selected"
-          {% endif %}
-        >
-          {{ variant.title }} - {{ variant.price | money }}
-        </option>
+    <div class="product-page__gallery" aria-label="{{ product.title | escape }} media">
+      {% for media in product.media %}
+        <figure class="product-page__media{% if forloop.first %} product-page__media--primary{% endif %}" data-media-id="{{ media.id }}">
+          {% case media.media_type %}
+            {% when 'image' %}
+              {{ media
+                | image_url: width: 1800
+                | image_tag:
+                  widths: '480, 720, 960, 1200, 1600, 1800',
+                  sizes: '(max-width: 767px) 100vw, 52vw',
+                  loading: 'lazy',
+                  alt: media.alt | default: product.title
+              }}
+            {% when 'video' %}
+              {{ media | media_tag: image_size: '1200x', controls: true }}
+            {% when 'external_video' %}
+              {{ media | external_video_tag }}
+            {% when 'model' %}
+              {{ media | model_viewer_tag }}
+          {% endcase %}
+        </figure>
+      {% else %}
+        <figure class="product-page__media product-page__media--primary">{{ 'product-1' | placeholder_svg_tag }}</figure>
       {% endfor %}
-    </select>
+    </div>
 
-    <input type="text" name="quantity" min="1" value="1">
+    <product-purchase class="product-purchase">
+      <div class="product-purchase__topline">
+        <p class="product-purchase__price" data-product-price>{{ current_variant.price | money }}</p>
+        {% if current_variant.compare_at_price > current_variant.price %}<s>{{ current_variant.compare_at_price | money }}</s>{% endif %}
+      </div>
 
-    <input type="submit" value="Add to cart">
-    {{ form | payment_button }}
-  {% endform %}
-</div>
+      {% form 'product', product, class: 'product-purchase__form', data-product-purchase-form: '' %}
+        <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-id>
+
+        {% unless product.has_only_default_variant %}
+          <div class="product-purchase__options">
+            {% for option in product.options_with_values %}
+              <fieldset>
+                <legend class="form-legend">{{ option.name | escape }}</legend>
+                <div class="product-purchase__values">
+                  {% for value in option.values %}
+                    <input
+                      class="visually-hidden"
+                      type="radio"
+                      id="Option-{{ section.id }}-{{ option.position }}-{{ forloop.index }}"
+                      name="options[{{ option.name | escape }}]"
+                      value="{{ value | escape }}"
+                      data-option-value
+                      data-option-position="{{ option.position }}"
+                      {% if option.selected_value == value %}checked{% endif %}
+                    >
+                    <label for="Option-{{ section.id }}-{{ option.position }}-{{ forloop.index }}">{{ value | escape }}</label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+            {% endfor %}
+          </div>
+        {% endunless %}
+
+        <div class="product-purchase__quantity">
+          <span class="form-legend">Quantity</span>
+          <div>
+            <button type="button" data-quantity-minus aria-label="Decrease quantity">−</button>
+            <label>
+              <span class="visually-hidden">Quantity</span>
+              <input type="number" name="quantity" value="1" min="1" inputmode="numeric" data-quantity-input>
+            </label>
+            <button type="button" data-quantity-plus aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+
+        <button class="button button--accent product-purchase__add" type="submit" data-add-button{% unless current_variant.available %} disabled{% endunless %}>
+          {% if current_variant.available %}Add to bag{% else %}Sold out{% endif %}
+        </button>
+        <p class="status-message" role="status" aria-live="polite" data-product-status></p>
+        <div class="product-purchase__payment">{{ form | payment_button }}</div>
+      {% endform %}
+
+      <div class="product-purchase__details">
+        {% if product.description != blank %}
+          <details open>
+            <summary>Description</summary>
+            <div class="product-purchase__richtext">{{ product.description }}</div>
+          </details>
+        {% endif %}
+        <details>
+          <summary>Delivery and returns</summary>
+          <div class="product-purchase__richtext">{{ section.settings.delivery_copy }}</div>
+        </details>
+        {% if section.settings.care_copy != blank %}
+          <details>
+            <summary>Care and material</summary>
+            <div class="product-purchase__richtext">{{ section.settings.care_copy }}</div>
+          </details>
+        {% endif %}
+      </div>
+
+      <script type="application/json" data-variant-json>
+        [
+          {% for variant in product.variants %}
+            {
+              "id": {{ variant.id }},
+              "available": {{ variant.available | json }},
+              "price": {{ variant.price | money | json }},
+              "options": {{ variant.options | json }},
+              "featured_media_id": {{ variant.featured_media.id | default: 'null' }}
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      </script>
+    </product-purchase>
+  </div>
+</section>
+
+{% stylesheet %}
+  .product-page { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .product-page__inner { display: grid; grid-template-columns: minmax(18rem, 0.8fr) minmax(28rem, 1.4fr) minmax(18rem, 0.75fr); gap: var(--ad-content-gap); padding-block: var(--ad-space-500) var(--ad-section-space); }
+  .product-page__identity,
+  .product-purchase { position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-400)); align-self: start; }
+  .product-page__identity h1 { margin-block: var(--ad-space-300); font-family: var(--font-display-family); font-size: clamp(2.5rem, 3.5vw, 4.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.065em; line-height: 0.86; text-transform: uppercase; }
+  .product-page__vendor,
+  .product-page__index { color: var(--ad-color-text-muted); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .product-page__index { margin-block-start: var(--ad-space-600); }
+  .product-page__gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ad-space-200); }
+  .product-page__media { aspect-ratio: 4 / 5; overflow: hidden; background: var(--ad-color-background-elevated); }
+  .product-page__media--primary { grid-column: 1 / -1; aspect-ratio: 5 / 6; }
+  .product-page__media img,
+  .product-page__media video,
+  .product-page__media iframe,
+  .product-page__media model-viewer,
+  .product-page__media svg { width: 100%; height: 100%; object-fit: cover; }
+  .product-purchase { display: block; }
+  .product-purchase__topline { display: flex; padding-block-end: var(--ad-space-300); align-items: baseline; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .product-purchase__price { font-family: var(--font-display-family); font-size: clamp(1.75rem, 3vw, 2.6rem); }
+  .product-purchase__form { display: grid; gap: var(--ad-space-400); padding-block: var(--ad-space-400); }
+  .product-purchase__options { display: grid; gap: var(--ad-space-400); }
+  .product-purchase__options fieldset { padding: 0; border: 0; }
+  .product-purchase__values { display: flex; margin-block-start: var(--ad-space-200); flex-wrap: wrap; gap: var(--ad-space-100); }
+  .product-purchase__values label { display: inline-grid; min-width: var(--ad-control-minimum); min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-200); place-items: center; border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); cursor: pointer; font-size: var(--ad-text-label); text-transform: uppercase; }
+  .product-purchase__values input:checked + label { border-color: var(--color-accent); background: var(--color-accent); color: var(--ad-color-text-inverse); }
+  .product-purchase__values input:focus-visible + label { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  .product-purchase__quantity { display: flex; align-items: center; justify-content: space-between; }
+  .product-purchase__quantity > div { display: grid; grid-template-columns: var(--ad-control-minimum) 3.5rem var(--ad-control-minimum); }
+  .product-purchase__quantity button,
+  .product-purchase__quantity input { width: 100%; min-height: var(--ad-control-minimum); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; text-align: center; }
+  .product-purchase__quantity input { border-inline: 0; }
+  .product-purchase__add { width: 100%; }
+  .product-purchase__payment .shopify-payment-button { margin: 0; }
+  .product-purchase__details { border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .product-purchase__details details { border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .product-purchase__details summary { padding-block: var(--ad-space-300); cursor: pointer; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-purchase__richtext { padding-block-end: var(--ad-space-400); color: var(--ad-color-text-muted); }
+  .product-purchase__richtext > * + * { margin-block-start: var(--ad-space-300); }
+
+  @media (max-width: 74.99rem) {
+    .product-page__inner { grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 0.8fr); }
+    .product-page__identity { position: static; grid-column: 1 / -1; }
+    .product-page__index { margin-block-start: var(--ad-space-300); }
+  }
+
+  @media (max-width: 47.99rem) {
+    .product-page__inner { display: flex; padding-block-start: var(--ad-space-300); flex-direction: column; }
+    .product-page__identity { order: 1; }
+    .product-page__gallery { order: 2; margin-inline: calc(var(--ad-page-padding) * -1); gap: 2px; }
+    .product-purchase { position: static; order: 3; }
+    .product-page__media--primary { aspect-ratio: 4 / 5; }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.product",
-  "settings": [],
-  "disabled_on": {
-    "groups": ["header", "footer"]
-  }
+  "name": "Product",
+  "settings": [
+    { "type": "richtext", "id": "delivery_copy", "label": "Delivery and returns", "default": "<p>Dispatch timing and return eligibility are confirmed at checkout.</p>" },
+    { "type": "richtext", "id": "care_copy", "label": "Care and material", "default": "<p>Follow the care instructions supplied with the object.</p>" }
+  ],
+  "disabled_on": { "groups": ["header", "footer"] }
 }
 {% endschema %}

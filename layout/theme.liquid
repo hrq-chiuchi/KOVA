@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="{{ request.locale.iso_code }}">
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% # Inlined CSS Variables %}
     {% render 'css-variables' %}
 
@@ -29,17 +30,21 @@
     <script src="{{ 'gsap.min.js' | asset_url }}" defer></script>
     <script src="{{ 'ScrollTrigger.min.js' | asset_url }}" defer></script>
     <script src="{{ 'motion-core.js' | asset_url }}" defer></script>
+    <script src="{{ 'kinetic-hero.js' | asset_url }}" defer></script>
+    <script src="{{ 'webgl-product-reveal.js' | asset_url }}" defer></script>
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
   </head>
 
   <body>
     <a class="skip-link" href="#MainContent">Skip to content</a>
     {% sections 'header-group' %}
+    {% section 'cart-drawer' %}
 
     <main id="MainContent" tabindex="-1">
       {{ content_for_layout }}
     </main>
 
+    <canvas class="webgl-reveal-canvas" data-webgl-reveal-canvas aria-hidden="true"></canvas>
     {% sections 'footer-group' %}
   </body>
 </html>

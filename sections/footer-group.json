@@ -14,7 +14,11 @@
     "footer": {
       "type": "footer",
       "settings": {
+        "eyebrow": "KOVA / Stay in range",
+        "statement": "Independent apparel and field objects for movement after dark.",
+        "wordmark": "KOVA",
         "menu": "",
+        "show_newsletter": true,
         "show_payment_icons": true
       }
     }

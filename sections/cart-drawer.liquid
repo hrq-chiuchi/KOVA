@@ -1,0 +1,97 @@
+<cart-drawer
+  class="cart-drawer"
+  data-section-id="{{ section.id }}"
+  data-refresh-url="{{ routes.cart_url }}?section_id={{ section.id }}"
+  data-change-url="{{ routes.cart_change_url }}.js"
+>
+  <dialog class="cart-drawer__dialog" data-cart-dialog scroll-lock aria-labelledby="CartDrawerTitle">
+    <div class="cart-drawer__panel">
+      <header class="cart-drawer__header">
+        <div>
+          <p class="eyebrow">Current loadout</p>
+          <h2 id="CartDrawerTitle">Bag / {{ cart.item_count | prepend: '0' | slice: -2, 2 }}</h2>
+        </div>
+        <button class="cart-drawer__close" type="button" data-cart-close>Close</button>
+      </header>
+
+      <div class="cart-drawer__body" data-cart-drawer-content>
+        {% if cart.empty? %}
+          <div class="cart-drawer__empty">
+            <p>Your bag is standing by.</p>
+            <a class="button button--accent" href="{{ routes.all_products_collection_url }}">Enter the index</a>
+          </div>
+        {% else %}
+          <ul class="cart-drawer__items" role="list">
+            {% for item in cart.items %}
+              <li class="cart-drawer__item">
+                <a class="cart-drawer__media" href="{{ item.url }}">
+                  {% if item.image %}
+                    {{ item.image | image_url: width: 320 | image_tag: widths: '160, 240, 320', sizes: '7rem', loading: 'lazy', alt: item.image.alt | default: item.product.title }}
+                  {% endif %}
+                </a>
+                <div class="cart-drawer__item-copy">
+                  <a href="{{ item.url }}">{{ item.product.title | escape }}</a>
+                  {% unless item.product.has_only_default_variant %}<small>{{ item.variant.title | escape }}</small>{% endunless %}
+                  <span>{{ item.final_line_price | money }}</span>
+                  <form action="{{ routes.cart_change_url }}" method="post" data-cart-change>
+                    <input type="hidden" name="id" value="{{ item.key }}">
+                    <label>
+                      <span class="visually-hidden">Quantity for {{ item.product.title | escape }}</span>
+                      <input type="number" name="quantity" value="{{ item.quantity }}" min="0" inputmode="numeric">
+                    </label>
+                    <button type="submit">Update</button>
+                    <button type="submit" name="quantity" value="0">Remove</button>
+                  </form>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      {% unless cart.empty? %}
+        <footer class="cart-drawer__footer">
+          <div><span>Subtotal</span><strong>{{ cart.total_price | money }}</strong></div>
+          <p>Taxes and shipping calculated at checkout.</p>
+          <form action="{{ routes.cart_url }}" method="post"><button class="button button--accent" type="submit" name="checkout">Checkout</button></form>
+          <a href="{{ routes.cart_url }}">View full bag</a>
+        </footer>
+      {% endunless %}
+    </div>
+  </dialog>
+</cart-drawer>
+
+{% stylesheet %}
+  .cart-drawer { position: relative; z-index: 80; }
+  .cart-drawer__dialog { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; }
+  .cart-drawer__dialog::backdrop { background: rgb(0 0 0 / 66%); backdrop-filter: blur(4px); }
+  .cart-drawer__panel { display: flex; width: min(100%, 34rem); height: 100%; margin-inline-start: auto; padding: var(--ad-space-400); flex-direction: column; background: rgb(25 25 25 / 94%); color: var(--ad-color-text-primary); backdrop-filter: blur(24px); }
+  .cart-drawer__header { display: flex; padding-block-end: var(--ad-space-400); align-items: start; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .cart-drawer__header h2 { margin-block-start: var(--ad-space-100); font-family: var(--font-display-family); font-size: clamp(2.4rem, 5vw, 4.5rem); letter-spacing: -0.06em; line-height: 0.85; text-transform: uppercase; }
+  .cart-drawer__close { min-width: var(--ad-control-minimum); border: 0; background: transparent; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .cart-drawer__body { flex: 1; overflow-y: auto; }
+  .cart-drawer__empty { display: grid; min-height: 60vh; place-content: center; justify-items: center; gap: var(--ad-space-400); text-align: center; }
+  .cart-drawer__items { padding: 0; list-style: none; }
+  .cart-drawer__item { display: grid; grid-template-columns: 7rem 1fr; gap: var(--ad-space-300); padding-block: var(--ad-space-400); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .cart-drawer__media { aspect-ratio: 4 / 5; overflow: hidden; background: var(--ad-color-background-primary); }
+  .cart-drawer__media img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-drawer__item-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--ad-space-100); }
+  .cart-drawer__item-copy > a { font-family: var(--font-display-family); font-size: 1.35rem; line-height: 0.95; text-decoration: none; text-transform: uppercase; }
+  .cart-drawer__item-copy small { color: var(--ad-color-text-muted); }
+  .cart-drawer__item-copy form { display: flex; margin-block-start: auto; align-items: center; gap: var(--ad-space-100); }
+  .cart-drawer__item-copy input { width: 4rem; min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; }
+  .cart-drawer__item-copy button { min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: 0; background: transparent; font-size: var(--ad-text-label); text-transform: uppercase; }
+  .cart-drawer__footer { display: grid; gap: var(--ad-space-200); padding-block-start: var(--ad-space-400); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .cart-drawer__footer > div { display: flex; justify-content: space-between; font-family: var(--font-display-family); font-size: 1.5rem; text-transform: uppercase; }
+  .cart-drawer__footer p { color: var(--ad-color-text-muted); font-size: 0.8rem; }
+  .cart-drawer__footer .button { width: 100%; }
+  .cart-drawer__footer > a { justify-self: center; font-size: var(--ad-text-label); text-transform: uppercase; }
+  @media (min-width: 48rem) { .cart-drawer__panel { border-inline-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); } }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Cart drawer",
+  "settings": []
+}
+{% endschema %}

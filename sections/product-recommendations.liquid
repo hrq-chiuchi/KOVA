@@ -1,0 +1,44 @@
+<product-recommendations
+  class="product-recommendations full-width"
+  data-section-id="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+  data-url="{{ routes.product_recommendations_url }}"
+  data-limit="{{ section.settings.product_limit }}"
+>
+  <div data-recommendations-results>
+    {% if recommendations.performed? and recommendations.products_count > 0 %}
+      <div class="section-shell product-recommendations__inner" data-motion-scope>
+        <header class="product-recommendations__header" data-reveal="section">
+          <p class="eyebrow">Continue the system</p>
+          <h2 class="section-heading"><span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span></h2>
+        </header>
+        <div class="product-recommendations__grid">
+          {% for product in recommendations.products %}
+            {% render 'product-card', product: product, index: forloop.index, sizes: '(max-width: 767px) 50vw, 25vw', quick_add: true %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</product-recommendations>
+
+{% stylesheet %}
+  .product-recommendations { display: block; background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .product-recommendations:empty { display: none; }
+  .product-recommendations__inner { padding-block: var(--ad-section-space); }
+  .product-recommendations__header { margin-block-end: var(--ad-space-600); }
+  .product-recommendations__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .product-recommendations__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ad-space-300); }
+  @media (max-width: 47.99rem) { .product-recommendations__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product recommendations",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Related equipment" },
+    { "type": "range", "id": "product_limit", "label": "Product limit", "min": 2, "max": 4, "step": 1, "default": 4 }
+  ],
+  "presets": [{ "name": "Product recommendations" }]
+}
+{% endschema %}
