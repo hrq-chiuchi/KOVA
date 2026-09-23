@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections.
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 (2026-09-23).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -171,3 +171,16 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** Native primitives keep merchant editing, inventory maths and the recommendation endpoints intact, and they prove the capability rather than imitating it.
 
 **Tradeoff / reconsideration:** `intent=related` stays empty until the store has order history, and bundle pricing must be maintained against component prices. Revisit if a component price changes or if the set needs customer-selectable options.
+
+## D-015 — Let structured data own material and care copy
+
+**Context:** Phase 4 renders material, care, and edition data from metaobjects. Fifteen product descriptions repeated the same material and care text, plus an identical "Field note" paragraph, so the PDP showed the information twice. Descriptions also feed the Shop app and Google Shopping, which do not render theme panels.
+
+**Options considered:** hide the repeated description sections in the theme only; trim the store copy; leave the duplication.
+
+**Decision:** With user approval (2026-09-23), trim the store copy. Keep each description's opening paragraph and any product-specific sections. Remove material and care sections only where a material profile exists, and remove the boilerplate field note everywhere.
+
+**Reasoning:** One source per fact avoids drift between the description and the metaobject, and it keeps the PDP free of repetition and orphaned headings.
+
+**Tradeoff / reconsideration:** Channels that show only the description (Shop app, Google Shopping) lose material and care detail. Reconsider if channel conversion depends on that copy; the fix would then be a channel-specific description feed, not re-duplicating the storefront copy. The originals were backed up before the change.
+

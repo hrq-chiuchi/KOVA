@@ -183,7 +183,18 @@ Capture only after the event occurs:
 
 ## Metrics
 
-**Current status: not measured.** There are no recorded Lighthouse, LCP, CLS, INP, JavaScript-size, image-weight, animation-FPS, accessibility-audit, conversion, or usability values. Future measurements must include enough context to be reproducible; absent data must remain absent rather than inferred.
+**Current status: local lab baseline only (2026-09-23).** Lighthouse 12.8.2, default mobile emulation (simulated throttling), headless Chromium, run against the Shopify CLI `theme dev` proxy at `127.0.0.1:9292` on the development store. The proxy serves over HTTP and relays storefront assets, so these values are not production field data, and single runs vary by roughly ±1.5 s LCP.
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT | Transfer |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Home, before fixes | 57 | 100 | 57 | 92 | 5.4 s | 0.001 | 750 ms | 6,660 KiB |
+| Home, after fixes | 56 | 100 | 57 | 92 | 6.8 s | 0.001 | 640 ms | 5,361 KiB |
+| Cargo pant PDP, before fixes | 48 | 94 | 75 | 100 | 8.0 s | 0 | 660 ms | 6,180 KiB |
+| Cargo pant PDP, after fixes | 49–51 | 100 | — | — | 5.8–7.2 s | 0 | 650–700 ms | 5,417 KiB |
+| Drop 001 collection, before fixes | 63 | 98 | 57 | 100 | 3.4 s | 0 | 1,300 ms | 7,014 KiB |
+| Drop 001 collection, after fixes | 70 | 100 | 75 | 100 | 3.4 s | 0 | 720 ms | 5,417 KiB |
+
+Best-practices failures are proxy artefacts (`is-on-https`), Shopify platform scripts (third-party cookies, an `origin_trials` CORS error, shop.app framing), and a `shopify-account` console warning that the store has no `customer-account-main-menu` menu, so the component falls back to default items. INP, field Core Web Vitals, animation FPS, conversion, and usability remain unmeasured.
 
 ## Catalog architecture — Implemented and verified against the live store
 
@@ -297,4 +308,15 @@ Not verified at the time: PDP rendering of the new metafield and metaobject cont
 - Homepage grids render Night Shift Cargo Pant / After Dark Utility Backpack / Dead Channel Utility Hoodie, Relay Modular Vest / Blacksite Shell Jacket / Ghostline Packable Poncho, and Night Transit Set 03 / Nullfold Card Wallet / Sector 05 Field Flask, with no placeholder cards.
 - Headless Chromium screenshots of the cargo pant PDP at 1440px and 390px showed the new identity content, swatches, collapsed panels, and guide link without horizontal overflow.
 
-Observed, not changed: several product descriptions repeat the positioning sentence and contain their own materials and care paragraphs, which now overlap the metaobject-driven panels. That is catalogue copy, to be trimmed in a content pass. Not verified: keyboard traversal of the new panels, screen-reader output, Theme Editor behaviour, and performance.
+Observed at the time: several product descriptions repeated the positioning sentence and contained their own materials and care paragraphs, which overlapped the metaobject-driven panels (resolved below under D-015).
+
+**2026-09-23 — Accessibility, keyboard, and performance pass:**
+
+- Keyboard traversal was scripted over the Chrome DevTools Protocol on the cargo pant PDP (1440px and 390px), the homepage, the Drop 001 collection, and the cart, at up to 90 Tab stops each. After the fixes below, every visible stop showed a focus indicator, and no page overflowed horizontally. Enter on the Features summary opened the panel and exposed five list items. With all panels open, the accessibility tree listed 10 definition terms. Size and colour radios expose their value text (`XS`…`XXL`, `BLACK`, `ASH GRAY`), swatch chips are `aria-hidden`, and the guide link is named "KOVA apparel size guide PDF (opens in a new tab)". No screen reader was run; this is an accessibility-tree check.
+- Fixed: the product-card media link duplicated the title link and failed Lighthouse's label-in-name audit. It is now `tabindex="-1"` and `aria-hidden`, and the sold-out state is announced beside the price. Collection-page cards take an `h2` title to keep heading order. The unbranded Buy it now button (white on `#1990c6`, contrast 3.59:1) now uses theme tokens. Shopify's injected hCaptcha badge suppressed the focus ring on its Privacy and Terms links, so a scoped rule restores it.
+- Fixed (performance): a V8 CPU profile of the PDP under 4× throttling attributed about 812 ms of self time to `loadTexture` in `assets/webgl-product-reveal.js`, which decoded and uploaded textures for every card at startup and forced offscreen lazy images to download. Cards now wait in a pending set until they come within half a viewport. After the change, `loadTexture` fell out of the top profile entries, and page transfer dropped by about 1.2–1.6 MB. Lighthouse's `bootup-time` attributes about 7 s to `ScrollTrigger.min.js`, but the CPU profile does not show that cost, so it was treated as an attribution artefact rather than a defect.
+- Fixed (LCP): the PDP's primary image, which is the LCP element, was `loading="lazy"`. It now loads eagerly with `fetchpriority="high"`. The homepage LCP is a kinetic-hero layer. All seven layers already load eagerly, and the top layer depends on script state, so the hero was left unchanged. Choosing a single high-priority layer is a follow-up.
+- Not verified, and why: the Shopify Theme Editor UI needs an authenticated admin browser session that this environment does not drive. Checkout completion would create a real order unless a test payment gateway is configured on the store, so it was not attempted.
+
+**2026-09-23 — Catalogue copy trimmed (D-015):** Descriptions were backed up, then 15 were rewritten through `productUpdate` to keep only their opening paragraph. The removed "Materials and construction" and "Care" sections were covered by each product's material profile, and "Field note" was identical boilerplate on every product. `Night Transit Set 03` was left unchanged: it has no material profile, and its "What is included" and "Why these three" sections are unique. The update returned no user errors. PDPs render the shortened description without Liquid errors, and the cargo pant PDP's Lighthouse accessibility score moved from 98 to 100 because the description's orphaned `h3` headings are gone.
+
