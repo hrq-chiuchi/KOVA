@@ -249,7 +249,7 @@
       url.searchParams.set('section_id', this.dataset.sectionId);
       url.searchParams.set('product_id', this.dataset.productId);
       url.searchParams.set('limit', this.dataset.limit || '4');
-      url.searchParams.set('intent', 'related');
+      url.searchParams.set('intent', this.dataset.intent || 'complementary');
       try {
         const response = await fetch(url);
         if (!response.ok) return;

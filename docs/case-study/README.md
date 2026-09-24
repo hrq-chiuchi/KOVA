@@ -354,3 +354,5 @@ Findings:
 
 Not verified: behaviour in the actual Theme Editor for the new sections, a populated reviews state (no review app is installed), and production performance.
 
+**2026-09-24 — Bug found and fixed (recommendations intent):** While testing page transitions, every PDP's Related equipment rail showed the same four products, with `pr_prod_strat=collection_fallback` in their URLs. `assets/theme.js` hardcoded `intent=related`, which has no order history to work from, so the curated complementary sets recorded in Phase 3 were never requested by the theme; only direct endpoint calls had exercised them. The intent is now a section setting that defaults to `complementary`. Afterwards the backpack PDP rendered Gridlink Pouch Array, Sector 05 Field Flask, and Signal Carabiner System, and the carabiner PDP rendered Nullfold Card Wallet and Night Transit Set 03, each tagged `pr_prod_strat=pinned`.
+
