@@ -138,6 +138,44 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 - **Recommendations:** `sections/product-recommendations.liquid` progressively loads related products through Shopify's recommendation endpoint.
 - **Cart/footer:** `sections/cart.liquid` provides editable lines, order note, totals, and checkout; `sections/footer.liquid` provides navigation, newsletter, optional localization, payment methods, and the KOVA wordmark.
 
+### Composition model — Theme blocks + section (Phase 8)
+
+**Implemented and checked in the development preview (2026-09-24). Actual Theme Editor UI verification is pending.**
+
+KOVA's reusable art direction has three layers. None of them is a generic page builder.
+
+1. **Snippet primitives** hold implementation reuse and carry no merchant settings.
+   - `snippets/display-heading.liquid` renders one reveal line per text line and takes `tag`, `id`, `class`, and passthrough `attributes`. Thirteen sections use it.
+   - `snippets/record-list.liquid` renders `Label: value` text as a `<dl>`, with `limit` and `keep_unlabelled`. The PDP specification panel, the signal frame, and the Record block use it.
+2. **KOVA theme blocks** (`blocks/kova-*.liquid`) are what merchants compose. Every block renders nothing when its content is blank, and none of them adds JavaScript.
+
+   | Block | Role | Merchant settings |
+   | --- | --- | --- |
+   | `kova-layout` | Arrangement of child blocks | Stack, three splits, three columns, or overlay on the first block; Tight / Standard / Open spacing; vertical alignment |
+   | `kova-eyebrow` | Label | Text, plus an optional collection whose live product count is appended |
+   | `kova-heading` | Display heading | Rich text, one paragraph per line with formatting stripped; H1/H2/H3; Title / Display / Statement size; accent last line; reveal on scroll |
+   | `kova-text` | Body copy | Rich text; Reading / Narrow width; Body / Lead size; quieter colour |
+   | `kova-cta` | One action | Label, link, and Outline / Accent / Underlined style |
+   | `kova-media` | Image | Image, phone crop, fallback alt text, shape, caption, drift on scroll. The native focal point sets `object-position` |
+   | `kova-record` + private `_kova-record-row` | Label/value facts | `Label: value` lines (connectable to a metafield) and/or row blocks |
+   | `kova-product` | Commerce | Product and title level; renders `snippets/product-card.liquid` unchanged |
+
+3. **`sections/composition.liquid`** ("Editorial composition") owns tone, accent, width, spacing, and the motion scope, and accepts `@theme` blocks. It has three presets with nested blocks: Split story, Full-bleed statement, and System record.
+
+Rules:
+
+- Arrangement never reorders children with CSS. Reading and focus order are editor order, and the overlay's backdrop is always the first child.
+- Only the heading block (reveal lines) and the image block (drift) have motion. Both use the existing `motion-core` hooks, so reduced motion and section lifecycle behave as in every other section. A per-block "Entrance" setting was left out: the card reveal groups every `data-reveal-card` in a scope under one trigger, which would not match what a merchant expects from a per-block setting.
+- Colour is tokens plus the section accent. On the light tone the accented heading line becomes a bar under ink text, the manifesto's contrast rule (D-018).
+- `closest.*` is only valid as a setting value, not as a Liquid expression. Blocks that need a resource therefore expose a resource setting (the eyebrow's "Count products in", the product block's "Product"), and templates set it to `{{ closest.collection }}` or `{{ closest.product }}`.
+- Dynamic sources are rejected on `textarea` settings, and `inline_richtext` rejects `<br>`. The heading therefore uses `richtext`, and a dynamic value has to be wrapped as `<p>{{ closest.collection.title }}</p>`.
+- The signature sections (hero, manifesto, signal frame, release record, editorial grid, and the PDP story sections) stay art-direction exceptions. They use the snippets and keep their section-local blocks, so no template data moved (D-022).
+
+Data-backed compositions:
+
+- **`templates/collection.story.json`:** a composition masthead whose H1, lead text, image, and object count come from the collection. The collection section's new "Show collection title and description" setting is off, so each fact appears once. The template is not assigned to any collection yet.
+- **`templates/page.system.json`:** an H1 from the page title, a system record, and a three-column product row; the page section's new "Show page title" setting is off. The page is not created yet: the copy is drafted from catalogue facts and awaits approval (D-020 rule).
+
 ### Lifecycle contract
 
 1. A section opts into decorative motion with `data-motion-scope`; hooks remain declarative and commerce-independent.
@@ -199,9 +237,14 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Catalog custom-data model | Foundation (Shopify custom data) | Shopify metafield/metaobject definitions; recorded in `docs/case-study/README.md` | **Implemented:** 10 product metafield definitions, 3 reusable metaobject definitions, 24 entries, all `PUBLIC_READ` for storefront consumption |
 | Drop 001 catalogue and collections | Templates / merchandising | Shopify products, collections, files | **Locally verified:** 16 published products, 62 variants, 7 published smart collections rendering 16/4/3/5/3/2/3 cards with no horizontal overflow |
 | Cart page and global footer | Sections | `sections/cart.liquid`, `sections/footer.liquid` | **Locally verified:** empty cart, newsletter/localization rendering conditions, desktop/mobile layout |
+| Display heading and record list primitives | Primitive | `snippets/display-heading.liquid`, `snippets/record-list.liquid` | **Locally verified (2026-09-24):** normalized `<main>` HTML of home, three PDPs, Drop 001, and the blog is byte-identical before and after the refactor |
+| KOVA theme blocks | Theme blocks | `blocks/kova-*.liquid`, `blocks/_kova-record-row.liquid` | **Implemented (Theme Editor UI verification pending):** rendered through two templates at 390/768/1440/1920px |
+| Editorial composition | Section | `sections/composition.liquid` | **Implemented (Theme Editor UI verification pending):** presets not yet added through the editor |
+| Collection story template | Template | `templates/collection.story.json` | **Locally verified (2026-09-24)** via `?view=story` on Drop 001: collection title as the only H1, live count 16, description; Lighthouse accessibility 100. **Planned:** assignment to a collection |
+| KOVA system page template | Template | `templates/page.system.json` | **Locally verified (2026-09-24)** via `?view=system` on an existing page; Lighthouse accessibility 100. **Planned:** page creation after copy approval |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |
 
-Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks remain baseline infrastructure and are not yet approved as final KOVA blocks.
+Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.
 
 ## Figma synchronization plan — Unavailable now
 

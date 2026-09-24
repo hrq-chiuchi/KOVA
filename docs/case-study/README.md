@@ -406,3 +406,55 @@ The LCP element is the front hero layer in every run. Best-practices variance co
 
 **Open:** campaign photography (Deferred; frames show pending), Loadout Builder (Planned), and verifying the hero mode toggle and the new sections in the actual Theme Editor UI.
 
+
+## Phase 8 composition log
+
+The brief called this phase "Phase 7: merchant-composable art direction". It is numbered 8 here because Phase 7 above is the homepage brand world.
+
+**2026-09-24 — Store capability check (read-only):** `shopify store info` and an Admin GraphQL `shop` query report store `kova-ne5bx2j5` as a **development store** on **"Shopify Plus App Development"** (`partnerDevelopment: true`, `shopifyPlus: true`) with **new customer accounts**. Shopify's documentation restricts custom apps that contain Functions to Plus stores, so the later Loadout phases can use a custom app on this store.
+
+**2026-09-24 — Implementation (D-022, D-023):**
+
+- **Snippets:** `display-heading` and `record-list` replace markup repeated in thirteen sections.
+- **Blocks and section:** eight KOVA theme blocks, one private row block, and an Editorial composition section with three nested presets.
+- **Toggles:** the collection section gains a "Show collection title and description" setting, and the page section, previously bare Skeleton markup, is rebuilt with a "Show page title" setting.
+- **Templates:** `collection.story.json` and `page.system.json` compose real data through dynamic sources.
+- **Removed:** the Skeleton text/group blocks and custom section.
+
+**Findings during implementation:**
+
+- The development theme refused the first `collection.story.json` upload. Shopify rejects Liquid in a setting "without valid dynamic sources". Bisecting showed the heading's `textarea` setting was the cause.
+- `inline_richtext` was tried next and rejected: its default may not contain `<br>`.
+- The heading now uses `richtext`, one paragraph per line. A dynamic value must be stored as `<p>{{ closest.collection.title }}</p>`, because top-level richtext nodes must be `p`, lists, or headings.
+- Shopify's documentation states that `closest.<type>` is available only as a setting value. Blocks therefore take explicit resource settings, which templates set to `{{ closest.* }}`.
+
+**Verification (local `theme dev` proxy, development theme `164481368323`, Chromium 151 headless):**
+
+- **Theme Check:** 71 files, no offenses. The Shopify AI Toolkit validator could not run (missing `@shopify/theme-check-common`), so Theme Check is the only static check.
+- **Refactor regression:** normalized `<main>` HTML (scripts and styles removed, whitespace collapsed) of the homepage, three PDPs, Drop 001, and the blog is byte-identical before and after the snippet refactor. Home, a PDP, and Drop 001 are identical again after the section toggles were added, since they default to on. A repeated fetch without changes was identical, and the baseline was re-fetched after the development theme's sync log confirmed the revert.
+- **`/collections/drop-001?view=story`:** one H1, "Drop 001 / Field Test", read from the collection title. Eyebrow "Collection / 16 objects" from the live count; lead text from the description. No collection has an image, so the image block renders nothing.
+- **`/pages/contact?view=system`:** previewed on the existing Contact page, so the H1 reads "Contact". Eyebrow "KOVA / 16 objects in Drop 001"; three real product cards with price, compare-at, and Options/Add actions.
+- **Layout:** both pages at 390, 768, 1440, and 1920px had zero horizontal overflow, one H1, and no page errors. Screenshots were reviewed at 390 and 1440px.
+- **Motion:** 2 ScrollTriggers on load with motion; 0 under reduced motion, with heading lines untransformed.
+- **Keyboard:** Tab traversal reached every link and control in `main` in reading order, each with a visible outline.
+- **Lighthouse** (12.8.2, mobile emulation, same proxy caveats as the Metrics table):
+
+  | Page | Accessibility | Performance | LCP | CLS |
+  | --- | --- | --- | --- | --- |
+  | Drop 001, story template | 100 | 74 | 3.4 s | 0 |
+  | System page template | 100 | 67 | 3.9 s | 0 |
+  | Home | 100 | 61 | 7.2 s | 0.001 |
+  | Cargo pant PDP | 100 | 44 | 7.1 s | 0 |
+
+  The PDP score is below the earlier 47–51 range, although its HTML is byte-identical to before this phase. That points to run variance on the proxy, not a regression. It is recorded as measured.
+
+**Not verified yet:**
+
+- The actual Theme Editor UI: adding presets, adding, removing, reordering, and nesting blocks, connecting dynamic sources in the picker, and listener or ScrollTrigger counts across block edits.
+- Safari.
+- The optional `edition_profile` metaobject template (not started).
+
+**Awaiting approval:**
+
+- Creating "The KOVA system" page with the drafted copy.
+- Assigning `collection.story` to a collection.
