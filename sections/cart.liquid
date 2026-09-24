@@ -17,20 +17,46 @@
       <form class="cart-page__form" action="{{ routes.cart_url }}" method="post">
         <ol class="cart-page__items">
           {% for item in cart.items %}
+            {%- liquid
+              # A merged loadout's parent product is hidden, so the line links to and shows its platform.
+              assign line_title = item.product.title
+              assign line_url = item.url
+              assign line_image = item.image
+              assign is_loadout = false
+              if item.properties._kova_loadout_platform != blank
+                assign is_loadout = true
+                assign line_title = item.title
+                assign platform = item.item_components.first
+                for component in item.item_components
+                  if component.product.title == item.properties._kova_loadout_platform
+                    assign platform = component
+                    break
+                  endif
+                endfor
+                assign line_url = platform.url
+                if line_image == blank
+                  assign line_image = platform.image
+                endif
+              endif
+            -%}
             <li class="cart-line">
-              <a class="cart-line__media" href="{{ item.url }}">
-                {% if item.image %}
-                  {{ item.image | image_url: width: 600 | image_tag: widths: '240, 360, 480, 600', sizes: '(max-width: 767px) 7rem, 12rem', loading: 'lazy', alt: item.image.alt | default: item.product.title }}
+              <a class="cart-line__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
+                {% if line_image %}
+                  {{ line_image | image_url: width: 600 | image_tag: widths: '240, 360, 480, 600', sizes: '(max-width: 767px) 7rem, 12rem', loading: 'lazy', alt: '' }}
+                {% else %}
+                  {% render 'media-pending', title: line_title, compact: true %}
                 {% endif %}
               </a>
               <div class="cart-line__identity">
-                <p class="eyebrow">Object {{ forloop.index | prepend: '0' }}</p>
-                <h2><a href="{{ item.url }}">{{ item.product.title | escape }}</a></h2>
-                {% unless item.product.has_only_default_variant %}<p>{{ item.variant.title | escape }}</p>{% endunless %}
-                <a href="{{ item.url_to_remove }}">{{ 'cart.remove' | t }}</a>
+                <p class="eyebrow">{% if is_loadout %}Loadout{% else %}Object{% endif %} {{ forloop.index | prepend: '0' }}</p>
+                <h2><a href="{{ line_url }}">{{ line_title | escape }}</a></h2>
+                {% unless is_loadout or item.product.has_only_default_variant %}<p>{{ item.variant.title | escape }}</p>{% endunless %}
+                {% render 'cart-line-components', item: item, class: 'cart-line__components' %}
+                {% if item.error_message != blank %}<p class="cart-line__error" role="alert">{{ item.error_message | escape }}</p>{% endif %}
+                <a href="{{ item.url_to_remove }}">{{ 'cart.remove' | t }}<span class="visually-hidden"> {{ line_title | escape }}</span></a>
               </div>
               <div class="cart-line__quantity form-field">
-                <label for="Quantity-{{ item.index }}">Quantity</label>
+                <label for="Quantity-{{ item.index }}">Quantity<span class="visually-hidden"> for {{ line_title | escape }}</span></label>
                 <input id="Quantity-{{ item.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric">
               </div>
               <p class="cart-line__price">{{ item.final_line_price | money }}</p>
@@ -72,6 +98,8 @@
   .cart-line__identity h2 a { text-decoration: none; }
   .cart-line__identity > p:not(.eyebrow),
   .cart-line__identity > a { color: var(--ad-color-text-muted); font-size: 0.85rem; }
+  .cart-line__components { margin-block-end: var(--ad-space-200); }
+  .cart-line__error { color: var(--ad-color-action-critical); font-size: 0.85rem; }
   .cart-line__quantity input { width: 100%; }
   .cart-line__price { align-self: start; font-family: var(--font-display-family); font-size: 1.5rem; }
   .cart-page__summary { display: grid; grid-template-columns: 1fr minmax(20rem, 0.75fr); gap: var(--ad-content-gap); margin-block-start: var(--ad-space-700); }
@@ -84,9 +112,10 @@
   @media (max-width: 47.99rem) {
     .cart-page__inner { padding-block-start: var(--ad-space-500); }
     .cart-page__header { min-height: 10rem; }
-    .cart-line { grid-template-columns: 7rem 1fr auto; gap: var(--ad-space-300); }
+    .cart-line { grid-template-columns: 6rem minmax(0, 1fr) auto; gap: var(--ad-space-300); }
+    .cart-line__identity h2 { overflow-wrap: anywhere; }
     .cart-line__quantity { grid-column: 2; width: 6rem; }
-    .cart-line__price { grid-column: 3; grid-row: 1; }
+    .cart-line__price { grid-column: 3; grid-row: 1; font-size: 1.15rem; }
     .cart-page__summary { grid-template-columns: 1fr; margin-block-start: var(--ad-space-500); }
     .cart-page__actions { grid-template-columns: 1fr; }
   }

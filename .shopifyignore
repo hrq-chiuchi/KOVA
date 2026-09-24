@@ -11,3 +11,6 @@
 #
 # Ignore templates and sections with a regular expression:
 #   /(templates|sections)/.*\.json/
+
+# The KOVA Core app lives beside the theme and is never uploaded with it.
+apps/**

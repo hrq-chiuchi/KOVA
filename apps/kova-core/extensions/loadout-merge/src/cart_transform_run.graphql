@@ -1,0 +1,29 @@
+query CartTransformRunInput {
+  cartTransform {
+    rules: metafield(namespace: "kova", key: "loadout_rules") {
+      jsonValue
+    }
+  }
+  cart {
+    lines {
+      id
+      quantity
+      group: attribute(key: "_kova_loadout") {
+        value
+      }
+      slot: attribute(key: "_kova_slot") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+}

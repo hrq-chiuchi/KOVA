@@ -1,0 +1,4 @@
+{
+  "name": "KOVA loadout guard",
+  "description": "Blocks checkout when a loadout was changed or left incomplete, so its items never check out at the wrong price."
+}

@@ -1,0 +1,95 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "validation": {
+        "rules": null
+      },
+      "cart": {
+        "lines": [
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "platform"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/1010",
+              "product": {
+                "id": "gid://shopify/Product/101",
+                "title": "After Dark Utility Backpack"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/2010",
+              "product": {
+                "id": "gid://shopify/Product/201",
+                "title": "Gridlink Pouch Array"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "hydration"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/3010",
+              "product": {
+                "id": "gid://shopify/Product/301",
+                "title": "Sector 05 Field Flask"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "The After Dark Utility Backpack loadout is incomplete or has changed. Remove its items or rebuild the loadout.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

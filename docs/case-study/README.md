@@ -513,3 +513,87 @@ Items to revisit. None of them blocks Phase 8.
    - "Carry Systems are built on the Relay Grid attachment standard. The Gridlink Pouch Array is listed as working with each of these three."
 2. Assign `collection.story` to Drop 001, or to another collection.
 3. Optionally, enable the Online Store webpage capability on the `edition_profile` metaobject definition and add a metaobject template composed from the KOVA blocks.
+
+## Phase 9 loadout foundation log
+
+Phase 9 adds loadouts: a carry platform plus modules from named slots, sold as one merged cart line at a tier price and enforced by Shopify Functions. The Loadout Builder UI is Phase 10. Hardware generations (V1/V2) were **Deferred** at the user's request.
+
+**2026-09-24 — Catalogue (D-024, D-025):** the user approved five invented Drop 002 products, drafted in the voice of Drop 001, with photography to follow. `apps/kova-core/scripts/seed-drop-002.mjs` wrote them through Admin GraphQL (`productSet`, `metaobjectUpsert`, `metafieldsSet`, `publishablePublish`, `collectionCreate`) and can be re-run safely.
+
+| Product | Role | Price | Variants and stock |
+| --- | --- | --- | --- |
+| Relay Sling 8 | Loadout platform | $158 | 1 variant, 14 |
+| Gridlink Cell 01 | Organizer module | $48 | 1 variant, 30 |
+| Sector Sleeve | Hydration module | $44 | 1 variant, 24 |
+| Lumen Tag Beacon | Signal module | $58 | White 20, Red 20 |
+| Afterimage Long Sleeve | Plain product, never in a loadout | $88 | S–XXL, 48 in total |
+
+- **New records:** two metaobject definitions (`loadout`, `loadout_slot`); four profile entries (material "Afterimage 190 Knit", fit "Close Base Layer", editions "Drop 002 / Relay Grid" and "Afterimage 400"); one loadout with three slots; the "KOVA Loadout" parent product; and 15 compatibility and recommendation references, six of which extend existing Drop 001 products. No other Drop 001 field changed.
+- **Found and fixed:** new entries of the publishable profile types default to DRAFT, which Liquid cannot read. Afterimage Long Sleeve showed "Object 79" instead of its drop code. The script now publishes them, and the page shows DROP 002 / 400 units, its fit, and its material.
+- **Found and fixed:** Shopify's automatic `/collections/all` listed the published "KOVA Loadout" parent. A smart collection with the handle `all` ("Products", product type is not `Loadout`) now serves that URL with the 21 KOVA products. Shopify's `/collections/all/products.json` and `/products.json` feeds still list the parent; its $0 price cannot be bought (see below).
+
+**2026-09-24 — Theme:**
+
+- `snippets/media-pending.liquid` replaces the generic placeholder on product cards, product pages, and cart lines. Cards without an image skip the WebGL reveal.
+- `snippets/cart-line-components.liquid` lists the objects in a merged loadout or a native bundle. The cart page and drawer show a loadout under its title, linked to and illustrated by its platform, and never print `_` properties.
+- **Found and fixed (pre-existing):** the cart page overflowed a 390px viewport by 6px on any line, because the price column pushed the mobile grid. The mobile grid now uses `minmax(0, 1fr)` and a smaller price.
+- Theme Check: 73 files, no offenses. `apps/**` is excluded from Theme Check and from theme uploads.
+
+**2026-09-24 — KOVA Core app (D-026):** created with `shopify app init` in the user's Dev Dashboard organisation after approval, and installed on the dev store with `shopify app dev`, which the user ran. It has not been deployed or released. `scripts/sync-rules.mjs` compiled the metaobjects and activated `CartTransform/135725315` and `Validation/138477827`.
+
+**Fixture tests:** vitest with Shopify's function test helpers.
+
+- `loadout-merge`: 12 carts, all passing:
+  - valid groups of two and three modules
+  - slot over its maximum
+  - product outside its slot
+  - bundle claiming a slot
+  - two platforms
+  - unequal quantities
+  - too few modules
+  - missing rules
+  - one valid and one invalid group
+  - plain cart
+  - a quantity-two loadout
+- `loadout-guard`: the same 12 carts plus two more (the parent added directly, and a merged loadout line), 14 in total, all passing.
+
+The largest fixture ran at 0.84M of the 11M-instruction limit.
+
+**Live results on the dev store** (AJAX cart through the development preview; every test cart was cleared):
+
+| Case | Result |
+| --- | --- |
+| Backpack + Pouch Array + Flask | One line "Loadout — After Dark Utility Backpack", $430.20 (10% off $478) |
+| Sling + Cell + Sleeve + Beacon, beside a plain hoodie | One loadout line at $261.80 (15% off $308); the hoodie untouched |
+| Courier with the Nullfold wallet claiming the organizer slot | Add refused (422): "The Lowlight Courier 14 loadout is incomplete or has changed…" |
+| A second hydration module added to a valid loadout | Refused; the loadout keeps its merged price |
+| A valid third module added to a two-module loadout | Accepted; re-priced to $447.10 (15% off $526) |
+| The KOVA Loadout parent added directly, with or without a spoofed property | Refused (422): "A KOVA Loadout can only be built from its platform and modules." |
+| Loadout beside Night Transit Set 03 | Both intact; the native bundle stays one line at $169.00 |
+| Merged line quantity set to 2 | Components and price doubled ($860.40); Shopify reports the parent as quantity 1 |
+
+**Findings that changed the design:**
+
+1. The first live run refused every loadout, valid ones included. The run logs showed the transform had returned a correct merge, but Shopify ignored it: the parent product was not on the Online Store channel. With no merge, the guard saw ungrouped lines. Publishing the parent to the Online Store (hidden with `seo.hidden`, untagged) made the merge apply. This settles the plan's open question.
+2. This also showed that validation runs after the transform: a valid loadout reaches the guard as a single "KOVA Loadout" line. Because the parent is now purchasable on its own at $0, the guard blocks a parent line whose cost is zero. A merged line always carries its components' total.
+3. The guard and the transform now import one rule module (`apps/kova-core/shared/loadout-rules.ts`), so they cannot disagree about what is valid.
+
+**Browser checks (Chromium):**
+
+- The cart page with a loadout has no overflow at 390 or 1440px, and keyboard order runs title → Remove → Quantity.
+- A pending-photography product page, a pending product card grid, and the cart have no overflow at either width.
+- Lighthouse accessibility is 100 on Relay Sling 8, Afterimage Long Sleeve, and Field Objects.
+
+**Not verified:**
+
+- **Checkout itself (Unavailable here):** the dev storefront is password-protected, and the browser test was redirected to `/password`. Validation's block was verified at add-to-cart, where Shopify runs the same function. The checkout step is not verified.
+- A before/after HTML diff of existing pages was not run, to avoid switching branches while `shopify theme dev` synced the working tree. The theme changes touch only the no-image branches and the cart, but the claim is unmeasured.
+- Safari (**Unavailable**, as in Phase 8).
+
+### Phase 9 backlog
+
+- **Drop 002 photography (owner: user).** Upload images to the five products. The pending frames disappear without code changes.
+- **Deploy decision (owner: user).** The functions run only while `shopify app dev` runs. Decide whether to deploy a KOVA Core version before Phase 10 ships.
+- **Rules editing.** Re-run `node apps/kova-core/scripts/sync-rules.mjs` after any change to a loadout or slot in the admin, until an App Home screen replaces it.
+- **Parent product page.** `/products/kova-loadout` returns 200 for anyone with the URL; consider a redirect or a dedicated template.
+- **Loadout quantity.** Decide in Phase 10 how the builder presents a quantity-two loadout (see D-024).

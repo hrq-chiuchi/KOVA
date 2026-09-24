@@ -138,6 +138,16 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 - **Recommendations:** `sections/product-recommendations.liquid` progressively loads related products through Shopify's recommendation endpoint.
 - **Cart/footer:** `sections/cart.liquid` provides editable lines, order note, totals, and checkout; `sections/footer.liquid` provides navigation, newsletter, optional localization, payment methods, and the KOVA wordmark.
 
+### Pending photography — Primitive (Phase 9)
+
+- **Surface:** `snippets/media-pending.liquid`.
+- **Contract:** the only stand-in for a product without imagery. Full size on the product page (label plus title, which is `aria-hidden` because the H1 already names the product); compact on cards and cart lines (label only). It never borrows another product's photography (D-013, D-025). Cards without an image carry no `data-webgl-reveal`.
+
+### Loadout line — Commerce component (Phase 9)
+
+- **Surfaces:** `sections/cart.liquid`, `sections/cart-drawer.liquid`, `snippets/cart-line-components.liquid`; rules and pricing in `apps/kova-core/` (D-024, D-026).
+- **Contract:** a line carrying `_kova_loadout_platform` is a merged loadout. It shows the transform's title ("Loadout — {platform}"), links to and uses the image of its platform component, lists every component, and exposes one quantity and one Remove control for the whole loadout. Lines with components but no loadout property (native bundles) list their components the same way. Properties starting with `_` are never printed. Shopify's cart line `error_message` is shown when present.
+
 ### Composition model — Theme blocks + section (Phase 8)
 
 **Implemented; verified in the development preview and in the actual Theme Editor UI (2026-09-24).** Safari is **Unavailable** (no macOS or iOS device).
@@ -237,7 +247,7 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Product FAQ | Section | `sections/product-faq.liquid` | **Locally verified:** merchant question blocks on native `<details>`, optional shipping/returns question that links store policies when they exist and otherwise uses the checkout-confirmation fallback |
 | Product reviews | Section | `sections/product-reviews.liquid` | **Implemented; empty state verified:** reads only Shopify's standard `reviews.rating`/`reviews.rating_count` metafields and `@app` review blocks; no review app is installed, so every product currently shows the empty state |
 | Corrupted-signal page transition | Motion behavior | `snippets/page-transition.liquid`, `assets/page-transition.css`, `assets/page-transition.js`, `layout/theme.liquid` | **Locally verified in Chromium 151 (2026-09-24):** cross-document view transition with SVG RGB-split/band-tear filters, pinned header, scanline sweep, card-to-PDP image morph, reversed tear on back navigation, single-name guard, bfcache cleanup, hover prefetch; off for reduced motion, in the Theme Editor, and by the Motion theme setting. **Unavailable in Firefox 154** (no cross-document view transitions; plain navigation) |
-| Catalog custom-data model | Foundation (Shopify custom data) | Shopify metafield/metaobject definitions; recorded in `docs/case-study/README.md` | **Implemented:** 10 product metafield definitions, 3 reusable metaobject definitions, 24 entries, all `PUBLIC_READ` for storefront consumption |
+| Catalog custom-data model | Foundation (Shopify custom data) | Shopify metafield/metaobject definitions; recorded in `docs/case-study/README.md` | **Implemented:** 10 product metafield definitions and 3 reusable profile metaobject definitions, all `PUBLIC_READ`; 24 profile entries from Phase 3 plus 4 from Drop 002 (Phase 9) |
 | Drop 001 catalogue and collections | Templates / merchandising | Shopify products, collections, files | **Locally verified:** 16 published products, 62 variants, 7 published smart collections rendering 16/4/3/5/3/2/3 cards with no horizontal overflow |
 | Cart page and global footer | Sections | `sections/cart.liquid`, `sections/footer.liquid` | **Locally verified:** empty cart, newsletter/localization rendering conditions, desktop/mobile layout |
 | Display heading and record list primitives | Primitive | `snippets/display-heading.liquid`, `snippets/record-list.liquid` | **Locally verified (2026-09-24):** normalized `<main>` HTML of home, three PDPs, Drop 001, and the blog is byte-identical before and after the refactor |
@@ -245,6 +255,11 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Editorial composition | Section | `sections/composition.liquid` | **Verified in the actual Theme Editor (2026-09-24):** all three presets added; setting changes and hide/show re-render with flat listener counts |
 | Collection story template | Template | `templates/collection.story.json` | **Locally verified (2026-09-24)** via `?view=story` on Drop 001: collection title as the only H1, live count 16, description; Lighthouse accessibility 100. **Planned:** assignment to a collection |
 | KOVA system page template | Template | `templates/page.system.json` | **Locally verified (2026-09-24)** via `?view=system` on an existing page; Lighthouse accessibility 100. **Planned:** page creation after copy approval |
+| Pending photography frame | Primitive | `snippets/media-pending.liquid` | **Locally verified (2026-09-24):** Drop 002 product pages, cards and cart lines at 390/1440px with no overflow; WebGL reveal skipped on cards without images; Lighthouse accessibility 100 on two pending PDPs and a mixed collection |
+| Loadout and bundle cart lines | Commerce component | `sections/cart.liquid`, `sections/cart-drawer.liquid`, `snippets/cart-line-components.liquid` | **Locally verified (2026-09-24):** merged loadout lines on the cart page and drawer (platform image and link, all components, no `_` properties), keyboard order, no overflow at 390/1440px after fixing a pre-existing 6px mobile overflow. Checkout rendering **not verified** (password-protected dev storefront) |
+| Loadout rules | Foundation (Shopify custom data) | `loadout`, `loadout_slot` metaobjects; `apps/kova-core/scripts/sync-rules.mjs` | **Implemented (2026-09-24):** one loadout (four platforms), three slots, 10%/15% tiers; compiled to the cart transform and validation |
+| KOVA Core loadout functions | App / Shopify Functions | `apps/kova-core/extensions/loadout-merge`, `loadout-guard`, `shared/loadout-rules.ts` | **Verified on the dev store through `shopify app dev` (2026-09-24):** 12 transform and 14 validation fixtures pass; live merges at the tier price, tampered, oversized and direct-parent carts refused, native bundle unaffected. **Not deployed** |
+| Drop 002 catalogue | Templates / merchandising | Shopify products, metaobjects, the `all` smart collection | **Implemented (2026-09-24):** five active products (21 KOVA products in total), photography **Planned** (owner: user); `/collections/all` served by a smart collection that excludes the loadout parent |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |
 
 Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.

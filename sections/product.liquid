@@ -60,7 +60,7 @@
           {% endcase %}
         </figure>
       {% else %}
-        <figure class="product-page__media product-page__media--primary">{{ 'product-1' | placeholder_svg_tag }}</figure>
+        <figure class="product-page__media product-page__media--primary">{% render 'media-pending', title: product.title %}</figure>
       {% endfor %}
     </div>
 

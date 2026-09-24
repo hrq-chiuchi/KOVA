@@ -1,0 +1,29 @@
+{% doc %}
+  Lists the components of a cart line that holds several objects: a merged KOVA loadout or a
+  native Shopify bundle. Renders nothing for an ordinary line.
+
+  @param {object} item - Cart line item
+  @param {string} [class] - Class for the list element
+
+  @example
+  {% render 'cart-line-components', item: item, class: 'cart-line__components' %}
+{% enddoc %}
+{% if item.item_components.size > 0 %}
+  <ul class="cart-components{% if class != blank %} {{ class }}{% endif %}" role="list" aria-label="Contents of {{ item.title | escape }}">
+    {% for component in item.item_components %}
+      <li>
+        <span>{{ component.product.title | escape }}</span>
+        {% unless component.product.has_only_default_variant %}<span class="cart-components__variant">{{ component.variant.title | escape }}</span>{% endunless %}
+        {% if component.quantity > item.quantity %}<span class="cart-components__quantity">× {{ component.quantity | divided_by: item.quantity }}</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% stylesheet %}
+  .cart-components { display: grid; margin: 0; padding: 0; gap: var(--ad-space-50); list-style: none; color: var(--ad-color-text-muted); font-size: 0.85rem; }
+  .cart-components li { position: relative; padding-inline-start: var(--ad-space-300); }
+  .cart-components li::before { position: absolute; inset-inline-start: 0; content: "+"; color: var(--color-accent, currentcolor); }
+  .cart-components__variant,
+  .cart-components__quantity { margin-inline-start: var(--ad-space-200); }
+{% endstylesheet %}
