@@ -1,0 +1,87 @@
+{% doc %}
+  Responsive image with an optional phone crop and scroll drift. The image's focal point sets the crop.
+  With no image it renders nothing, except a pending frame in the theme editor so it stays selectable.
+{% enddoc %}
+{%- liquid
+  assign image = block.settings.image
+  assign mobile_image = block.settings.mobile_image
+  assign alt = image.alt | default: block.settings.alt
+  assign focal_style = nil
+  if image.presentation.focal_point != blank
+    assign focal_style = image.presentation.focal_point | prepend: 'object-position: '
+  endif
+-%}
+{%- if image != blank -%}
+  <figure class="kova-media" {{ block.shopify_attributes }}>
+    <div class="kova-media__frame" style="--kova-media-ratio: {{ block.settings.ratio }};">
+      {% comment %} Drift sits on an inner node: reduced-motion cleanup clears inline styles. {% endcomment %}
+      <div class="kova-media__drift"{% if block.settings.drift %} data-parallax data-motion-speed="6"{% endif %}>
+        <picture>
+          {%- if mobile_image != blank -%}
+            <source
+              media="(max-width: 47.99rem)"
+              srcset="{{ mobile_image | image_url: width: 750 }} 750w, {{ mobile_image | image_url: width: 1100 }} 1100w"
+              sizes="100vw"
+            >
+          {%- endif -%}
+          {{ image
+            | image_url: width: 2400
+            | image_tag:
+              widths: '540, 750, 1100, 1500, 1920, 2400',
+              sizes: '(max-width: 47.99rem) 100vw, 70vw',
+              loading: 'lazy',
+              alt: alt,
+              style: focal_style
+          }}
+        </picture>
+      </div>
+    </div>
+    {%- if block.settings.caption != blank -%}
+      <figcaption class="eyebrow kova-media__caption">{{ block.settings.caption | escape }}</figcaption>
+    {%- endif -%}
+  </figure>
+{%- elsif request.design_mode -%}
+  <div class="kova-media kova-media--pending" {{ block.shopify_attributes }}>
+    <div class="kova-media__frame" style="--kova-media-ratio: {{ block.settings.ratio }};">
+      <span class="eyebrow">Image pending</span>
+    </div>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-media { position: relative; margin: 0; }
+  .kova-media__frame { position: relative; overflow: hidden; aspect-ratio: var(--kova-media-ratio); background: var(--ad-color-background-elevated); }
+  .kova-media__drift { position: absolute; inset: 0; }
+  .kova-media__drift[data-parallax] { inset: -6% 0; }
+  .kova-media__drift picture,
+  .kova-media__drift img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .kova-media__caption { margin-block-start: var(--ad-space-300); color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .kova-media--pending .kova-media__frame { display: grid; place-items: center; border: var(--ad-border-hairline) dashed var(--ad-color-border-subtle); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Image",
+  "tag": null,
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image", "info": "Set a focal point on the image to control the crop." },
+    { "type": "image_picker", "id": "mobile_image", "label": "Phone image", "info": "Optional. A separate crop for narrow screens." },
+    { "type": "text", "id": "alt", "label": "Alt text fallback", "info": "Used only when the image has no alt text of its own. Leave blank for decorative images." },
+    {
+      "type": "select",
+      "id": "ratio",
+      "label": "Shape",
+      "default": "4 / 5",
+      "options": [
+        { "value": "4 / 5", "label": "Portrait" },
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "3 / 2", "label": "Landscape" },
+        { "value": "21 / 9", "label": "Wide" }
+      ]
+    },
+    { "type": "text", "id": "caption", "label": "Caption" },
+    { "type": "checkbox", "id": "drift", "label": "Drift on scroll", "default": false, "info": "Desktop only. Off when visitors prefer reduced motion." }
+  ],
+  "presets": [{ "name": "Image" }]
+}
+{% endschema %}

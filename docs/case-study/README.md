@@ -406,3 +406,110 @@ The LCP element is the front hero layer in every run. Best-practices variance co
 
 **Open:** campaign photography (Deferred; frames show pending), Loadout Builder (Planned), and verifying the hero mode toggle and the new sections in the actual Theme Editor UI.
 
+
+## Phase 8 composition log
+
+The brief called this phase "Phase 7: merchant-composable art direction". It is numbered 8 here because Phase 7 above is the homepage brand world.
+
+**2026-09-24 — Store capability check (read-only):** `shopify store info` and an Admin GraphQL `shop` query report store `kova-ne5bx2j5` as a **development store** on **"Shopify Plus App Development"** (`partnerDevelopment: true`, `shopifyPlus: true`) with **new customer accounts**. Shopify's documentation restricts custom apps that contain Functions to Plus stores, so the later Loadout phases can use a custom app on this store.
+
+**2026-09-24 — Implementation (D-022, D-023):**
+
+- **Snippets:** `display-heading` and `record-list` replace markup repeated in fourteen sections.
+- **Blocks and section:** eight KOVA theme blocks, one private row block, and an Editorial composition section with three nested presets.
+- **Toggles:** the collection section gains a "Show collection title and description" setting, and the page section, previously bare Skeleton markup, is rebuilt with a "Show page title" setting.
+- **Templates:** `collection.story.json` and `page.system.json` compose real data through dynamic sources.
+- **Removed:** the Skeleton text/group blocks and custom section.
+
+**Findings during implementation:**
+
+- The development theme refused the first `collection.story.json` upload. Shopify rejects Liquid in a setting "without valid dynamic sources". Bisecting showed the heading's `textarea` setting was the cause.
+- `inline_richtext` was tried next and rejected: its default may not contain `<br>`.
+- The heading now uses `richtext`, one paragraph per line. A dynamic value must be stored as `<p>{{ closest.collection.title }}</p>`, because top-level richtext nodes must be `p`, lists, or headings.
+- A throwaway `product.blocktest` template exercised every block path the two real templates do not use. It was viewed on the backpack PDP and deleted afterwards without being committed. It found:
+  - **Image block:** a filter chain inside `image_tag`'s `style:` argument printed an empty `style="object-position: "` when the image had no focal point. The style is now assigned first and emitted only when a focal point exists.
+  - **Overlay:** without an image, the text stack became `:first-child` and inherited the backdrop styles. The backdrop now requires a first Image block, and otherwise the children stack.
+  - **Record:** its `textarea` lines rejected every metafield dynamic source, so the block's "connect a metafield" claim was false. Switched to `richtext`: `<p>{{ product.metafields.custom.technical_specifications.value }}</p>` uploads and renders the backpack's five specification rows. The `closest.product.metafields…` form is still rejected.
+  - **Entities:** a heading of `Tools &amp; gear` would have rendered a visible `&amp;` through `escape`. Rich-text callers now pass `entities: true` (`escape_once`); the fourteen existing callers keep `escape`.
+  - **Also exercised:** overlay with a real product image and drift, all three button styles, the wide-second split, `closest.product` in the product block, and a heading with an apostrophe.
+
+  At 390, 768, 1440, and 1920px there was zero overflow and one H1. Desktop kept one persistent drift ScrollTrigger, with none on phones or under reduced motion. Screenshots were reviewed at 390 and 1440px.
+- The system page copy was checked against the catalogue with a read-only Admin query. Carry Systems holds the Lowlight Courier 14, After Dark Utility Backpack, Gridlink Pouch Array, and Driftline Hip Rig. Only that collection's description, plus the Night Transit Set's, names Relay Grid, and all 16 KOVA products list compatible products. The draft had implied that the Relay Modular Vest is part of the grid and that every object works with every other. It now names the three carry platforms, each of which lists the Gridlink Pouch Array.
+- The rebuilt page section renders the Contact and Your Privacy Choices pages with their title as the only H1 and their content intact.
+- Shopify's documentation states that `closest.<type>` is available only as a setting value. Blocks therefore take explicit resource settings, which templates set to `{{ closest.* }}`.
+
+**Verification (local `theme dev` proxy, development theme `164481368323`, Chromium 151 headless):**
+
+- **Theme Check:** 71 files, no offenses. The Shopify AI Toolkit validator could not run (missing `@shopify/theme-check-common`), so Theme Check is the only static check.
+- **Refactor regression:** normalized `<main>` HTML (scripts and styles removed, whitespace collapsed) of the homepage, three PDPs, Drop 001, and the blog is byte-identical before and after the snippet refactor. Home, a PDP, and Drop 001 are identical again after the section toggles were added, since they default to on. A repeated fetch without changes was identical, and the baseline was re-fetched after the development theme's sync log confirmed the revert.
+- **`/collections/drop-001?view=story`:** one H1, "Drop 001 / Field Test", read from the collection title. Eyebrow "Collection / 16 objects" from the live count; lead text from the description. No collection has an image, so the image block renders nothing.
+- **`/pages/contact?view=system`:** previewed on the existing Contact page, so the H1 reads "Contact". Eyebrow "KOVA / 16 objects in Drop 001"; three real product cards with price, compare-at, and Options/Add actions.
+- **Layout:** both pages at 390, 768, 1440, and 1920px had zero horizontal overflow, one H1, and no page errors. Screenshots were reviewed at 390 and 1440px.
+- **Motion:** 2 ScrollTriggers on load with motion; 0 under reduced motion, with heading lines untransformed.
+- **Keyboard:** Tab traversal reached every link and control in `main` in reading order, each with a visible outline.
+- **Lighthouse** (12.8.2, mobile emulation, same proxy caveats as the Metrics table):
+
+  | Page | Accessibility | Performance | LCP | CLS |
+  | --- | --- | --- | --- | --- |
+  | Drop 001, story template | 100 | 74 | 3.4 s | 0 |
+  | System page template | 100 | 67* | 3.9 s* | 0 |
+  | Home | 100 | 61 | 7.2 s | 0.001 |
+  | Cargo pant PDP | 100 | 44 | 7.1 s | 0 |
+
+  \* Measured before the copy and product-row correction below. Accessibility was re-measured afterwards at 100 on both templates; performance was not.
+
+  The PDP score is below the earlier 47–51 range, although its HTML is byte-identical to before this phase. That points to run variance on the proxy, not a regression. It is recorded as measured.
+
+**2026-09-24 — Actual Theme Editor verification:**
+
+Setup:
+
+- The user signed in to the Shopify admin in a visible Chromium 151 window.
+- That window was driven over the Chrome DevTools Protocol against development theme `164481368323`, served by `shopify theme dev` from this branch.
+- A probe in the preview frame recorded `shopify:*` events, page errors, ScrollTriggers, motion scopes, and the pending states. Listener counts on `window` and `document` came from `DOMDebugger.getEventListeners`.
+- Nothing was saved. Each edit session was discarded by reloading the editor.
+
+| Action in the editor | Observed |
+| --- | --- |
+| Section picker on the homepage | The three presets are listed by name (Split story, Full-bleed statement, System record) |
+| Add each preset in turn | One `section:load` each; motion scopes 9 → 10 → 11 → 12; each shows "Image pending" and "Link pending" in the editor; one H1 on the page; no errors |
+| Toggle System record's Tone four times | `unload` → `load` → `select` each time; window/document listeners 58/57 before and after, no change by event type; the reloaded heading's reveal lines settle at `translate(0, 0)` |
+| Block picker | Lists the eight KOVA blocks. The private record row is not offered |
+| Add a Layout inside the section's Layout, then a Text inside it | Section → Layout → Layout → Text (three block levels); `block:select` opens merchant-worded settings; listeners unchanged (58/58) |
+| Drag the Record above the second stack in the sidebar | Preview DOM order changed from [stack, stack, record] to [stack, record, stack] with no section reload |
+| Remove the nested Text | Section reload, one fewer Text, no listener growth |
+| Product template: Split story, then the heading's dynamic-source button | The picker offers the closest Product's fields and metafields; choosing Title shows a connected "Título" chip, and the preview heading reads the product title |
+| Record block lines → Technical specifications through the picker | Live specification rows. This is the connection the `closest.product.metafields…` JSON form could not make |
+| Hide and show the section twice | `unload`, then `load`, each time; motion scopes 7 → 6 → 7; listeners 50/56 throughout |
+| Collection story template in the editor | The JSON-authored `closest.collection` heading shows as a connected "Título" chip; eyebrow count, H1, and the masthead toggle resolve live |
+
+Bugs found and fixed:
+
+- **Mid-word breaks.** A Title heading in the narrow column of a split broke long words mid-word, for example "BACKPA / CK". Layouts are now inline-size containers, and heading sizes are capped by column width. After the fix, the editor measured 45.9px in a 328px column with no word split across lines. The storefront templates measured no broken words at 390 and 1440px, and Drop 001's story heading now sets on two lines instead of three.
+- **Record row count.** Picker-connected record lines rendered 4 of the backpack's 5 specifications. Each rich-text paragraph left a blank line, and the line limit counted blanks. Blank lines are now collapsed first, and the editor shows all 5 rows.
+- One operator error during the run: a label heuristic clicked "Remove section" instead of "Show". It affected only the unsaved draft, and the draft was discarded.
+
+After the fixes: the story and system templates showed zero overflow and one H1 at 390, 768, 1440, and 1920px. The normalized HTML of home, a PDP, and Drop 001 is still byte-identical. Theme Check: 71 files, no offenses.
+
+**Not verified:**
+
+- Safari (**Unavailable**: Linux development machine; see the backlog).
+- The image focal-point path. No image in the store has a focal point set (see the backlog).
+- The optional `edition_profile` metaobject template (not started).
+
+### Phase 8 backlog and open decisions
+
+Items to revisit. None of them blocks Phase 8.
+
+**Backlog:**
+
+- **Focal-point imagery (owner: user).** Supply images for composition blocks and set a focal point on at least one in Shopify Files. Then verify that the Image block's `object-position` crop follows it at 390px and 1440px. Until then the path is untested.
+- **Safari (Unavailable).** The development machine runs Linux, and no macOS or iOS device is available. Safari behaviour of the composition blocks and view transitions stays unverified until one is.
+
+**Decisions to return to:**
+
+1. Create "The KOVA system" page with `page.system`, using the copy drafted from catalogue facts:
+   - "Every KOVA product page lists the objects it works with, from carry platforms to the small tools that clip to them."
+   - "Carry Systems are built on the Relay Grid attachment standard. The Gridlink Pouch Array is listed as working with each of these three."
+2. Assign `collection.story` to Drop 001, or to another collection.
+3. Optionally, enable the Online Store webpage capability on the `edition_profile` metaobject definition and add a metaobject template composed from the KOVA blocks.

@@ -1,0 +1,21 @@
+{% doc %}
+  One label/value row inside a Record block.
+{% enddoc %}
+{%- if block.settings.label != blank and block.settings.value != blank -%}
+  <div {{ block.shopify_attributes }}>
+    <dt>{{ block.settings.label | escape }}</dt>
+    <dd>{{ block.settings.value | escape }}</dd>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Row",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Release" },
+    { "type": "text", "id": "value", "label": "Value", "default": "Drop 001" }
+  ],
+  "presets": [{ "name": "Row" }]
+}
+{% endschema %}

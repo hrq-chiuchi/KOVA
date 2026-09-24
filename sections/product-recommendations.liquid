@@ -11,7 +11,7 @@
       <div class="section-shell product-recommendations__inner" data-motion-scope>
         <header class="product-recommendations__header" data-reveal="section">
           <p class="eyebrow">Continue the system</p>
-          <h2 class="section-heading"><span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span></h2>
+          {% render 'display-heading', text: section.settings.heading, class: 'section-heading' %}
         </header>
         <div class="product-recommendations__grid">
           {% for product in recommendations.products %}

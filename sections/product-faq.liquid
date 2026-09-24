@@ -24,9 +24,8 @@
     <div class="product-faq__inner section-shell">
       <header class="product-faq__header" data-reveal="section">
         <p class="eyebrow">{{ section.settings.eyebrow | escape }} / {{ question_count | prepend: '0' | slice: -2, 2 }}</p>
-        <h2 id="FaqHeading-{{ section.id }}" class="section-heading">
-          <span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span>
-        </h2>
+        {% assign heading_id = 'FaqHeading-' | append: section.id %}
+        {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'section-heading' %}
         {% if section.settings.intro != blank %}
           <div class="product-faq__intro">{{ section.settings.intro }}</div>
         {% endif %}

@@ -1,0 +1,49 @@
+{% doc %}
+  Body copy at a controlled reading width.
+{% enddoc %}
+{%- if block.settings.text != blank -%}
+  <div class="kova-text kova-text--{{ block.settings.width }} kova-text--{{ block.settings.size }}{% if block.settings.muted %} kova-text--muted{% endif %}" {{ block.shopify_attributes }}>
+    {{ block.settings.text }}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-text > * { margin: 0; }
+  .kova-text > * + * { margin-block-start: var(--ad-space-300); }
+  .kova-text--reading { max-width: 38rem; }
+  .kova-text--narrow { max-width: 24rem; }
+  .kova-text--lead { font-size: var(--ad-text-lead); line-height: 1.35; }
+  .kova-text--muted { color: color-mix(in srgb, currentcolor 72%, transparent); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Text",
+  "tag": null,
+  "settings": [
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Describe what this object or system does in the field.</p>" },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "Width",
+      "default": "reading",
+      "options": [
+        { "value": "reading", "label": "Reading" },
+        { "value": "narrow", "label": "Narrow" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "Size",
+      "default": "body",
+      "options": [
+        { "value": "body", "label": "Body" },
+        { "value": "lead", "label": "Lead" }
+      ]
+    },
+    { "type": "checkbox", "id": "muted", "label": "Quieter colour", "default": false }
+  ],
+  "presets": [{ "name": "Text" }]
+}
+{% endschema %}

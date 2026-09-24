@@ -1,0 +1,35 @@
+{% doc %}
+  One product rendered with the shared editorial product card, including price, availability and quick add.
+{% enddoc %}
+{%- if block.settings.product != blank -%}
+  <div class="kova-product" {{ block.shopify_attributes }}>
+    {% render 'product-card',
+      product: block.settings.product,
+      sizes: '(max-width: 47.99rem) 100vw, 33vw',
+      quick_add: true,
+      heading_tag: block.settings.heading_tag
+    %}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product",
+  "tag": null,
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Title level",
+      "default": "h3",
+      "options": [
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" }
+      ],
+      "info": "H3 when the product sits under a section heading."
+    }
+  ],
+  "presets": [{ "name": "Product" }]
+}
+{% endschema %}

@@ -126,22 +126,11 @@
         {% if kova.technical_specifications.value != blank %}
           <details>
             <summary>Specifications</summary>
-            <dl class="product-purchase__richtext product-purchase__specs">
-              {% assign spec_lines = kova.technical_specifications.value | newline_to_br | split: '<br />' %}
-              {% for raw_line in spec_lines %}
-                {% assign line = raw_line | strip %}
-                {% if line == blank %}{% continue %}{% endif %}
-                {% if line contains ':' %}
-                  {% assign spec_label = line | split: ':' | first %}
-                  <div>
-                    <dt>{{ spec_label | strip | escape }}</dt>
-                    <dd>{{ line | remove_first: spec_label | remove_first: ':' | strip | escape }}</dd>
-                  </div>
-                {% else %}
-                  <div><dd>{{ line | escape }}</dd></div>
-                {% endif %}
-              {% endfor %}
-            </dl>
+            {% render 'record-list',
+              text: kova.technical_specifications.value,
+              class: 'product-purchase__richtext product-purchase__specs',
+              keep_unlabelled: true
+            %}
           </details>
         {% endif %}
         {% if fit != blank %}

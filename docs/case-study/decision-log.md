@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24); D-018 to D-021 in Phase 7; D-022 and D-023 in Phase 8 (2026-09-24).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -256,3 +256,40 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** The context, program and texture budgets are unchanged, native scrolling is untouched, and the whole row reads as one moment with slight desynchronisation.
 
 **Tradeoff / reconsideration:** A batch canvas covers the whole container, so its pixel area is larger than one card for the length of the intro. Reconsider if a container grows very tall (for example a long collection grid revealing in one batch) and frame pacing suffers on low-end GPUs.
+
+## D-022 — Compose art direction from snippets, opinionated theme blocks, and one section
+
+**Context:** Merchants could reuse KOVA's look only by copying whole sections. Fourteen sections repeated the same reveal-line heading markup, and two duplicated the specification parser. The only theme blocks were Skeleton's generic `text` and `group`. The brief suggested a four-family block tree (layout, media, content, interaction), but warned against building a generic page builder.
+
+**Options considered:**
+- Convert every section-local block (pillars, frames, annotations, stories) into global theme blocks. This means a data migration in `index.json` and `product.json`, and it flattens compositions that only work in one place.
+- Build a free-form builder with offsets, masks, and animation modes.
+- Extract snippet primitives for the real duplication, add a small set of opinionated blocks, and add one section that hosts them.
+
+**Decision:**
+- Add two snippets, eight public blocks, one private row block, and `sections/composition.liquid` with three nested presets.
+- Keep the signature sections as art-direction exceptions. They adopt the snippets without schema changes, so no template data changes.
+- Limit motion to heading reveal and image drift. Marquee, glitch, and video are **Deferred**: marquee and glitch have no second use yet, and video needs a pause control and a reduced-motion rule that it never autoplays.
+- Resources reach blocks through explicit settings set to `{{ closest.* }}`.
+- The heading and the record lines use `richtext` paragraphs as lines, because `textarea` rejects dynamic sources and `inline_richtext` rejects line breaks.
+- The collection and page sections gain toggles for their own title, so a composition can hold the single H1 without repeating facts.
+
+**Reasoning:** The duplication was in markup, not in merchant content, so it belongs in snippets. The blocks cover what a merchant actually rearranges: arrangement, type, copy, action, image, facts, and a product card. Keeping the exceptions intact preserves the compositions that give the site its character.
+
+**Tradeoff / reconsideration:**
+- A merchant cannot place a heading line in italic or accent a middle line; formatting is stripped by design.
+- The overlay arrangement always uses the first child as backdrop, which a merchant must learn from the setting's info text.
+- Promote a section-local block to a theme block only when a second section needs it.
+- Revisit the heading setting type if Shopify adds dynamic-source support to `textarea`.
+
+## D-023 — Remove the Skeleton text/group blocks and custom section
+
+**Context:** `blocks/text.liquid`, `blocks/group.liquid`, and `sections/custom-section.liquid` came from Skeleton, were referenced by no template, section group, or settings data, and duplicated the new blocks with untokenized styles (pixel padding, `overflow: hidden` on groups).
+
+**Options considered:** keep them as a fallback; restyle them; remove them.
+
+**Decision:** Remove all three after a repository-wide reference check. The `kova-*` blocks and the Editorial composition section replace them.
+
+**Reasoning:** Two parallel block vocabularies would confuse merchants in the block picker and invite untokenized content.
+
+**Tradeoff / reconsideration:** Any theme copy on the store that still uses them would lose those blocks. None of the checked-in templates did. Unused locale keys for them remain in `locales/`.

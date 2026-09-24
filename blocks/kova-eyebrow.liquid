@@ -1,0 +1,43 @@
+{% doc %}
+  Small uppercase label above a heading. Can append the live product count of a collection.
+{% enddoc %}
+{%- liquid
+  assign count_collection = block.settings.count_collection
+-%}
+{%- if block.settings.text != blank or count_collection != blank -%}
+  <p class="eyebrow kova-eyebrow" {{ block.shopify_attributes }}>
+    {{- block.settings.text | escape -}}
+    {%- if count_collection != blank -%}
+      {%- if block.settings.text != blank %} / {% endif -%}
+      {{- count_collection.products_count }} {{ block.settings.count_label | escape -}}
+    {%- endif -%}
+  </p>
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-eyebrow { margin: 0; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Eyebrow",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "text", "label": "Text", "default": "Field record" },
+    {
+      "type": "collection",
+      "id": "count_collection",
+      "label": "Count products in",
+      "info": "Optional. Adds the collection's current product count after the text."
+    },
+    {
+      "visible_if": "{{ block.settings.count_collection != blank }}",
+      "type": "text",
+      "id": "count_label",
+      "label": "Count label",
+      "default": "objects"
+    }
+  ],
+  "presets": [{ "name": "Eyebrow" }]
+}
+{% endschema %}

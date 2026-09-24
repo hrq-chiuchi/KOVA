@@ -1,0 +1,26 @@
+{% doc %}
+  Renders a display heading split into one reveal line per text line, using the shared
+  motion-core hooks. Line breaks in the source text become separate lines.
+
+  @param {string} text - Heading text; newlines split it into lines
+  @param {string} [id] - Element id, for aria-labelledby on the parent section
+  @param {string} [class] - Class for the heading element
+  @param {string} [tag] - Heading element: h1, h2 or h3 (default h2)
+  @param {string} [attributes] - Extra attributes, output as-is
+  @param {boolean} [entities] - Text already holds HTML entities (from rich text); escapes without double-encoding them
+
+  @example
+  {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'manifesto__heading' %}
+{% enddoc %}
+{%- liquid
+  assign heading_tag = tag | default: 'h2'
+  unless heading_tag == 'h1' or heading_tag == 'h3'
+    assign heading_tag = 'h2'
+  endunless
+  assign lines = text | newline_to_br | split: '<br />'
+-%}
+<{{ heading_tag }}{% if id != blank %} id="{{ id }}"{% endif %}{% if class != blank %} class="{{ class }}"{% endif %}{% if attributes != blank %} {{ attributes }}{% endif %}>
+  {% for line in lines %}
+    <span data-reveal-line-wrap><span data-reveal-line>{% if entities %}{{ line | strip | escape_once }}{% else %}{{ line | strip | escape }}{% endif %}</span></span>
+  {% endfor %}
+</{{ heading_tag }}>

@@ -1,0 +1,146 @@
+{% comment %}
+  Merchant-composed editorial section built from KOVA theme blocks. The section owns tone, accent,
+  width and the motion scope; blocks own content. Presets start from art-directed arrangements.
+{% endcomment %}
+<div
+  class="composition full-width composition--{{ section.settings.tone }} composition--space-{{ section.settings.spacing }}"
+  data-motion-scope
+  style="--color-accent: {{ section.settings.accent }};"
+>
+  <div class="composition__inner{% if section.settings.width == 'contained' %} section-shell{% endif %}">
+    {% content_for 'blocks' %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .composition { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .composition--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .composition--space-standard .composition__inner { padding-block: var(--ad-section-space); }
+  .composition--space-compact .composition__inner { padding-block: var(--ad-space-700); }
+  .composition__inner { display: grid; gap: var(--ad-content-gap); }
+  /* Light tone: accent text fails 3:1 on the inverse background, so the accent becomes a bar under ink text. */
+  .composition--inverse .kova-heading--accent [data-reveal-line-wrap]:last-child { color: inherit; }
+  .composition--inverse .kova-heading--accent [data-reveal-line-wrap]:last-child [data-reveal-line] {
+    display: inline-block;
+    box-shadow: inset 0 -0.14em 0 var(--color-accent);
+  }
+  .composition--inverse .kova-layout--overlay > .kova-media:first-child ~ * { color: var(--ad-color-text-primary); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Editorial composition",
+  "tag": "div",
+  "class": "section-composition",
+  "blocks": [{ "type": "@theme" }],
+  "settings": [
+    {
+      "type": "select",
+      "id": "tone",
+      "label": "Tone",
+      "default": "dark",
+      "options": [
+        { "value": "dark", "label": "Dark" },
+        { "value": "inverse", "label": "Light" }
+      ]
+    },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "Width",
+      "default": "contained",
+      "options": [
+        { "value": "contained", "label": "Page grid" },
+        { "value": "full", "label": "Full bleed" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "spacing",
+      "label": "Section spacing",
+      "default": "standard",
+      "options": [
+        { "value": "standard", "label": "Standard" },
+        { "value": "compact", "label": "Compact" },
+        { "value": "none", "label": "None" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Split story",
+      "blocks": [
+        {
+          "type": "kova-layout",
+          "settings": { "arrangement": "split-wide-first", "spacing": "open", "alignment": "end" },
+          "blocks": [
+            { "type": "kova-media", "settings": { "ratio": "4 / 5" } },
+            {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "standard" },
+              "blocks": [
+                { "type": "kova-eyebrow", "settings": { "text": "Field record" } },
+                { "type": "kova-heading", "settings": { "text": "<p>Built</p><p>for after dark</p>", "size": "title" } },
+                { "type": "kova-text", "settings": { "muted": true } },
+                { "type": "kova-cta", "settings": { "style": "outline" } }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Full-bleed statement",
+      "settings": { "width": "full", "spacing": "none" },
+      "blocks": [
+        {
+          "type": "kova-layout",
+          "settings": { "arrangement": "overlay", "spacing": "standard" },
+          "blocks": [
+            { "type": "kova-media", "settings": { "ratio": "21 / 9" } },
+            {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "standard" },
+              "blocks": [
+                { "type": "kova-eyebrow", "settings": { "text": "Transmission" } },
+                { "type": "kova-heading", "settings": { "text": "<p>Signal</p><p>over noise</p>", "size": "display", "accent_last_line": true } },
+                { "type": "kova-cta", "settings": { "style": "accent" } }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "System record",
+      "settings": { "tone": "inverse" },
+      "blocks": [
+        {
+          "type": "kova-layout",
+          "settings": { "arrangement": "split-even", "spacing": "open", "alignment": "start" },
+          "blocks": [
+            {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "standard" },
+              "blocks": [
+                { "type": "kova-eyebrow", "settings": { "text": "System record" } },
+                { "type": "kova-heading", "settings": { "text": "<p>One system</p><p>many loads</p>", "size": "title", "accent_last_line": true } },
+                { "type": "kova-text", "settings": { "muted": true } }
+              ]
+            },
+            {
+              "type": "kova-record",
+              "settings": { "title": "Record" },
+              "blocks": [
+                { "type": "_kova-record-row", "settings": { "label": "Release", "value": "Drop 001" } },
+                { "type": "_kova-record-row", "settings": { "label": "Status", "value": "Active" } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

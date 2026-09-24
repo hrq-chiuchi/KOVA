@@ -4,7 +4,7 @@
 {% endcomment %}
 {% liquid
   assign notes_blog = section.settings.blog
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign heading_id = 'FieldNotesHeading-' | append: section.id
 %}
 
 <section
@@ -17,11 +17,7 @@
     <header class="field-notes__header" data-reveal="section">
       <div>
         <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-        <h2 id="FieldNotesHeading-{{ section.id }}" class="section-heading">
-          {% for line in heading_lines %}
-            <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-          {% endfor %}
-        </h2>
+        {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'section-heading' %}
       </div>
       {% if section.settings.intro != blank %}<div class="field-notes__intro">{{ section.settings.intro }}</div>{% endif %}
     </header>
