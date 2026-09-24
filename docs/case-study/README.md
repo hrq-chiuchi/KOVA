@@ -370,3 +370,39 @@ Not verified: behaviour in the actual Theme Editor for the new sections, a popul
 
 Not verified: Safari (supports cross-document view transitions from 18.2, but SVG filters on transition pseudo-elements were not tested), real-device frame timing on discrete or mobile GPUs, the Theme Editor exclusion in the actual editor, and the specific WebGL hover-handoff path in isolation.
 
+## Phase 7 homepage brand-world log
+
+**2026-09-24 — Implementation:** The homepage moved from four sections to ten: release hero (collection mode) → release record → Current Transmission (staggered) → campaign signal frame → manifesto → Night Transit loadout → Night Uniform (feature) → field-test signal frame → Hard Goods (strip) → Field Notes, closing on the footer's end-transmission copy. See D-018 to D-020.
+
+**Bugs found and fixed during verification:**
+
+- Reduced motion's `clearProps: 'all'` wiped the inline `--x/--y` positions of signal-frame annotations. The reveal hook now sits on an inner element.
+- `motion-core.js` revealed cards with `autoAlpha`, whose `visibility: hidden` removed links inside unrevealed cards from the tab order. Cards now animate opacity only.
+- Pre-existing: `webgl-product-reveal.js` `parkCanvas()` called `appendChild(undefined)` on section unload under reduced motion, where no canvas is ever acquired. It is now guarded.
+- The manifesto's signal-red line measured 2.94:1 on the light tone. On that tone the accent is now a bar under ink text.
+- Five inline placeholder SVGs added 320 KB to the HTML and pushed LCP from 6.8 s to 7.2–9.2 s. They were replaced with CSS-only pending states, and the front hero layer gained `fetchpriority="high"`.
+
+**Verification (local `theme dev` proxy, Chromium 151 via Playwright):**
+
+- Theme Check: 59 files, no offenses. `node --check` passes for the touched JS.
+- All ten sections render with no `Liquid error` at 1440px and 390px, with zero horizontal overflow and one `h1`.
+- Derived values match the store: 16 products (the bundle counts as one), 16/16 in stock, Black / Ash Gray, Active; loadout combined variant weight 518 g (1.14 lb), $169.00 vs $188.00; field-test features and five specifications from Blacksite Shell Jacket.
+- Synthetic `shopify:section:unload`/`load` of all eight non-hero sections, twice: 9 motion scopes and 14 ScrollTriggers before and after (0 under reduced motion), with no page errors after the WebGL fix. The actual Theme Editor UI was not exercised for the new sections.
+- Keyboard: 47 tab stops from the hero to the footer at 1440px. Every link in the annotations, loadout components and product cards is reachable with a visible focus outline, and focused links scroll into view and reveal.
+
+**Lighthouse (12.8.2, default mobile emulation, same proxy caveats as the Metrics table):**
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT | Transfer |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Previous 4-section template with the new hero code (incl. `fetchpriority`), same day | 57–60 | 100 | 57 | 92 | 6.8 s | — | 500–580 ms | 5,337 KiB |
+| New home, before fixes | 50–53 | 96 | 75 | 92 | 8.6–9.2 s | 0.001 | 430–540 ms | 5,345 KiB |
+| New home, after fixes (3 runs) | 58–59 | 100 | 57–75 | 92 | 6.6–6.8 s | 0.001 | 480–500 ms | 5,007–5,041 KiB |
+
+The LCP element is the front hero layer in every run. Best-practices variance comes from the proxy and platform artefacts described under Metrics.
+
+**2026-09-24 — Synchronized glitch reveal:** In the Hard Goods strip, the four WebGL intros ran one after another (about 0.86 s each), because the single shared canvas was mounted inside one card at a time. Intros are now batched per card container on the same canvas and context, using per-card viewports and an 80 ms stagger. Measured in Chromium with SwiftShader WebGL: all four Hard Goods cards start at the same frame and finish at +852, +928, +1016 and +1093 ms. In the staggered Current Transmission grid, the third card joins the running batch as it scrolls in instead of waiting. After a batch, hover transitions still mount in the hovered card and the canvas returns to `body`. Section reloads stay at 9 motion scopes and 14 ScrollTriggers with no errors.
+
+**2026-09-24 — Field Notes published:** With user approval, the `Field Notes` blog (`field-notes`) and four articles by "KOVA" were created through `shopify store execute`, after `shopify store auth` requested `read_content,write_content`. The copy was checked against each product's storefront positioning, features and description, and it claims no test or event. The homepage section, `/blogs/field-notes`, and the article pages return 200 with no Liquid errors, one `h1`, and no horizontal overflow at 1440px and 390px. Published dates show 23.09.26 because the store's time zone is behind the UTC publish time.
+
+**Open:** campaign photography (Deferred; frames show pending), Loadout Builder (Planned), and verifying the hero mode toggle and the new sections in the actual Theme Editor UI.
+

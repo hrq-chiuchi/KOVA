@@ -1,0 +1,184 @@
+{% comment %}
+  One home for the release's facts. Counts, colourways and status are derived from the collection;
+  only the code, date and copy are merchant-authored, so nothing here can drift from the catalogue.
+{% endcomment %}
+{% liquid
+  assign release = section.settings.collection
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign colour_names = section.settings.colour_option | downcase | split: ','
+  assign colours = '|'
+  assign available_count = 0
+
+  if release != blank
+    for product in release.products
+      if product.available
+        assign available_count = available_count | plus: 1
+      endif
+      for option in product.options_with_values
+        assign option_name = option.name | downcase | strip
+        if colour_names contains option_name
+          for value in option.values
+            assign key = '|' | append: value | append: '|'
+            unless colours contains key
+              assign colours = colours | append: value | append: '|'
+            endunless
+          endfor
+        endif
+      endfor
+    endfor
+  endif
+
+  assign colour_list = colours | remove_first: '|' | split: '|' | join: ' / '
+  assign status = section.settings.status_override
+  if status == blank and release != blank
+    if available_count > 0
+      assign status = 'Active'
+    else
+      assign status = 'Sold out'
+    endif
+  endif
+%}
+
+<section
+  id="{{ section.settings.anchor | default: 'field-record' | handleize }}"
+  class="release-record full-width release-record--{{ section.settings.tone }}"
+  data-motion-scope
+  style="--record-accent: {{ section.settings.accent }};"
+  aria-labelledby="ReleaseHeading-{{ section.id }}"
+>
+  <div class="release-record__inner section-shell">
+    <header class="release-record__mark" data-reveal="section">
+      <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      <h2 id="ReleaseHeading-{{ section.id }}" class="release-record__heading">
+        {% for line in heading_lines %}
+          <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+        {% endfor %}
+      </h2>
+    </header>
+
+    <div class="release-record__statement">{{ section.settings.statement }}</div>
+
+    <dl class="release-record__record">
+      {% if section.settings.code != blank %}
+        <div><dt>Release</dt><dd>{{ section.settings.code | escape }}</dd></div>
+      {% endif %}
+      {% if section.settings.release_date != blank %}
+        <div><dt>Released</dt><dd>{{ section.settings.release_date | escape }}</dd></div>
+      {% endif %}
+      {% if release != blank %}
+        <div><dt>Products</dt><dd>{{ release.products_count }}</dd></div>
+        <div><dt>In stock</dt><dd>{{ available_count }} / {{ release.products_count }}</dd></div>
+        {% if colour_list != blank %}
+          <div><dt>Colourways</dt><dd>{{ colour_list | escape }}</dd></div>
+        {% endif %}
+      {% endif %}
+      {% if status != blank %}
+        <div class="release-record__status"><dt>Status</dt><dd>{{ status | escape }}</dd></div>
+      {% endif %}
+    </dl>
+
+    {% if release != blank and section.settings.link_label != blank %}
+      <a class="release-record__link" href="{{ release.url }}">
+        <span>{{ section.settings.link_label | escape }}</span><span aria-hidden="true">↗</span>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if section.blocks.size > 0 %}
+    <ol class="release-record__frames" role="list" aria-label="{{ section.settings.frames_label | escape }}" tabindex="0">
+      {% for block in section.blocks %}
+        <li class="release-record__frame" data-reveal-card {{ block.shopify_attributes }}>
+          <figure>
+            <div class="release-record__frame-media{% if block.settings.image == blank %} release-record__frame-media--pending{% endif %}">
+              {% if block.settings.image != blank %}
+                {{ block.settings.image
+                  | image_url: width: 1400
+                  | image_tag:
+                    widths: '480, 720, 960, 1200, 1400',
+                    sizes: '(max-width: 767px) 78vw, 36vw',
+                    loading: 'lazy',
+                    alt: block.settings.image.alt | default: block.settings.caption
+                }}
+              {% else %}
+                {% comment %} CSS-only pending state: Shopify's placeholder illustrations are ~64 KB of inline SVG each. {% endcomment %}
+                <span class="release-record__pending">Frame pending</span>
+              {% endif %}
+            </div>
+            <figcaption>
+              <span>{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <span>{{ block.settings.caption | escape }}</span>
+            </figcaption>
+          </figure>
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .release-record { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); padding-block: var(--ad-section-space); }
+  .release-record--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .release-record__inner { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.7fr); grid-template-areas: 'mark record' 'statement record' 'link link'; column-gap: var(--ad-content-gap); }
+  .release-record__mark { grid-area: mark; }
+  .release-record__heading { margin: var(--ad-space-300) 0 0; font-family: var(--font-display-family); font-size: clamp(3.25rem, 7.4vw, 8.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.075em; line-height: 0.8; text-transform: uppercase; }
+  .release-record__heading [data-reveal-line-wrap]:first-child { color: var(--record-accent); }
+  .release-record__statement { grid-area: statement; max-width: 30rem; margin-block-start: var(--ad-space-500); color: color-mix(in srgb, currentcolor 68%, transparent); font-size: var(--ad-text-lead); line-height: 1.45; }
+  .release-record__statement > * { margin: 0; }
+  .release-record__record { grid-area: record; align-self: end; margin: 0; border-block-start: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 20%, transparent); }
+  .release-record__record > div { display: flex; padding-block: var(--ad-space-300); justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 20%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .release-record__record dt { color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .release-record__record dd { margin: 0; font-weight: 700; text-align: end; }
+  .release-record__status dd::before { display: inline-block; width: 0.5em; height: 0.5em; margin-inline-end: var(--ad-space-100); background: var(--record-accent); content: ''; }
+  .release-record__link { display: flex; grid-area: link; margin-block-start: var(--ad-space-600); padding-block: var(--ad-space-300); justify-content: space-between; border-block: var(--ad-border-hairline) solid currentcolor; font-family: var(--font-display-family); font-size: clamp(1.5rem, 3vw, 2.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; text-decoration: none; text-transform: uppercase; }
+
+  /* Native horizontal scroll with snap: no pinning, so the page keeps normal scrolling. */
+  .release-record__frames { display: grid; grid-auto-columns: minmax(18rem, 36vw); grid-auto-flow: column; gap: clamp(0.75rem, 2vw, 2rem); margin: var(--ad-space-700) 0 0; padding: 0 var(--ad-page-padding) var(--ad-space-300); overflow-x: auto; list-style: none; overscroll-behavior-x: contain; scroll-padding-inline: var(--ad-page-padding); scroll-snap-type: x mandatory; scrollbar-width: thin; }
+  .release-record__frame { scroll-snap-align: start; }
+  .release-record__frame figure { margin: 0; }
+  .release-record__frame-media { position: relative; overflow: hidden; aspect-ratio: 4 / 5; background: var(--ad-color-background-elevated); }
+  .release-record__frame-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .release-record__frame-media--pending { background: repeating-linear-gradient(0deg, rgb(244 243 237 / 5%) 0 1px, transparent 1px 6px), linear-gradient(160deg, var(--ad-color-background-elevated), color-mix(in srgb, var(--record-accent) 14%, var(--ad-color-background-primary))); color: var(--ad-color-text-primary); }
+  .release-record__pending { position: absolute; inset: auto var(--ad-space-300) var(--ad-space-300); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .release-record__frame figcaption { display: flex; gap: var(--ad-space-300); padding-block: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 24%, transparent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  @media (max-width: 47.99rem) {
+    .release-record__inner { grid-template-columns: 1fr; grid-template-areas: 'mark' 'statement' 'record' 'link'; }
+    .release-record__record { margin-block-start: var(--ad-space-500); }
+    .release-record__frames { grid-auto-columns: 78vw; margin-block-start: var(--ad-space-500); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Release record",
+  "tag": "div",
+  "class": "section-release-record",
+  "max_blocks": 8,
+  "settings": [
+    { "type": "collection", "id": "collection", "label": "Release collection", "info": "Object count, stock and colourways are read from this collection." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Transmission / 001" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "DROP 001\nAFTERDARK SUPPLY" },
+    { "type": "richtext", "id": "statement", "label": "Statement", "default": "<p>A release of apparel and field objects developed for movement after daylight.</p>" },
+    { "type": "text", "id": "code", "label": "Release code", "default": "Drop 001" },
+    { "type": "text", "id": "release_date", "label": "Release date", "info": "Optional. Leave blank rather than inventing a date." },
+    { "type": "text", "id": "status_override", "label": "Status override", "info": "Blank derives Active or Sold out from stock." },
+    { "type": "text", "id": "colour_option", "label": "Colour option names", "default": "Color,Colour", "info": "Comma-separated product option names treated as colourways." },
+    { "type": "text", "id": "link_label", "label": "Collection link label", "default": "Shop the full release" },
+    { "type": "text", "id": "frames_label", "label": "Frames label", "default": "Release frames" },
+    { "type": "text", "id": "anchor", "label": "Anchor ID", "default": "field-record" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "blocks": [
+    {
+      "type": "frame",
+      "name": "Frame",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "caption", "label": "Caption", "default": "Campaign frame" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Release record", "blocks": [{ "type": "frame" }, { "type": "frame" }, { "type": "frame" }] }]
+}
+{% endschema %}

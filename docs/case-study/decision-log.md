@@ -208,3 +208,51 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** Browsers without cross-document support, including Firefox 154, get no transition. Full-viewport SVG filters roughly halve delivered animation frames on an integrated GPU; drop to the transform/clip-only variant if real-device testing shows dropped steps. Reconsider if Firefox ships cross-document view transitions or if the stepped effect reads as jank rather than intent.
 
+
+## D-018 — Restructure the homepage as a brand world, built mostly from existing systems
+
+**Context:** The homepage ran hero → three near-identical product grids → footer. It looked finished but read as a catalogue. An external scope proposal suggested twelve beats alternating commerce, atmosphere, story and evidence, built on four brand systems: Drops, Loadouts, Field Manuals and Field Notes. Taken literally it would add twelve bespoke sections, two of which repeat the same facts, and it contained invented data (a release date equal to the day it was written, a "Black / Graphite / Signal" colour system).
+
+**Options considered:** build all twelve beats as proposed; add only visual interludes; consolidate the beats onto existing patterns and derive every fact from the store.
+
+**Decision:** Consolidate. The "Drop Transmission" and "Drop Record" beats become one release-record section. The campaign interlude and field test share one annotated full-bleed section. Night Uniform and Hard Goods become two new layouts of the existing editorial grid rather than new sections. The end transmission is footer copy. That leaves five new sections. Every fact is derived from the store: product count, stock, colourways, combined variant weight, bundle price, and field-test copy from `custom.feature_list` and specifications. Atmosphere lines are editorial text in a clearly labelled setting. Image-led sections without campaign photography render a CSS-only pending state, following D-010.
+
+**Reasoning:** Each fact keeps one home (the D-016 rule). Reusing the grid and the frame keeps the system small while the page rhythm changes. Deriving data means the page cannot drift from the catalogue.
+
+**Tradeoff / reconsideration:** The pending frames make the page visibly unfinished until photography exists. Shopify's placeholder illustrations were tried first and dropped: five of them inlined 320 KB of SVG into a 437 KB document and delayed the hero LCP. Replace pending frames as soon as approved campaign imagery exists. Promote the signal frame's annotation model only if a third use appears.
+
+## D-019 — Let the hero follow a collection without losing the authored hero
+
+**Context:** The user wanted to keep the current statement hero and also be able to point the hero at a release.
+
+**Options considered:** replace the hero with a release hero; add a second hero section; add a content-source setting to the existing hero.
+
+**Decision:** Add `content_source` (`custom` | `collection`). Custom is unchanged. Collection mode draws the image stack from the collection, and each blank text setting falls back to the collection's title, product count, description or URL. A quiet secondary link can point to the release record.
+
+**Reasoning:** One section keeps one motion lifecycle, and merchants switch modes without rebuilding the section.
+
+**Tradeoff / reconsideration:** Authored copy overrides collection copy field by field, so a merchant must clear a field to see the fallback. Reconsider with an explicit per-field toggle if that confuses merchants.
+
+## D-020 — Field Notes are real blog articles or nothing
+
+**Context:** A journal index makes a fictional brand feel active, but sample entries would be invented content presented as published writing.
+
+**Options considered:** ship sample entries; defer the section; build a blog-backed section with an honest empty state, and publish articles only after copy approval.
+
+**Decision:** `sections/field-notes.liquid` reads only a Shopify blog. With no blog or no articles it says "No field notes published yet". Articles are drafted as brand and design notes, never as claims that tests or events happened, and are published only after user approval.
+
+**Reasoning:** This follows the reviews rule in D-016: the theme never ships authored stand-in content.
+
+**Tradeoff / reconsideration:** The homepage shows an empty journal until articles are approved and published. Four articles were approved and published on 2026-09-24.
+
+## D-021 — Batch WebGL intros on the single shared context
+
+**Context:** D-009 bounds the reveal to one WebGL context and canvas, which was mounted inside one card per intro. A row of four cards therefore glitched one after another, over more than three seconds, which reads as lag rather than a signal.
+
+**Options considered:** one canvas per card (breaks the context budget); a fixed full-viewport overlay (drifts against native scroll between frames); mounting the same canvas over the cards' shared container and drawing each card into its own viewport.
+
+**Decision:** Batch intros that arrive together in the same container. The canvas mounts absolutely inside the container, so it scrolls with the cards, and each card draws with `gl.viewport`/`gl.scissor` at its measured offset with an 80 ms stagger. Hover keeps the single-card mount.
+
+**Reasoning:** The context, program and texture budgets are unchanged, native scrolling is untouched, and the whole row reads as one moment with slight desynchronisation.
+
+**Tradeoff / reconsideration:** A batch canvas covers the whole container, so its pixel area is larger than one card for the length of the intro. Reconsider if a container grows very tall (for example a long collection grid revealing in one batch) and frame pacing suffers on low-end GPUs.

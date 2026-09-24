@@ -80,8 +80,9 @@
         });
 
         if (cards.length) {
+          // Opacity only: autoAlpha's visibility:hidden would drop links inside unrevealed cards from the tab order.
           gsap.from(cards, {
-            autoAlpha: 0,
+            opacity: 0,
             y: desktop ? 48 : 24,
             duration: 0.75,
             stagger: 0.08,

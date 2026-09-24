@@ -1,6 +1,35 @@
 {% liquid
   assign layer_count = 0
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign source = blank
+  if section.settings.content_source == 'collection' and section.settings.collection != blank
+    assign source = section.settings.collection
+  endif
+
+  # Collection mode: each blank text setting falls back to the collection, so the hero can follow a release.
+  assign eyebrow = section.settings.eyebrow
+  assign heading = section.settings.heading
+  assign body = section.settings.body
+  assign button_link = section.settings.button_link
+  if source != blank
+    if eyebrow == blank
+      assign eyebrow = source.title | append: ' / ' | append: source.products_count | append: ' products'
+    endif
+    if heading == blank
+      assign heading = source.title
+    endif
+    if body == blank
+      assign body = source.description
+    endif
+    if button_link == blank
+      assign button_link = source.url
+    endif
+  endif
+
+  assign layer_products = collections.all.products
+  if source != blank
+    assign layer_products = source.products
+  endif
+  assign heading_lines = heading | newline_to_br | split: '<br />'
 %}
 
 <kinetic-hero
@@ -13,6 +42,8 @@
     {% for block in section.blocks %}
       {% if block.settings.image != blank %}
         {% assign layer_count = layer_count | plus: 1 %}
+        {% comment %} The last layer paints on top of the stack and is the LCP image. {% endcomment %}
+        {% if forloop.last %}{% assign fetch_priority = 'high' %}{% else %}{% assign fetch_priority = 'auto' %}{% endif %}
         <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};" {{ block.shopify_attributes }}>
           <picture>
             {% if block.settings.mobile_image != blank %}
@@ -24,6 +55,7 @@
                 widths: '480, 720, 960, 1200, 1600',
                 sizes: '(max-width: 767px) 66vw, 34vw',
                 loading: 'eager',
+                fetchpriority: fetch_priority,
                 class: 'kinetic-hero__image',
                 alt: block.settings.alt
             }}
@@ -33,9 +65,10 @@
     {% endfor %}
 
     {% if layer_count == 0 %}
-      {% for product in collections.all.products limit: 7 %}
+      {% for product in layer_products limit: 7 %}
         {% if product.featured_image %}
           {% assign layer_count = layer_count | plus: 1 %}
+          {% if forloop.last %}{% assign fetch_priority = 'high' %}{% else %}{% assign fetch_priority = 'auto' %}{% endif %}
           <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};">
             {{ product.featured_image
               | image_url: width: 1400
@@ -43,6 +76,7 @@
                 widths: '480, 720, 960, 1200, 1400',
                 sizes: '(max-width: 767px) 66vw, 34vw',
                 loading: 'eager',
+                fetchpriority: fetch_priority,
                 class: 'kinetic-hero__image',
                 alt: product.featured_image.alt | default: product.title
             }}
@@ -64,19 +98,26 @@
   </div>
 
   <div class="kinetic-hero__content section-shell" data-reveal="hero">
-    <p class="eyebrow" data-reveal-item="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% if eyebrow != blank %}<p class="eyebrow" data-reveal-item="eyebrow">{{ eyebrow | escape }}</p>{% endif %}
     <h1 class="kinetic-hero__title">
       {% for line in heading_lines %}
         <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
       {% endfor %}
     </h1>
     <div class="kinetic-hero__footer">
-      <div class="kinetic-hero__copy" data-reveal-item="detail">{{ section.settings.body }}</div>
-      {% if section.settings.button_label != blank %}
-        <a class="button button--accent" href="{{ section.settings.button_link | default: routes.all_products_collection_url }}" data-reveal-item="detail">
-          {{ section.settings.button_label | escape }}
-        </a>
-      {% endif %}
+      <div class="kinetic-hero__copy" data-reveal-item="detail">{{ body }}</div>
+      <div class="kinetic-hero__actions" data-reveal-item="detail">
+        {% if section.settings.button_label != blank %}
+          <a class="button button--accent" href="{{ button_link | default: routes.all_products_collection_url }}">
+            {{ section.settings.button_label | escape }}
+          </a>
+        {% endif %}
+        {% if section.settings.secondary_label != blank and section.settings.secondary_link != blank %}
+          <a class="kinetic-hero__secondary" href="{{ section.settings.secondary_link }}">
+            <span>{{ section.settings.secondary_label | escape }}</span><span aria-hidden="true">↗</span>
+          </a>
+        {% endif %}
+      </div>
       <p class="kinetic-hero__instruction" data-reveal-item="detail"><span aria-hidden="true">↘</span> Move to reshuffle / tap on touch</p>
     </div>
   </div>
@@ -181,6 +222,9 @@
     gap: var(--ad-content-gap);
   }
 
+  .kinetic-hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ad-space-300) var(--ad-space-400); }
+  .kinetic-hero__secondary { display: inline-flex; min-height: var(--ad-control-minimum); align-items: center; gap: var(--ad-space-100); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
+  .kinetic-hero__secondary span:first-child { border-block-end: var(--ad-border-hairline) solid currentcolor; }
   .kinetic-hero__copy { max-width: 32rem; color: color-mix(in srgb, var(--hero-fg) 78%, transparent); }
   .kinetic-hero__copy > * { margin: 0; }
   .kinetic-hero__instruction { margin: 0; justify-self: end; font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
@@ -208,11 +252,15 @@
   "class": "section-kinetic-hero",
   "max_blocks": 7,
   "settings": [
+    { "type": "select", "id": "content_source", "label": "Content source", "default": "custom", "options": [{ "value": "custom", "label": "Custom" }, { "value": "collection", "label": "Collection" }], "info": "Collection mode uses the collection's product images, and its title, description and URL wherever a text setting below is blank." },
+    { "type": "collection", "id": "collection", "label": "Collection" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "KOVA / independent supply" },
     { "type": "textarea", "id": "heading", "label": "Heading", "default": "BUILT FOR\nAFTER DARK" },
     { "type": "richtext", "id": "body", "label": "Body", "default": "<p>Limited-run apparel and objects engineered for motion, noise and late hours.</p>" },
     { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop current release" },
     { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "text", "id": "secondary_label", "label": "Secondary link label" },
+    { "type": "url", "id": "secondary_link", "label": "Secondary link" },
     { "type": "range", "id": "section_height", "label": "Section height", "min": 75, "max": 120, "step": 5, "unit": "%", "default": 100 },
     { "type": "range", "id": "pointer_threshold", "label": "Image change distance", "min": 24, "max": 120, "step": 8, "unit": "px", "default": 56 },
     { "type": "color", "id": "background", "label": "Background", "default": "#080808" },

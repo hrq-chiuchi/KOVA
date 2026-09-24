@@ -29,6 +29,15 @@ body.menu-open {
   display: block;
 }
 
+/* Batch intros mount the shared canvas over the cards' container instead of a single card. */
+.is-webgl-host {
+  position: relative;
+}
+
+.is-webgl-host > .webgl-reveal-canvas {
+  display: block;
+}
+
 [data-webgl-reveal].is-webgl-animating img {
   opacity: 0 !important;
   transition: none;

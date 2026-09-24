@@ -12,27 +12,35 @@
     "hero": {
       "type": "kinetic-hero",
       "settings": {
-        "eyebrow": "KOVA / Independent supply",
+        "eyebrow": "Drop 001 / Afterdark supply",
         "heading": "BUILT FOR\nAFTER DARK",
         "body": "<p>Limited-run apparel and objects engineered for motion, noise and late hours.</p>",
         "button_label": "Shop current release",
-        "button_link": "shopify://collections/all",
+        "button_link": "",
         "section_height": 100,
         "pointer_threshold": 56,
         "background": "#080808",
         "foreground": "#f4f3ed",
-        "accent": "#dfff00"
+        "accent": "#dfff00",
+        "content_source": "collection",
+        "collection": "drop-001",
+        "secondary_label": "View field record",
+        "secondary_link": "#field-record"
       }
     },
     "current_release": {
       "type": "editorial-product-grid",
       "settings": {
-        "eyebrow": "Release 001 / Available now",
+        "eyebrow": "Drop 001 / Current transmission",
         "heading": "CURRENT\nTRANSMISSION",
         "intro": "<p>Three pieces from the first KOVA field test. Built as a compact uniform for heat, movement and signal.</p>",
         "content_mode": "products",
         "collection": "drop-001",
-        "products": ["night-shift-cargo-pant", "after-dark-utility-backpack", "dead-channel-utility-hoodie"],
+        "products": [
+          "night-shift-cargo-pant",
+          "after-dark-utility-backpack",
+          "dead-channel-utility-hoodie"
+        ],
         "product_limit": 3,
         "layout": "staggered",
         "tone": "inverse",
@@ -50,11 +58,16 @@
         "content_mode": "products",
         "collection": "outerwear",
         "product_limit": 3,
-        "layout": "aligned",
+        "layout": "feature",
         "tone": "dark",
         "accent": "#ff4f2e",
         "link_label": "Shop outerwear",
-        "link_url": "shopify://collections/outerwear"
+        "link_url": "shopify://collections/outerwear",
+        "products": [
+          "relay-modular-vest",
+          "blacksite-shell-jacket",
+          "ghostline-packable-poncho"
+        ]
       }
     },
     "field_objects": {
@@ -62,17 +75,262 @@
       "settings": {
         "eyebrow": "Field objects / Available now",
         "heading": "HARD\nGOODS",
-        "intro": "<p>Small tools and carry objects sharing the same night-use language.</p>",
+        "intro": "<p>Small tools and carry objects, indexed like equipment.</p>",
         "content_mode": "products",
         "collection": "field-objects",
-        "product_limit": 3,
-        "layout": "staggered",
+        "product_limit": 4,
+        "layout": "strip",
         "tone": "inverse",
         "accent": "#dfff00",
         "link_label": "Shop field objects",
-        "link_url": "shopify://collections/field-objects"
+        "link_url": "shopify://collections/field-objects",
+        "products": [
+          "gridlink-pouch-array",
+          "sector-05-field-flask",
+          "signal-carabiner-system",
+          "nullfold-card-wallet"
+        ]
+      }
+    },
+    "release_record": {
+      "type": "release-record",
+      "blocks": {
+        "frame_1": {
+          "type": "frame",
+          "settings": {
+            "caption": "Campaign frame / Transit"
+          }
+        },
+        "frame_2": {
+          "type": "frame",
+          "settings": {
+            "caption": "Campaign frame / Weather"
+          }
+        },
+        "frame_3": {
+          "type": "frame",
+          "settings": {
+            "caption": "Campaign frame / Carry"
+          }
+        }
+      },
+      "block_order": [
+        "frame_1",
+        "frame_2",
+        "frame_3"
+      ],
+      "settings": {
+        "collection": "drop-001",
+        "eyebrow": "Transmission / 001",
+        "heading": "DROP 001\nAFTERDARK SUPPLY",
+        "statement": "<p>The first KOVA release: apparel, carry systems and field objects developed for movement after daylight.</p>",
+        "code": "Drop 001",
+        "release_date": "",
+        "status_override": "",
+        "colour_option": "Color,Colour",
+        "link_label": "Shop the full release",
+        "frames_label": "Drop 001 campaign frames",
+        "anchor": "field-record",
+        "tone": "dark",
+        "accent": "#dfff00"
+      }
+    },
+    "campaign_frame": {
+      "type": "signal-frame",
+      "blocks": {
+        "a1": {
+          "type": "annotation",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "label": "",
+            "text": "Storm layer",
+            "feature_index": 1,
+            "x": 58,
+            "y": 26,
+            "align": "start"
+          }
+        },
+        "a2": {
+          "type": "annotation",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "label": "",
+            "text": "Load system",
+            "feature_index": 1,
+            "x": 72,
+            "y": 48,
+            "align": "start"
+          }
+        },
+        "a3": {
+          "type": "annotation",
+          "settings": {
+            "product": "night-shift-cargo-pant",
+            "label": "",
+            "text": "Movement base",
+            "feature_index": 1,
+            "x": 42,
+            "y": 64,
+            "align": "end"
+          }
+        }
+      },
+      "block_order": [
+        "a1",
+        "a2",
+        "a3"
+      ],
+      "settings": {
+        "image_alt": "",
+        "height": 100,
+        "eyebrow": "Afterdark supply / Drop 001",
+        "meta": "02:17\nSouth sector\nRain / low visibility",
+        "heading": "AFTER\nHOURS",
+        "cta_label": "",
+        "cta_link": "",
+        "show_specifications": false,
+        "accent": "#dfff00"
+      }
+    },
+    "manifesto": {
+      "type": "manifesto",
+      "blocks": {
+        "p1": {
+          "type": "pillar",
+          "settings": {
+            "title": "Movement",
+            "text": "Cut for walking, kneeling, cycling and long transit, not for standing still."
+          }
+        },
+        "p2": {
+          "type": "pillar",
+          "settings": {
+            "title": "Utility",
+            "text": "Every pocket, loop and panel has a job. Storage is indexed so things stay findable in the dark."
+          }
+        },
+        "p3": {
+          "type": "pillar",
+          "settings": {
+            "title": "Adaptation",
+            "text": "Pieces attach, nest and layer, so one system covers changing weather and routes."
+          }
+        }
+      },
+      "block_order": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "settings": {
+        "eyebrow": "KOVA / Point of view",
+        "heading": "BUILT\nFOR THE\nHOURS\nBETWEEN.",
+        "body": "<p>KOVA makes modular apparel and field objects for movement after daylight.</p><p>Pieces are designed as systems around weather, transit and storage, not around seasons.</p>",
+        "tone": "inverse",
+        "accent": "#ff4f2e"
+      }
+    },
+    "loadout": {
+      "type": "loadout-teaser",
+      "settings": {
+        "product": "night-transit-set-03",
+        "components": [
+          "sector-05-field-flask",
+          "signal-carabiner-system",
+          "nullfold-card-wallet"
+        ],
+        "eyebrow": "Loadout / Hydration, retention, essentials",
+        "kicker": "Loadout / Night Transit Set 03",
+        "heading": "NIGHT\nTRANSIT",
+        "intro": "<p>Three field objects configured as one carry system and sold as a single set.</p>",
+        "cta_label": "Explore loadout",
+        "tone": "dark",
+        "accent": "#dfff00"
+      }
+    },
+    "field_test": {
+      "type": "signal-frame",
+      "blocks": {
+        "f1": {
+          "type": "annotation",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "label": "Construction",
+            "text": "",
+            "feature_index": 1,
+            "x": 14,
+            "y": 30,
+            "align": "start"
+          }
+        },
+        "f2": {
+          "type": "annotation",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "label": "Hood",
+            "text": "",
+            "feature_index": 2,
+            "x": 86,
+            "y": 42,
+            "align": "end"
+          }
+        },
+        "f3": {
+          "type": "annotation",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "label": "Closure",
+            "text": "",
+            "feature_index": 3,
+            "x": 20,
+            "y": 62,
+            "align": "start"
+          }
+        }
+      },
+      "block_order": [
+        "f1",
+        "f2",
+        "f3"
+      ],
+      "settings": {
+        "image_alt": "",
+        "height": 90,
+        "eyebrow": "Field test / Shell system",
+        "meta": "",
+        "heading": "FIELD\nTEST",
+        "cta_label": "Open field manual",
+        "cta_link": "",
+        "product": "blacksite-shell-jacket",
+        "show_specifications": true,
+        "accent": "#ff4f2e"
+      }
+    },
+    "field_notes": {
+      "type": "field-notes",
+      "settings": {
+        "blog": "field-notes",
+        "article_limit": 4,
+        "eyebrow": "Journal / Field notes",
+        "heading": "FIELD\nNOTES",
+        "intro": "<p>Design notes, release notes and guides to the KOVA system.</p>",
+        "show_excerpt": true,
+        "link_label": "Read all field notes",
+        "tone": "inverse",
+        "accent": "#dfff00"
       }
     }
   },
-  "order": ["hero", "current_release", "night_uniform", "field_objects"]
+  "order": [
+    "hero",
+    "release_record",
+    "current_release",
+    "campaign_frame",
+    "manifesto",
+    "loadout",
+    "night_uniform",
+    "field_test",
+    "field_objects",
+    "field_notes"
+  ]
 }

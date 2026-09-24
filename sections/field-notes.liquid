@@ -1,0 +1,83 @@
+{% comment %}
+  Editorial index of a Shopify blog. Articles are the only content source; with no blog or no
+  articles the section says so instead of showing sample entries.
+{% endcomment %}
+{% liquid
+  assign notes_blog = section.settings.blog
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+%}
+
+<section
+  class="field-notes full-width field-notes--{{ section.settings.tone }}"
+  data-motion-scope
+  style="--notes-accent: {{ section.settings.accent }};"
+  aria-labelledby="FieldNotesHeading-{{ section.id }}"
+>
+  <div class="field-notes__inner section-shell">
+    <header class="field-notes__header" data-reveal="section">
+      <div>
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        <h2 id="FieldNotesHeading-{{ section.id }}" class="section-heading">
+          {% for line in heading_lines %}
+            <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+          {% endfor %}
+        </h2>
+      </div>
+      {% if section.settings.intro != blank %}<div class="field-notes__intro">{{ section.settings.intro }}</div>{% endif %}
+    </header>
+
+    {% if notes_blog != blank and notes_blog.articles_count > 0 %}
+      <ol class="field-notes__list" role="list">
+        {% for article in notes_blog.articles limit: section.settings.article_limit %}
+          {% render 'field-note-row', article: article, index: forloop.index, show_excerpt: section.settings.show_excerpt %}
+        {% endfor %}
+      </ol>
+
+      <a class="field-notes__link" href="{{ notes_blog.url }}">
+        <span>{{ section.settings.link_label | escape }}</span><span aria-hidden="true">↗</span>
+      </a>
+    {% else %}
+      <p class="field-notes__empty">No field notes published yet.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .field-notes { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .field-notes--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .field-notes__inner { padding-block: var(--ad-section-space); }
+  .field-notes__header { display: grid; grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); align-items: end; gap: var(--ad-content-gap); margin-block-end: var(--ad-space-700); }
+  .field-notes__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .field-notes__intro { max-width: 30rem; justify-self: end; color: color-mix(in srgb, currentcolor 68%, transparent); }
+  .field-notes__intro > * { margin: 0; }
+  .field-notes__list { margin: 0; padding: 0; list-style: none; border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .field-notes--inverse .field-note-row__index { color: inherit; }
+  .field-notes--inverse .field-note-row:hover .field-note-row__title { color: inherit; text-decoration: underline; }
+  .field-notes__link { display: flex; margin-block-start: var(--ad-space-600); padding-block: var(--ad-space-300); justify-content: space-between; border-block: var(--ad-border-hairline) solid currentcolor; font-family: var(--font-display-family); font-size: clamp(1.5rem, 3vw, 2.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; text-decoration: none; text-transform: uppercase; }
+  .field-notes__empty { margin: 0; padding-block: var(--ad-space-500); border-block: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); color: color-mix(in srgb, currentcolor 68%, transparent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  @media (max-width: 47.99rem) {
+    .field-notes__header { grid-template-columns: 1fr; margin-block-end: var(--ad-space-500); }
+    .field-notes__intro { justify-self: start; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Field notes",
+  "tag": "div",
+  "class": "section-field-notes",
+  "settings": [
+    { "type": "blog", "id": "blog", "label": "Blog" },
+    { "type": "range", "id": "article_limit", "label": "Articles", "min": 2, "max": 6, "step": 1, "default": 4 },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Journal / Field notes" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "FIELD\nNOTES" },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "checkbox", "id": "show_excerpt", "label": "Show excerpts", "default": true },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "Read all field notes" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "presets": [{ "name": "Field notes" }]
+}
+{% endschema %}

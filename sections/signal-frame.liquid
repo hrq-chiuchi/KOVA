@@ -1,0 +1,240 @@
+{% comment %}
+  Full-bleed annotated frame. Art-direction exception: annotations sit at merchant-set coordinates over
+  the image on wide screens, then fall back to an ordered list under it on narrow screens.
+  Atmosphere lines are editorial text. Product-linked annotations can read the product's real
+  feature list, so technical copy is never retyped here.
+{% endcomment %}
+{% liquid
+  assign featured = section.settings.product
+  assign kova = featured.metafields.custom
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign meta_lines = section.settings.meta | newline_to_br | split: '<br />'
+  assign image = section.settings.image
+  assign cta_url = section.settings.cta_link
+  if cta_url == blank and featured != blank
+    assign cta_url = featured.url | append: '#field-manual'
+  endif
+%}
+
+<section
+  class="signal-frame full-width{% if image == blank %} signal-frame--pending{% endif %}"
+  data-motion-scope
+  style="--frame-accent: {{ section.settings.accent }}; --frame-height: {{ section.settings.height }}svh;"
+  aria-labelledby="SignalHeading-{{ section.id }}"
+>
+  <div class="signal-frame__stage">
+    <div class="signal-frame__media"{% if image != blank %} data-parallax data-motion-speed="6"{% endif %}>
+      {% if image != blank %}
+        <picture>
+          {% if section.settings.mobile_image != blank %}
+            <source media="(max-width: 47.99rem)" srcset="{{ section.settings.mobile_image | image_url: width: 900 }} 900w, {{ section.settings.mobile_image | image_url: width: 1400 }} 1400w" sizes="100vw">
+          {% endif %}
+          {{ image
+            | image_url: width: 2400
+            | image_tag:
+              widths: '750, 1100, 1500, 1920, 2400',
+              sizes: '100vw',
+              loading: 'lazy',
+              alt: image.alt | default: section.settings.image_alt
+          }}
+        </picture>
+      {% endif %}
+    </div>
+
+    <div class="signal-frame__overlay section-shell">
+      <div class="signal-frame__top">
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% if section.settings.meta != blank %}
+          <p class="signal-frame__meta">
+            {% for line in meta_lines %}<span>{{ line | strip | escape }}</span>{% endfor %}
+          </p>
+        {% endif %}
+        {% if image == blank %}<p class="signal-frame__pending">Image pending</p>{% endif %}
+      </div>
+
+      <div class="signal-frame__bottom" data-reveal="section">
+        <h2 id="SignalHeading-{{ section.id }}" class="signal-frame__heading">
+          {% for line in heading_lines %}
+            <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+          {% endfor %}
+        </h2>
+        {% if section.settings.cta_label != blank and cta_url != blank %}
+          <a class="signal-frame__cta" href="{{ cta_url }}">
+            <span>{{ section.settings.cta_label | escape }}</span><span aria-hidden="true">→</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if section.blocks.size > 0 %}
+      <ol class="signal-frame__annotations" role="list">
+        {% for block in section.blocks %}
+          {% liquid
+            assign target = block.settings.product
+            assign note = block.settings.text
+            if note == blank and target != blank
+              assign features = target.metafields.custom.feature_list.value
+              assign feature_offset = block.settings.feature_index | minus: 1
+              for feature in features offset: feature_offset limit: 1
+                assign note = feature
+              endfor
+            endif
+            assign label = block.settings.label | default: target.title
+          %}
+          <li
+            class="signal-frame__annotation signal-frame__annotation--{{ block.settings.align }}"
+            style="--x: {{ block.settings.x }}%; --y: {{ block.settings.y }}%;"
+            {{ block.shopify_attributes }}
+          >
+            {% comment %} Reveal hook sits on an inner node: motion cleanup clears inline styles, which hold the position. {% endcomment %}
+            <div class="signal-frame__tag" data-reveal-card>
+              <span class="signal-frame__index" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <span class="signal-frame__label">
+                {% if target != blank %}
+                  <a href="{{ target.url }}">{{ label | escape }}</a>
+                {% else %}
+                  {{ label | escape }}
+                {% endif %}
+              </span>
+              {% if note != blank %}<span class="signal-frame__note">{{ note | escape }}</span>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </div>
+
+  {% if featured != blank and section.settings.show_specifications %}
+    <div class="signal-frame__record section-shell">
+      <div>
+        <p class="eyebrow">{{ featured.type | default: 'Field object' | escape }}</p>
+        <p class="signal-frame__product">
+          <a href="{{ featured.url }}">{{ featured.title | escape }}</a>
+        </p>
+        {% if kova.functional_descriptor.value != blank %}
+          <p class="signal-frame__descriptor">{{ kova.functional_descriptor.value | escape }}</p>
+        {% endif %}
+      </div>
+      {% if kova.technical_specifications.value != blank %}
+        <dl class="signal-frame__specs">
+          {% assign spec_lines = kova.technical_specifications.value | newline_to_br | split: '<br />' %}
+          {% for raw_line in spec_lines limit: 5 %}
+            {% assign line = raw_line | strip %}
+            {% unless line contains ':' %}{% continue %}{% endunless %}
+            {% assign spec_label = line | split: ':' | first %}
+            <div>
+              <dt>{{ spec_label | strip | escape }}</dt>
+              <dd>{{ line | remove_first: spec_label | remove_first: ':' | strip | escape }}</dd>
+            </div>
+          {% endfor %}
+        </dl>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .signal-frame { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .signal-frame__stage { position: relative; display: grid; min-height: max(36rem, var(--frame-height)); overflow: clip; isolation: isolate; }
+  .signal-frame__media { position: absolute; z-index: -2; inset: -8% 0; }
+  .signal-frame__media picture,
+  .signal-frame__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .signal-frame__stage::after { position: absolute; z-index: -1; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / 55%), rgb(0 0 0 / 8%) 38%, rgb(0 0 0 / 70%)); content: ''; pointer-events: none; }
+  .signal-frame--pending .signal-frame__media { background: repeating-linear-gradient(0deg, rgb(244 243 237 / 4%) 0 1px, transparent 1px 6px), radial-gradient(circle at 64% 42%, color-mix(in srgb, var(--frame-accent) 14%, transparent), transparent 42%), var(--ad-color-background-elevated); }
+
+  .signal-frame__overlay { display: flex; padding-block: var(--ad-space-700) var(--ad-space-600); flex-direction: column; justify-content: space-between; gap: var(--ad-space-700); }
+  .signal-frame__top { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: var(--ad-space-300); }
+  .signal-frame__top .eyebrow { margin: 0; }
+  .signal-frame__meta { display: grid; margin: 0; justify-items: end; gap: var(--ad-space-50); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-align: end; text-transform: uppercase; }
+  .signal-frame__meta span:first-child { color: var(--frame-accent); font-size: clamp(1.5rem, 3vw, 2.5rem); letter-spacing: -0.02em; }
+  .signal-frame__pending { grid-column: 1 / -1; margin: 0; color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .signal-frame__bottom { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--ad-space-400); }
+  .signal-frame__heading { margin: 0; font-family: var(--font-display-family); font-size: var(--ad-text-title); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.86; text-transform: uppercase; }
+  .signal-frame__cta { display: inline-flex; min-height: var(--ad-control-minimum); align-items: center; gap: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid currentcolor; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-decoration: none; text-transform: uppercase; }
+  .signal-frame__cta:hover { color: var(--frame-accent); }
+
+  .signal-frame__annotations { margin: 0; padding: 0; list-style: none; }
+  .signal-frame__annotation { font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-frame__index { color: var(--frame-accent); font-weight: 700; }
+  .signal-frame__label { font-weight: 700; }
+  .signal-frame__label a { text-decoration: none; }
+  .signal-frame__label a:hover { text-decoration: underline; }
+  .signal-frame__note { color: color-mix(in srgb, currentcolor 72%, transparent); letter-spacing: 0.06em; text-transform: none; }
+
+  @media (min-width: 48rem) {
+    .signal-frame__overlay { grid-area: 1 / 1; }
+    .signal-frame__annotations { position: absolute; inset: 0; pointer-events: none; }
+    .signal-frame__annotation { pointer-events: auto; }
+    .signal-frame__annotation { position: absolute; inset-block-start: var(--y); inset-inline-start: var(--x); width: max-content; max-width: 17rem; padding-inline-start: var(--ad-space-300); border-inline-start: var(--ad-border-hairline) solid var(--frame-accent); }
+    .signal-frame__annotation::before { position: absolute; inset-block-start: 0; inset-inline-start: calc(-0.25rem - 0.5px); width: 0.5rem; height: 0.5rem; background: var(--frame-accent); content: ''; }
+    .signal-frame__annotation--end { padding-inline: 0 var(--ad-space-300); border-inline-start: 0; border-inline-end: var(--ad-border-hairline) solid var(--frame-accent); text-align: end; translate: -100% 0; }
+    .signal-frame__annotation--end::before { inset-inline: auto calc(-0.25rem - 0.5px); }
+    .signal-frame__tag { display: grid; grid-template-columns: auto 1fr; column-gap: var(--ad-space-200); row-gap: var(--ad-space-50); }
+    .signal-frame__annotation--end .signal-frame__tag { grid-template-columns: 1fr auto; }
+    .signal-frame__annotation--end .signal-frame__index { order: 2; }
+    .signal-frame__note { grid-column: 2; }
+    .signal-frame__annotation--end .signal-frame__note { grid-column: 1; }
+  }
+
+  .signal-frame__record { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.8fr); gap: var(--ad-content-gap); padding-block: var(--ad-space-600); }
+  .signal-frame__record .eyebrow { margin: 0 0 var(--ad-space-200); color: var(--ad-color-text-muted); }
+  .signal-frame__product { margin: 0; font-family: var(--font-display-family); font-size: clamp(1.75rem, 3.4vw, 3.25rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+  .signal-frame__product a { text-decoration: none; }
+  .signal-frame__descriptor { margin: var(--ad-space-200) 0 0; color: var(--ad-color-text-muted); }
+  .signal-frame__specs { margin: 0; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .signal-frame__specs > div { display: flex; padding-block: var(--ad-space-200); justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-frame__specs dt { color: var(--ad-color-text-muted); }
+  .signal-frame__specs dd { margin: 0; font-weight: 700; text-align: end; }
+
+  @media (max-width: 47.99rem) {
+    .signal-frame__stage { display: block; min-height: 0; }
+    .signal-frame__media { position: relative; inset: auto; height: max(28rem, 72svh); }
+    .signal-frame__stage::after { inset: 0 0 auto; height: max(28rem, 72svh); }
+    .signal-frame__overlay { position: absolute; inset: 0 0 auto; height: max(28rem, 72svh); margin-inline: auto; }
+    .signal-frame__annotations { display: grid; width: min(100% - (2 * var(--ad-page-padding)), var(--ad-container-width)); margin: var(--ad-space-400) auto 0; }
+    .signal-frame__annotation { padding-block: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+    .signal-frame__tag { display: grid; grid-template-columns: 2rem 1fr; }
+    .signal-frame__note { grid-column: 2; margin-block-start: var(--ad-space-50); }
+    .signal-frame__record { grid-template-columns: 1fr; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Signal frame",
+  "tag": "div",
+  "class": "section-signal-frame",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobile image" },
+    { "type": "text", "id": "image_alt", "label": "Image description", "info": "Used when the image has no alt text in Files." },
+    { "type": "range", "id": "height", "label": "Frame height", "min": 70, "max": 110, "step": 5, "unit": "%", "default": 100 },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Afterdark supply / Drop 001" },
+    { "type": "textarea", "id": "meta", "label": "Atmosphere lines", "default": "02:17\nSouth sector\nRain / low visibility", "info": "Editorial scene-setting, one line each. Not presented as data." },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "AFTER\nHOURS" },
+    { "type": "text", "id": "cta_label", "label": "Link label" },
+    { "type": "url", "id": "cta_link", "label": "Link", "info": "With a featured product and no link, points to its field manual." },
+    { "type": "header", "content": "Field test" },
+    { "type": "product", "id": "product", "label": "Featured product" },
+    { "type": "checkbox", "id": "show_specifications", "label": "Show product specifications", "default": true },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "blocks": [
+    {
+      "type": "annotation",
+      "name": "Annotation",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "text", "id": "label", "label": "Label", "info": "Blank uses the product title." },
+        { "type": "text", "id": "text", "label": "Note", "info": "Blank uses the product's feature at the index below." },
+        { "type": "range", "id": "feature_index", "label": "Feature number", "min": 1, "max": 8, "step": 1, "default": 1 },
+        { "type": "range", "id": "x", "label": "Horizontal position", "min": 4, "max": 96, "step": 1, "unit": "%", "default": 60 },
+        { "type": "range", "id": "y", "label": "Vertical position", "min": 8, "max": 88, "step": 1, "unit": "%", "default": 40 },
+        { "type": "select", "id": "align", "label": "Line side", "default": "start", "options": [{ "value": "start", "label": "Left" }, { "value": "end", "label": "Right" }] }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Signal frame", "blocks": [{ "type": "annotation" }] }]
+}
+{% endschema %}
