@@ -293,3 +293,61 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** Two parallel block vocabularies would confuse merchants in the block picker and invite untokenized content.
 
 **Tradeoff / reconsideration:** Any theme copy on the store that still uses them would lose those blocks. None of the checked-in templates did. Unused locale keys for them remain in `locales/`.
+
+## D-024 — Model loadouts as metaobjects and let the cart transform own their price
+
+**Context:** Phase 9 introduces loadouts: one carry platform plus modules from named slots, sold together at a tier price. Most of the catalogue should stay ordinary products. The storefront cannot be trusted to price or validate a kit, because line properties are set by the browser.
+
+**Options considered:**
+- Hardcode loadouts in theme settings.
+- Store slot membership as product metafields on each module.
+- Model loadouts and slots as metaobjects, compile them into function configuration, and enforce them in Shopify Functions.
+- Price loadouts with a Discount Function, the Cart Transform, or both.
+
+**Decision:**
+- Two merchant-owned metaobject types, `loadout` and `loadout_slot`, both with storefront read access, are the only source of rules. One entry, "Relay Grid loadout", covers four platforms and three slots.
+- Participation is opt-in: 10 of the 21 KOVA products (four platforms and six slot candidates) take part; every other product, including the native bundle, never does.
+- `scripts/sync-rules.mjs` compiles the entries to JSON on the cart transform and the validation, because functions cannot read metaobjects.
+- The `loadout-merge` cart transform merges a valid group into one "KOVA Loadout" line with `percentageDecrease` (10% for two modules, 15% for three or more). There is no Discount Function, so price has one owner.
+- The `loadout-guard` validation applies the same shared rules (`apps/kova-core/shared/loadout-rules.ts`) and blocks a rejected group, and it blocks the parent product when it is added on its own at $0.
+
+**Reasoning:** Metaobjects give merchants an admin UI for the rules and give the Phase 10 builder a Liquid-readable source. Judging groups in one shared module means the two functions cannot disagree. A single price owner avoids stacking a transform price change with a discount.
+
+**Tradeoff / reconsideration:**
+- Every rule edit needs a sync run until an App Home screen replaces the script.
+- Two of the same module in one loadout cannot be expressed, because the cart combines identical lines and the rules require one quantity across the group. The Phase 10 builder must offer distinct products per slot.
+- Setting a merged line's quantity to 2 doubles each component and the price correctly, but Shopify reports the parent as quantity 1 holding two of each object. Revisit when the builder handles quantity.
+- Add a Discount Function only if loadout pricing must combine with other discounts in ways a transform price cannot.
+
+## D-025 — Sell products without photography behind an explicit pending frame
+
+**Context:** The user asked for new products that fit loadouts, with photography to follow. D-013 forbids borrowing another product's imagery, and Shopify's generic placeholder SVG reads as a broken store.
+
+**Options considered:** keep the new products unlisted or as drafts until photographed; publish them with the generic placeholder; publish them with a KOVA-styled "Photography pending" frame.
+
+**Decision:** The five Drop 002 products are active and purchasable. `snippets/media-pending.liquid` replaces the generic placeholder on product cards, product pages, and cart lines: a token-styled frame labelled "Photography pending", with the title on the product page. Cards without an image skip the WebGL reveal.
+
+**Reasoning:** The loadout rules need real, buyable products to be tested end to end, and an explicit pending state keeps D-013's honesty rule: nothing claims to depict an object it does not.
+
+**Tradeoff / reconsideration:** Collections now mix photographed and pending cards, which weakens the grid until photography arrives. Replace the frames product by product as images are added; no code change is needed.
+
+## D-026 — Keep KOVA Core in the theme repository and run it in development only
+
+**Context:** Functions need a Shopify app. Plus stores can run custom-app Functions, and this store qualifies. The project rule is never to deploy functions without the user.
+
+**Options considered:** a separate app repository; an app in `apps/` beside the theme; a hosted app with a backend.
+
+**Decision:**
+- `apps/kova-core/` holds the app. It was created with `shopify app init` (no template UI) and has two TypeScript functions.
+- There is no backend, and there is no App Home yet. The template showed that App Home can run without a hosted server, so it stays available for later.
+- `apps/**` is excluded from `.shopifyignore` and Theme Check.
+- Functions are TypeScript, not Rust: the system Rust toolchain on the development machine has no `wasm32-wasip1` standard library.
+- The app runs through `shopify app dev` only. It has not been deployed or released.
+- Live testing showed that Shopify ignores a `linesMerge` whose parent product is not on the Online Store channel. The "KOVA Loadout" parent is therefore published there only, hidden from search and the sitemap with `seo.hidden`, untagged so no collection lists it, and blocked by the guard when added directly.
+
+**Reasoning:** One repository keeps the rules, the theme that renders them, and the documentation in the same review. A development-only app keeps the enforcement testable without releasing anything.
+
+**Tradeoff / reconsideration:**
+- The functions stop running when `shopify app dev` stops. Before Phase 10 ships, the user decides whether to deploy a version.
+- The parent product's page is reachable by direct URL. Its $0 price cannot be bought, but the page should get a redirect or template if it becomes a problem.
+- Switch to Rust if instruction counts approach the limit. The largest fixture uses about 0.85M of 11M.
