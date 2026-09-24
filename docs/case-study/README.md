@@ -469,7 +469,19 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
 
 In the editor only, an Image block with no image shows an "Image pending" frame, and a Button without a link shows a dashed "Link pending" label. Storefront output for both is empty, as verified; the editor states are part of the pending Theme Editor pass.
 
-**Awaiting approval:**
+### Phase 8 backlog and open decisions
 
-- Creating "The KOVA system" page with the drafted copy.
-- Assigning `collection.story` to a collection.
+Items to revisit. None of them blocks Phase 8.
+
+**Backlog:**
+
+- **Focal-point imagery (owner: user).** Supply images for composition blocks and set a focal point on at least one in Shopify Files. Then verify that the Image block's `object-position` crop follows it at 390px and 1440px. Until then the path is untested.
+- **Safari (Unavailable).** The development machine runs Linux, and no macOS or iOS device is available. Safari behaviour of the composition blocks and view transitions stays unverified until one is.
+
+**Decisions to return to:**
+
+1. Create "The KOVA system" page with `page.system`, using the copy drafted from catalogue facts:
+   - "Every KOVA product page lists the objects it works with, from carry platforms to the small tools that clip to them."
+   - "Carry Systems are built on the Relay Grid attachment standard. The Gridlink Pouch Array is listed as working with each of these three."
+2. Assign `collection.story` to Drop 001, or to another collection.
+3. Optionally, enable the Online Store webpage capability on the `edition_profile` metaobject definition and add a metaobject template composed from the KOVA blocks.
