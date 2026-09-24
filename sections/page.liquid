@@ -1,17 +1,53 @@
 {% comment %}
-  This section is used in the page template to render store pages like About us
-  or Contact us.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/page
+  Store page such as About or Contact. The title can be turned off when an editorial composition
+  above this section shows the page title as the page heading.
 {% endcomment %}
+{%- liquid
+  assign has_content = false
+  if page.content != blank
+    assign has_content = true
+  endif
+-%}
+{% if section.settings.show_title or has_content %}
+  <div class="page-content full-width" data-motion-scope>
+    <div class="page-content__inner section-shell">
+      {% if section.settings.show_title %}
+        <header class="page-content__header" data-reveal="section">
+          {% render 'display-heading', text: page.title, class: 'section-heading', tag: 'h1' %}
+        </header>
+      {% endif %}
+      {% if has_content %}
+        <div class="page-content__body">{{ page.content }}</div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
 
-<h1>{{ page.title }}</h1>
+{% stylesheet %}
+  .page-content { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .page-content__inner { padding-block: var(--ad-space-500) var(--ad-section-space); }
+  .page-content__header { max-width: 60rem; margin-block-end: var(--ad-space-700); }
+  .page-content__header .section-heading { margin: 0; }
+  .page-content__body { max-width: 40rem; margin-inline-start: clamp(0rem, 16vw, 18rem); font-size: var(--ad-text-lead); line-height: 1.6; }
+  .page-content__body > * { margin: 0; }
+  .page-content__body > * + * { margin-block-start: var(--ad-space-400); }
 
-{{ page.content }}
+  @media (max-width: 47.99rem) {
+    .page-content__body { margin-inline-start: 0; }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.page",
-  "settings": []
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show page title",
+      "default": true,
+      "info": "Turn off only when a section above this one shows the page title as the page heading."
+    }
+  ]
 }
 {% endschema %}

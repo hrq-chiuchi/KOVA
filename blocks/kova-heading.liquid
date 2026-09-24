@@ -1,0 +1,73 @@
+{% doc %}
+  Display heading using the shared display-heading snippet. Each paragraph of the rich text is one
+  reveal line; formatting is stripped so the display type stays uniform.
+{% enddoc %}
+{%- if block.settings.text != blank -%}
+  {%- capture newline %}
+{% endcapture -%}
+  {%- liquid
+    assign heading_text = block.settings.text | replace: '</p>', newline | replace: '<br>', newline | strip_html | strip
+    capture heading_class
+      echo 'kova-heading kova-heading--' | append: block.settings.size
+      if block.settings.accent_last_line
+        echo ' kova-heading--accent'
+      endif
+    endcapture
+    if block.settings.reveal
+      assign heading_attributes = block.shopify_attributes | append: ' data-reveal="section"'
+    else
+      assign heading_attributes = block.shopify_attributes
+    endif
+  -%}
+  {% render 'display-heading',
+    text: heading_text,
+    tag: block.settings.level,
+    class: heading_class,
+    attributes: heading_attributes
+  %}
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-heading { margin: 0; font-family: var(--font-display-family); font-weight: var(--font-display-weight); text-transform: uppercase; }
+  .kova-heading [data-reveal-line-wrap] { display: block; }
+  .kova-heading--title { font-size: var(--ad-text-title); letter-spacing: -0.05em; line-height: 0.9; }
+  .kova-heading--display { font-size: var(--ad-text-display); letter-spacing: -0.07em; line-height: 0.8; }
+  .kova-heading--statement { max-width: 22ch; font-size: clamp(2rem, 4.8vw, 5.25rem); letter-spacing: -0.055em; line-height: 0.92; text-wrap: balance; }
+  .kova-heading--accent [data-reveal-line-wrap]:last-child { color: var(--color-accent); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Heading",
+  "tag": null,
+  "settings": [
+    { "type": "richtext", "id": "text", "label": "Heading", "default": "<p>Built</p><p>for after dark</p>", "info": "Each paragraph is one line of the heading. Formatting is not shown." },
+    {
+      "type": "select",
+      "id": "level",
+      "label": "Heading level",
+      "default": "h2",
+      "options": [
+        { "value": "h1", "label": "H1, page title" },
+        { "value": "h2", "label": "H2, section heading" },
+        { "value": "h3", "label": "H3, sub-heading" }
+      ],
+      "info": "Use H1 once per page, only when nothing else on the page is the title."
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "Size",
+      "default": "title",
+      "options": [
+        { "value": "title", "label": "Title" },
+        { "value": "display", "label": "Display" },
+        { "value": "statement", "label": "Statement" }
+      ]
+    },
+    { "type": "checkbox", "id": "accent_last_line", "label": "Accent the last line", "default": false },
+    { "type": "checkbox", "id": "reveal", "label": "Reveal lines on scroll", "default": true, "info": "Skipped when visitors prefer reduced motion." }
+  ],
+  "presets": [{ "name": "Heading" }]
+}
+{% endschema %}

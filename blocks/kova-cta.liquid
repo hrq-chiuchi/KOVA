@@ -1,0 +1,57 @@
+{% doc %}
+  A single call to action. Renders nothing until it has both a label and a link.
+{% enddoc %}
+{%- if block.settings.label != blank and block.settings.link != blank -%}
+  {%- liquid
+    case block.settings.style
+      when 'accent'
+        assign cta_class = 'button button--accent'
+      when 'quiet'
+        assign cta_class = 'kova-cta--quiet'
+      else
+        assign cta_class = 'button'
+    endcase
+  -%}
+  <a class="kova-cta {{ cta_class }}" href="{{ block.settings.link }}" {{ block.shopify_attributes }}>
+    <span>{{ block.settings.label | escape }}</span><span aria-hidden="true">→</span>
+  </a>
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-cta { justify-self: start; min-height: var(--ad-control-minimum); }
+  .kova-cta--quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ad-space-100);
+    border-block-end: var(--ad-border-hairline) solid currentcolor;
+    font-size: var(--ad-text-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .kova-cta--quiet:hover { color: var(--color-accent); }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Button",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Enter the system" },
+    { "type": "url", "id": "link", "label": "Link" },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Style",
+      "default": "outline",
+      "options": [
+        { "value": "outline", "label": "Outline" },
+        { "value": "accent", "label": "Accent" },
+        { "value": "quiet", "label": "Underlined link" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Button" }]
+}
+{% endschema %}

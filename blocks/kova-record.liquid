@@ -1,0 +1,54 @@
+{% doc %}
+  A label/value record. Reads "Label: value" lines, which can be connected to a metafield such as
+  technical specifications, followed by any rows added as blocks.
+{% enddoc %}
+{%- if block.settings.lines != blank or block.blocks.size > 0 -%}
+  <div class="kova-record" {{ block.shopify_attributes }}>
+    {%- if block.settings.title != blank -%}
+      <p class="eyebrow kova-record__title">{{ block.settings.title | escape }}</p>
+    {%- endif -%}
+    {%- if block.settings.lines != blank -%}
+      {% render 'record-list', text: block.settings.lines, class: 'kova-record__list', limit: block.settings.limit %}
+    {%- endif -%}
+    {%- if block.blocks.size > 0 -%}
+      <dl class="kova-record__list">{% content_for 'blocks' %}</dl>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .kova-record__title { margin: 0 0 var(--ad-space-200); }
+  .kova-record__list { margin: 0; border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .kova-record__list > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ad-space-300);
+    padding-block: var(--ad-space-200);
+    border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent);
+    font-size: var(--ad-text-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .kova-record__list dt { color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .kova-record__list dd { margin: 0; font-weight: 700; text-align: end; }
+  .kova-record__list + .kova-record__list { border-block-start: 0; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Record",
+  "tag": null,
+  "blocks": [{ "type": "_kova-record-row" }],
+  "settings": [
+    { "type": "text", "id": "title", "label": "Title" },
+    {
+      "type": "textarea",
+      "id": "lines",
+      "label": "Records",
+      "info": "One per line as Label: value. Connect a product metafield such as technical specifications to read it live."
+    },
+    { "type": "range", "id": "limit", "label": "Maximum lines", "min": 1, "max": 12, "step": 1, "default": 8 }
+  ],
+  "presets": [{ "name": "Record" }]
+}
+{% endschema %}

@@ -1,0 +1,108 @@
+{
+  "sections": {
+    "intro": {
+      "type": "composition",
+      "blocks": {
+        "split": {
+          "type": "kova-layout",
+          "settings": { "arrangement": "split-wide-first", "spacing": "open", "alignment": "end" },
+          "blocks": {
+            "copy": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "standard", "alignment": "start" },
+              "blocks": {
+                "eyebrow": {
+                  "type": "kova-eyebrow",
+                  "settings": { "text": "KOVA", "count_collection": "drop-001", "count_label": "objects in Drop 001" }
+                },
+                "heading": {
+                  "type": "kova-heading",
+                  "settings": { "text": "<p>{{ closest.page.title }}</p>", "level": "h1", "size": "display", "accent_last_line": false, "reveal": true }
+                },
+                "lead": {
+                  "type": "kova-text",
+                  "settings": {
+                    "text": "<p>Every KOVA object is built to work with the others. Carry platforms and modules share one attachment standard, and each product page lists the objects it works with.</p>",
+                    "width": "reading",
+                    "size": "lead",
+                    "muted": true
+                  }
+                }
+              },
+              "block_order": ["eyebrow", "heading", "lead"]
+            },
+            "record": {
+              "type": "kova-record",
+              "settings": { "title": "System record", "lines": "", "limit": 8 },
+              "blocks": {
+                "release": { "type": "_kova-record-row", "settings": { "label": "Release", "value": "Drop 001" } },
+                "standard": { "type": "_kova-record-row", "settings": { "label": "Attachment", "value": "Relay Grid" } }
+              },
+              "block_order": ["release", "standard"]
+            }
+          },
+          "block_order": ["copy", "record"]
+        }
+      },
+      "block_order": ["split"],
+      "settings": { "tone": "dark", "accent": "#dfff00", "width": "contained", "spacing": "compact" }
+    },
+    "platforms": {
+      "type": "composition",
+      "blocks": {
+        "stack": {
+          "type": "kova-layout",
+          "settings": { "arrangement": "stack", "spacing": "open", "alignment": "start" },
+          "blocks": {
+            "header": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "split-even", "spacing": "open", "alignment": "end" },
+              "blocks": {
+                "heading_group": {
+                  "type": "kova-layout",
+                  "settings": { "arrangement": "stack", "spacing": "tight", "alignment": "start" },
+                  "blocks": {
+                    "eyebrow": { "type": "kova-eyebrow", "settings": { "text": "Carry platforms" } },
+                    "heading": {
+                      "type": "kova-heading",
+                      "settings": { "text": "<p>One grid</p><p>many loads</p>", "level": "h2", "size": "title", "accent_last_line": true, "reveal": true }
+                    }
+                  },
+                  "block_order": ["eyebrow", "heading"]
+                },
+                "text": {
+                  "type": "kova-text",
+                  "settings": {
+                    "text": "<p>The Relay Grid attachment standard runs across KOVA load platforms and modules, so a pack, a vest and a pouch set index to each other.</p>",
+                    "width": "narrow",
+                    "size": "body",
+                    "muted": true
+                  }
+                }
+              },
+              "block_order": ["heading_group", "text"]
+            },
+            "products": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "columns-3", "spacing": "standard", "alignment": "start" },
+              "blocks": {
+                "backpack": { "type": "kova-product", "settings": { "product": "after-dark-utility-backpack", "heading_tag": "h3" } },
+                "vest": { "type": "kova-product", "settings": { "product": "relay-modular-vest", "heading_tag": "h3" } },
+                "pouches": { "type": "kova-product", "settings": { "product": "gridlink-pouch-array", "heading_tag": "h3" } }
+              },
+              "block_order": ["backpack", "vest", "pouches"]
+            }
+          },
+          "block_order": ["header", "products"]
+        }
+      },
+      "block_order": ["stack"],
+      "settings": { "tone": "inverse", "accent": "#dfff00", "width": "contained", "spacing": "standard" }
+    },
+    "main": {
+      "type": "page",
+      "settings": { "show_title": false }
+    }
+  },
+  "order": ["intro", "platforms", "main"]
+}

@@ -1,0 +1,91 @@
+{% doc %}
+  Arranges child blocks as a stack, a two-column split, or an overlay where the first child is the
+  backdrop. Arrangement never reorders children, so reading and focus order follow the editor order.
+{% enddoc %}
+<div
+  class="kova-layout kova-layout--{{ block.settings.arrangement }} kova-layout--space-{{ block.settings.spacing }} kova-layout--align-{{ block.settings.alignment }}"
+  {{ block.shopify_attributes }}
+>
+  {% content_for 'blocks' %}
+</div>
+
+{% stylesheet %}
+  .kova-layout { display: grid; min-width: 0; }
+  .kova-layout > * { min-width: 0; }
+  .kova-layout--space-tight { gap: var(--ad-space-300); }
+  .kova-layout--space-standard { gap: var(--ad-space-500); }
+  .kova-layout--space-open { gap: var(--ad-content-gap) var(--ad-space-800); }
+  .kova-layout--align-start { align-items: start; }
+  .kova-layout--align-center { align-items: center; }
+  .kova-layout--align-end { align-items: end; }
+  .kova-layout--stack { grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .kova-layout--stack > .kova-layout--stack { gap: var(--ad-space-300); }
+
+  .kova-layout--overlay { grid-template-areas: 'stage'; min-height: var(--kova-overlay-height, 80svh); isolation: isolate; }
+  .kova-layout--overlay > * { grid-area: stage; }
+  .kova-layout--overlay > :first-child { z-index: -1; height: 100%; }
+  .kova-layout--overlay > :first-child .kova-media__frame { height: 100%; aspect-ratio: auto; }
+  .kova-layout--overlay > :first-child::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--ad-color-background-primary), transparent 65%);
+    content: '';
+    pointer-events: none;
+  }
+  .kova-layout--overlay > :not(:first-child) { align-self: end; max-width: 56rem; padding: var(--ad-page-padding); color: var(--ad-color-text-primary); }
+
+  @media (min-width: 48rem) {
+    .kova-layout--split-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kova-layout--split-wide-first { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); }
+    .kova-layout--split-wide-second { grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr); }
+    .kova-layout--columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Layout",
+  "tag": null,
+  "blocks": [{ "type": "@theme" }],
+  "settings": [
+    {
+      "type": "select",
+      "id": "arrangement",
+      "label": "Arrangement",
+      "default": "stack",
+      "options": [
+        { "value": "stack", "label": "Stack" },
+        { "value": "split-even", "label": "Split, even columns" },
+        { "value": "split-wide-first", "label": "Split, wide first column" },
+        { "value": "split-wide-second", "label": "Split, wide second column" },
+        { "value": "columns-3", "label": "Three columns" },
+        { "value": "overlay", "label": "Overlay on first block" }
+      ],
+      "info": "Splits and columns stack on phones. Overlay uses the first block, usually an image, as the backdrop."
+    },
+    {
+      "type": "select",
+      "id": "spacing",
+      "label": "Spacing",
+      "default": "standard",
+      "options": [
+        { "value": "tight", "label": "Tight" },
+        { "value": "standard", "label": "Standard" },
+        { "value": "open", "label": "Open" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Vertical alignment",
+      "default": "start",
+      "options": [
+        { "value": "start", "label": "Top" },
+        { "value": "center", "label": "Middle" },
+        { "value": "end", "label": "Bottom" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Layout" }]
+}
+{% endschema %}
