@@ -1,0 +1,150 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "validation": {
+        "rules": {
+          "jsonValue": {
+            "parentVariantId": "gid://shopify/ProductVariant/9001",
+            "loadouts": [
+              {
+                "name": "Relay Grid loadout",
+                "platforms": [
+                  "gid://shopify/Product/101",
+                  "gid://shopify/Product/102",
+                  "gid://shopify/Product/103",
+                  "gid://shopify/Product/104"
+                ],
+                "minModules": 2,
+                "tiers": [
+                  {
+                    "modules": 2,
+                    "percent": 10
+                  },
+                  {
+                    "modules": 3,
+                    "percent": 15
+                  }
+                ],
+                "slots": [
+                  {
+                    "key": "organizer",
+                    "products": [
+                      "gid://shopify/Product/201",
+                      "gid://shopify/Product/202"
+                    ],
+                    "required": false,
+                    "max": 2
+                  },
+                  {
+                    "key": "hydration",
+                    "products": [
+                      "gid://shopify/Product/301",
+                      "gid://shopify/Product/302"
+                    ],
+                    "required": false,
+                    "max": 1
+                  },
+                  {
+                    "key": "signal",
+                    "products": [
+                      "gid://shopify/Product/401",
+                      "gid://shopify/Product/402"
+                    ],
+                    "required": false,
+                    "max": 2
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "cart": {
+        "lines": [
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "platform"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/1030",
+              "product": {
+                "id": "gid://shopify/Product/103",
+                "title": "Relay Modular Vest"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/5010",
+              "product": {
+                "id": "gid://shopify/Product/501",
+                "title": "Nullfold Card Wallet"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/2010",
+              "product": {
+                "id": "gid://shopify/Product/201",
+                "title": "Gridlink Pouch Array"
+              }
+            },
+            "cost": {
+              "totalAmount": {
+                "amount": "48.0"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "The Relay Modular Vest loadout is incomplete or has changed. Remove its items or rebuild the loadout.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

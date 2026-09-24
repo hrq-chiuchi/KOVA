@@ -288,6 +288,9 @@ function setParentProduct() {
     status: "ACTIVE",
     productType: "Loadout",
     descriptionHtml: "<p>Merged cart line for a KOVA loadout. Created by the KOVA Core cart transform; not sold on its own.</p>",
+    // Excluded from search, the sitemap and every collection (it has no tags). The guard blocks it
+    // when it is added to a cart directly.
+    metafields: [{ namespace: "seo", key: "hidden", type: "number_integer", value: "1" }],
     productOptions: [{ name: "Title", values: [{ name: "Default Title" }] }],
     variants: [{
       optionValues: [{ optionName: "Title", name: "Default Title" }],
@@ -302,10 +305,10 @@ function setParentProduct() {
   return check(result, "kova-loadout").product;
 }
 
-function publish(id) {
+function publish(id, publications = PUBLICATIONS) {
   const result = gql(`mutation ($id: ID!, $input: [PublicationInput!]!) {
     publishablePublish(id: $id, input: $input) { userErrors { field message } }
-  }`, { id, input: PUBLICATIONS.map((publicationId) => ({ publicationId })) }, { mutate: true }).publishablePublish;
+  }`, { id, input: publications.map((publicationId) => ({ publicationId })) }, { mutate: true }).publishablePublish;
   check(result, `publish ${id}`);
 }
 
@@ -333,8 +336,31 @@ for (const product of PRODUCTS) {
   publish(id);
   console.log(`  ${product.handle} ${id}`);
 }
+// Live testing on 2026-09-24 showed Shopify ignores a linesMerge whose parent is not on the
+// Online Store channel, so the parent is published there (and only there).
 const parent = setParentProduct();
-console.log(`  kova-loadout ${parent.id} (unpublished) variant ${parent.variants.nodes[0].id}`);
+publish(parent.id, [PUBLICATIONS[0]]);
+console.log(`  kova-loadout ${parent.id} (Online Store only, hidden) variant ${parent.variants.nodes[0].id}`);
+
+// Shopify's automatic /collections/all lists every published product, including the loadout
+// parent. A smart collection with the handle `all` takes over that URL without it.
+step("All-products collection");
+{
+  const existing = gql(`{ collectionByHandle(handle: "all") { id } }`).collectionByHandle;
+  let id = existing?.id;
+  if (!id) {
+    const result = gql(`mutation ($input: CollectionInput!) {
+      collectionCreate(input: $input) { collection { id } userErrors { field message } }
+    }`, { input: {
+      handle: "all",
+      title: "Products",
+      ruleSet: { appliedDisjunctively: false, rules: [{ column: "TYPE", relation: "NOT_EQUALS", condition: "Loadout" }] },
+    } }, { mutate: true }).collectionCreate;
+    id = check(result, "collectionCreate all").collection.id;
+  }
+  publish(id);
+  console.log(`  all ${id}`);
+}
 
 step("References");
 const allHandles = [...new Set([

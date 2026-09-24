@@ -32,9 +32,16 @@
                 if item.properties._kova_loadout_platform != blank
                   assign is_loadout = true
                   assign line_title = item.title
-                  assign line_url = item.item_components.first.url
+                  assign platform = item.item_components.first
+                  for component in item.item_components
+                    if component.product.title == item.properties._kova_loadout_platform
+                      assign platform = component
+                      break
+                    endif
+                  endfor
+                  assign line_url = platform.url
                   if line_image == blank
-                    assign line_image = item.item_components.first.image
+                    assign line_image = platform.image
                   endif
                 endif
               -%}

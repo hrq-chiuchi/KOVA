@@ -26,9 +26,16 @@
               if item.properties._kova_loadout_platform != blank
                 assign is_loadout = true
                 assign line_title = item.title
-                assign line_url = item.item_components.first.url
+                assign platform = item.item_components.first
+                for component in item.item_components
+                  if component.product.title == item.properties._kova_loadout_platform
+                    assign platform = component
+                    break
+                  endif
+                endfor
+                assign line_url = platform.url
                 if line_image == blank
-                  assign line_image = item.item_components.first.image
+                  assign line_image = platform.image
                 endif
               endif
             -%}
@@ -105,9 +112,10 @@
   @media (max-width: 47.99rem) {
     .cart-page__inner { padding-block-start: var(--ad-space-500); }
     .cart-page__header { min-height: 10rem; }
-    .cart-line { grid-template-columns: 7rem 1fr auto; gap: var(--ad-space-300); }
+    .cart-line { grid-template-columns: 6rem minmax(0, 1fr) auto; gap: var(--ad-space-300); }
+    .cart-line__identity h2 { overflow-wrap: anywhere; }
     .cart-line__quantity { grid-column: 2; width: 6rem; }
-    .cart-line__price { grid-column: 3; grid-row: 1; }
+    .cart-line__price { grid-column: 3; grid-row: 1; font-size: 1.15rem; }
     .cart-page__summary { grid-template-columns: 1fr; margin-block-start: var(--ad-space-500); }
     .cart-page__actions { grid-template-columns: 1fr; }
   }

@@ -22,8 +22,8 @@
 
 {% stylesheet %}
   .cart-components { display: grid; margin: 0; padding: 0; gap: var(--ad-space-50); list-style: none; color: var(--ad-color-text-muted); font-size: 0.85rem; }
-  .cart-components li { display: flex; flex-wrap: wrap; gap: 0 var(--ad-space-200); }
-  .cart-components li::before { content: "+"; color: var(--color-accent, currentcolor); }
+  .cart-components li { position: relative; padding-inline-start: var(--ad-space-300); }
+  .cart-components li::before { position: absolute; inset-inline-start: 0; content: "+"; color: var(--color-accent, currentcolor); }
   .cart-components__variant,
-  .cart-components__quantity { color: var(--ad-color-text-muted); }
+  .cart-components__quantity { margin-inline-start: var(--ad-space-200); }
 {% endstylesheet %}
