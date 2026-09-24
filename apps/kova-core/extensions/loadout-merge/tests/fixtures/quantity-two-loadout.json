@@ -1,0 +1,181 @@
+{
+  "payload": {
+    "export": "cart-transform-run",
+    "target": "cart.transform.run",
+    "input": {
+      "cartTransform": {
+        "rules": {
+          "jsonValue": {
+            "parentVariantId": "gid://shopify/ProductVariant/9001",
+            "loadouts": [
+              {
+                "name": "Relay Grid loadout",
+                "platforms": [
+                  "gid://shopify/Product/101",
+                  "gid://shopify/Product/102",
+                  "gid://shopify/Product/103",
+                  "gid://shopify/Product/104"
+                ],
+                "minModules": 2,
+                "tiers": [
+                  {
+                    "modules": 2,
+                    "percent": 10
+                  },
+                  {
+                    "modules": 3,
+                    "percent": 15
+                  }
+                ],
+                "slots": [
+                  {
+                    "key": "organizer",
+                    "products": [
+                      "gid://shopify/Product/201",
+                      "gid://shopify/Product/202"
+                    ],
+                    "required": false,
+                    "max": 2
+                  },
+                  {
+                    "key": "hydration",
+                    "products": [
+                      "gid://shopify/Product/301",
+                      "gid://shopify/Product/302"
+                    ],
+                    "required": false,
+                    "max": 1
+                  },
+                  {
+                    "key": "signal",
+                    "products": [
+                      "gid://shopify/Product/401",
+                      "gid://shopify/Product/402"
+                    ],
+                    "required": false,
+                    "max": 2
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "cart": {
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 2,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "platform"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/1040",
+              "product": {
+                "id": "gid://shopify/Product/104",
+                "title": "Relay Sling 8"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/2",
+            "quantity": 2,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/2010",
+              "product": {
+                "id": "gid://shopify/Product/201",
+                "title": "Gridlink Pouch Array"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/3",
+            "quantity": 2,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "signal"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/4010",
+              "product": {
+                "id": "gid://shopify/Product/401",
+                "title": "Signal Carabiner System"
+              }
+            }
+          },
+          {
+            "id": "gid://shopify/CartLine/4",
+            "quantity": 2,
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "signal"
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/4020",
+              "product": {
+                "id": "gid://shopify/Product/402",
+                "title": "Lumen Tag Beacon"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "linesMerge": {
+            "parentVariantId": "gid://shopify/ProductVariant/9001",
+            "title": "Loadout — Relay Sling 8",
+            "attributes": [
+              {
+                "key": "_kova_loadout_platform",
+                "value": "Relay Sling 8"
+              }
+            ],
+            "cartLines": [
+              {
+                "cartLineId": "gid://shopify/CartLine/1",
+                "quantity": 2
+              },
+              {
+                "cartLineId": "gid://shopify/CartLine/2",
+                "quantity": 2
+              },
+              {
+                "cartLineId": "gid://shopify/CartLine/3",
+                "quantity": 2
+              },
+              {
+                "cartLineId": "gid://shopify/CartLine/4",
+                "quantity": 2
+              }
+            ],
+            "price": {
+              "percentageDecrease": {
+                "value": 15
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

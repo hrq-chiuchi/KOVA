@@ -1,0 +1,59 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "platform"
+            },
+            "parentRelationship": {
+              "parent": {
+                "id": "gid://shopify/CartLine/9"
+              }
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "title": "After Dark Utility Backpack"
+              }
+            }
+          },
+          {
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "parentRelationship": {
+              "parent": {
+                "id": "gid://shopify/CartLine/9"
+              }
+            },
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "title": "Gridlink Pouch Array"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": []
+          }
+        }
+      ]
+    }
+  }
+}

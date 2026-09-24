@@ -22,7 +22,7 @@
 %}
 
 <article class="product-card" data-reveal-card>
-  <a class="product-card__media{% if alternate_image != blank %} product-card__media--alternate{% endif %}" href="{{ product.url }}" tabindex="-1" aria-hidden="true" data-webgl-reveal>
+  <a class="product-card__media{% if alternate_image != blank %} product-card__media--alternate{% endif %}" href="{{ product.url }}" tabindex="-1" aria-hidden="true"{% if product.featured_image %} data-webgl-reveal{% endif %}>
     {% if product.featured_image %}
       {{ product.featured_image
         | image_url: width: 1200
@@ -45,7 +45,7 @@
         }}
       {% endif %}
     {% else %}
-      {{ 'product-1' | placeholder_svg_tag: 'product-card__placeholder' }}
+      {% render 'media-pending', title: product.title, compact: true %}
     {% endif %}
     {% if index %}<span class="product-card__index" aria-hidden="true">{{ index | prepend: '0' | slice: -2, 2 }}</span>{% endif %}
     {% unless product.available %}<span class="product-card__badge">Sold out</span>{% endunless %}

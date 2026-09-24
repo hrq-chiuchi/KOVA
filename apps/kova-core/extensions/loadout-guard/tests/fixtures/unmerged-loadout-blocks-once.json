@@ -1,0 +1,71 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "organizer"
+            },
+            "parentRelationship": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "title": "Gridlink Pouch Array"
+              }
+            }
+          },
+          {
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "platform"
+            },
+            "parentRelationship": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "title": "Lowlight Courier 14"
+              }
+            }
+          },
+          {
+            "group": {
+              "value": "g1"
+            },
+            "slot": {
+              "value": "hydration"
+            },
+            "parentRelationship": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "title": "Sector Sleeve"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "The Lowlight Courier 14 loadout is incomplete or has changed. Remove its items or rebuild the loadout.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

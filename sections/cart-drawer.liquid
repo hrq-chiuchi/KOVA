@@ -23,20 +23,39 @@
         {% else %}
           <ul class="cart-drawer__items" role="list">
             {% for item in cart.items %}
+              {%- liquid
+                # A merged loadout's parent product is hidden, so the line links to and shows its platform.
+                assign line_title = item.product.title
+                assign line_url = item.url
+                assign line_image = item.image
+                assign is_loadout = false
+                if item.properties._kova_loadout_platform != blank
+                  assign is_loadout = true
+                  assign line_title = item.title
+                  assign line_url = item.item_components.first.url
+                  if line_image == blank
+                    assign line_image = item.item_components.first.image
+                  endif
+                endif
+              -%}
               <li class="cart-drawer__item">
-                <a class="cart-drawer__media" href="{{ item.url }}">
-                  {% if item.image %}
-                    {{ item.image | image_url: width: 320 | image_tag: widths: '160, 240, 320', sizes: '7rem', loading: 'lazy', alt: item.image.alt | default: item.product.title }}
+                <a class="cart-drawer__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
+                  {% if line_image %}
+                    {{ line_image | image_url: width: 320 | image_tag: widths: '160, 240, 320', sizes: '7rem', loading: 'lazy', alt: '' }}
+                  {% else %}
+                    {% render 'media-pending', title: line_title, compact: true %}
                   {% endif %}
                 </a>
                 <div class="cart-drawer__item-copy">
-                  <a href="{{ item.url }}">{{ item.product.title | escape }}</a>
-                  {% unless item.product.has_only_default_variant %}<small>{{ item.variant.title | escape }}</small>{% endunless %}
+                  <a href="{{ line_url }}">{{ line_title | escape }}</a>
+                  {% unless is_loadout or item.product.has_only_default_variant %}<small>{{ item.variant.title | escape }}</small>{% endunless %}
+                  {% render 'cart-line-components', item: item %}
+                  {% if item.error_message != blank %}<small class="cart-drawer__error" role="alert">{{ item.error_message | escape }}</small>{% endif %}
                   <span>{{ item.final_line_price | money }}</span>
                   <form action="{{ routes.cart_change_url }}" method="post" data-cart-change>
                     <input type="hidden" name="id" value="{{ item.key }}">
                     <label>
-                      <span class="visually-hidden">Quantity for {{ item.product.title | escape }}</span>
+                      <span class="visually-hidden">Quantity for {{ line_title | escape }}</span>
                       <input type="number" name="quantity" value="{{ item.quantity }}" min="0" inputmode="numeric">
                     </label>
                     <button type="submit">Update</button>
@@ -78,6 +97,7 @@
   .cart-drawer__item-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--ad-space-100); }
   .cart-drawer__item-copy > a { font-family: var(--font-display-family); font-size: 1.35rem; line-height: 0.95; text-decoration: none; text-transform: uppercase; }
   .cart-drawer__item-copy small { color: var(--ad-color-text-muted); }
+  .cart-drawer__item-copy .cart-drawer__error { color: var(--ad-color-action-critical); }
   .cart-drawer__item-copy form { display: flex; margin-block-start: auto; align-items: center; gap: var(--ad-space-100); }
   .cart-drawer__item-copy input { width: 4rem; min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; }
   .cart-drawer__item-copy button { min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: 0; background: transparent; font-size: var(--ad-text-label); text-transform: uppercase; }

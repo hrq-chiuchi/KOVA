@@ -1,0 +1,25 @@
+query CartValidationsGenerateRunInput {
+  cart {
+    lines {
+      group: attribute(key: "_kova_loadout") {
+        value
+      }
+      slot: attribute(key: "_kova_slot") {
+        value
+      }
+      parentRelationship {
+        parent {
+          id
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            title
+          }
+        }
+      }
+    }
+  }
+}

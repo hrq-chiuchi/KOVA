@@ -1,0 +1,63 @@
+{% doc %}
+  Renders the honest stand-in for a product that has no photography yet: a framed, token-styled
+  "Photography pending" panel instead of a generic placeholder or borrowed imagery.
+
+  @param {string} title - Product title shown inside the frame
+  @param {string} [class] - Extra class for the frame element
+  @param {boolean} [compact] - Card size: hides the title, which the card already shows
+
+  @example
+  {% render 'media-pending', title: product.title, compact: true %}
+{% enddoc %}
+<span class="media-pending{% if compact %} media-pending--compact{% endif %}{% if class != blank %} {{ class }}{% endif %}">
+  <span class="media-pending__label">Photography pending</span>
+  {% unless compact %}<span class="media-pending__title" aria-hidden="true">{{ title | escape }}</span>{% endunless %}
+</span>
+
+{% stylesheet %}
+  .media-pending {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding: var(--ad-space-400);
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--ad-space-200);
+    background:
+      linear-gradient(currentcolor, currentcolor) top left / var(--ad-space-400) var(--ad-border-hairline),
+      linear-gradient(currentcolor, currentcolor) top left / var(--ad-border-hairline) var(--ad-space-400),
+      linear-gradient(currentcolor, currentcolor) bottom right / var(--ad-space-400) var(--ad-border-hairline),
+      linear-gradient(currentcolor, currentcolor) bottom right / var(--ad-border-hairline) var(--ad-space-400),
+      var(--ad-color-background-elevated);
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    color: var(--ad-color-text-muted);
+  }
+  .media-pending__label { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .media-pending__title {
+    max-width: 18ch;
+    color: var(--ad-color-text-primary);
+    font-family: var(--font-display-family);
+    font-size: var(--ad-text-title);
+    font-weight: var(--font-display-weight);
+    letter-spacing: -0.055em;
+    line-height: 0.9;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+  }
+  .media-pending:not(.media-pending--compact) { min-height: 12rem; }
+  /* Cards carry an index and a badge in their top corners, so the compact frame keeps one corner mark. */
+  .media-pending--compact {
+    padding: var(--ad-space-300);
+    justify-content: center;
+    align-items: center;
+    background:
+      linear-gradient(currentcolor, currentcolor) bottom right / var(--ad-space-400) var(--ad-border-hairline),
+      linear-gradient(currentcolor, currentcolor) bottom right / var(--ad-border-hairline) var(--ad-space-400),
+      var(--ad-color-background-elevated);
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    text-align: center;
+  }
+{% endstylesheet %}
