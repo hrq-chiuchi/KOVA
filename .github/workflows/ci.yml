@@ -1,5 +1,9 @@
 name: CI
 on: [push]
+permissions:
+  contents: read
+  # theme-check-action reports results as a check run, which needs write access.
+  checks: write
 jobs:
   theme-check:
     name: Theme Check
