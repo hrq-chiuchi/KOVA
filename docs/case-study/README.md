@@ -415,7 +415,7 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
 
 **2026-09-24 — Implementation (D-022, D-023):**
 
-- **Snippets:** `display-heading` and `record-list` replace markup repeated in thirteen sections.
+- **Snippets:** `display-heading` and `record-list` replace markup repeated in fourteen sections.
 - **Blocks and section:** eight KOVA theme blocks, one private row block, and an Editorial composition section with three nested presets.
 - **Toggles:** the collection section gains a "Show collection title and description" setting, and the page section, previously bare Skeleton markup, is rebuilt with a "Show page title" setting.
 - **Templates:** `collection.story.json` and `page.system.json` compose real data through dynamic sources.
@@ -426,6 +426,16 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
 - The development theme refused the first `collection.story.json` upload. Shopify rejects Liquid in a setting "without valid dynamic sources". Bisecting showed the heading's `textarea` setting was the cause.
 - `inline_richtext` was tried next and rejected: its default may not contain `<br>`.
 - The heading now uses `richtext`, one paragraph per line. A dynamic value must be stored as `<p>{{ closest.collection.title }}</p>`, because top-level richtext nodes must be `p`, lists, or headings.
+- A throwaway `product.blocktest` template exercised every block path the two real templates do not use. It was viewed on the backpack PDP and deleted afterwards without being committed. It found:
+  - **Image block:** a filter chain inside `image_tag`'s `style:` argument printed an empty `style="object-position: "` when the image had no focal point. The style is now assigned first and emitted only when a focal point exists.
+  - **Overlay:** without an image, the text stack became `:first-child` and inherited the backdrop styles. The backdrop now requires a first Image block, and otherwise the children stack.
+  - **Record:** its `textarea` lines rejected every metafield dynamic source, so the block's "connect a metafield" claim was false. Switched to `richtext`: `<p>{{ product.metafields.custom.technical_specifications.value }}</p>` uploads and renders the backpack's five specification rows. The `closest.product.metafields…` form is still rejected.
+  - **Entities:** a heading of `Tools &amp; gear` would have rendered a visible `&amp;` through `escape`. Rich-text callers now pass `entities: true` (`escape_once`); the fourteen existing callers keep `escape`.
+  - **Also exercised:** overlay with a real product image and drift, all three button styles, the wide-second split, `closest.product` in the product block, and a heading with an apostrophe.
+
+  At 390, 768, 1440, and 1920px there was zero overflow and one H1. Desktop kept one persistent drift ScrollTrigger, with none on phones or under reduced motion. Screenshots were reviewed at 390 and 1440px.
+- The system page copy was checked against the catalogue with a read-only Admin query. Carry Systems holds the Lowlight Courier 14, After Dark Utility Backpack, Gridlink Pouch Array, and Driftline Hip Rig. Only that collection's description, plus the Night Transit Set's, names Relay Grid, and all 16 KOVA products list compatible products. The draft had implied that the Relay Modular Vest is part of the grid and that every object works with every other. It now names the three carry platforms, each of which lists the Gridlink Pouch Array.
+- The rebuilt page section renders the Contact and Your Privacy Choices pages with their title as the only H1 and their content intact.
 - Shopify's documentation states that `closest.<type>` is available only as a setting value. Blocks therefore take explicit resource settings, which templates set to `{{ closest.* }}`.
 
 **Verification (local `theme dev` proxy, development theme `164481368323`, Chromium 151 headless):**

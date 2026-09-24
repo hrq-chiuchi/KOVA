@@ -259,7 +259,7 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 ## D-022 — Compose art direction from snippets, opinionated theme blocks, and one section
 
-**Context:** Merchants could reuse KOVA's look only by copying whole sections. Thirteen sections repeated the same reveal-line heading markup, and two duplicated the specification parser. The only theme blocks were Skeleton's generic `text` and `group`. The brief suggested a four-family block tree (layout, media, content, interaction), but warned against building a generic page builder.
+**Context:** Merchants could reuse KOVA's look only by copying whole sections. Fourteen sections repeated the same reveal-line heading markup, and two duplicated the specification parser. The only theme blocks were Skeleton's generic `text` and `group`. The brief suggested a four-family block tree (layout, media, content, interaction), but warned against building a generic page builder.
 
 **Options considered:**
 - Convert every section-local block (pillars, frames, annotations, stories) into global theme blocks. This means a data migration in `index.json` and `product.json`, and it flattens compositions that only work in one place.
@@ -271,7 +271,7 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - Keep the signature sections as art-direction exceptions. They adopt the snippets without schema changes, so no template data changes.
 - Limit motion to heading reveal and image drift. Marquee, glitch, and video are **Deferred**: marquee and glitch have no second use yet, and video needs a pause control and a reduced-motion rule that it never autoplays.
 - Resources reach blocks through explicit settings set to `{{ closest.* }}`.
-- The heading uses `richtext` paragraphs as lines, because `textarea` rejects dynamic sources and `inline_richtext` rejects line breaks.
+- The heading and the record lines use `richtext` paragraphs as lines, because `textarea` rejects dynamic sources and `inline_richtext` rejects line breaks.
 - The collection and page sections gain toggles for their own title, so a composition can hold the single H1 without repeating facts.
 
 **Reasoning:** The duplication was in markup, not in merchant content, so it belongs in snippets. The blocks cover what a merchant actually rearranges: arrangement, type, copy, action, image, facts, and a product card. Keeping the exceptions intact preserves the compositions that give the site its character.

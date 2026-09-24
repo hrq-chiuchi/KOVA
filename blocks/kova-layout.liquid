@@ -1,6 +1,6 @@
 {% doc %}
-  Arranges child blocks as a stack, a two-column split, or an overlay where the first child is the
-  backdrop. Arrangement never reorders children, so reading and focus order follow the editor order.
+  Arranges child blocks as a stack, splits, three columns, or an overlay where a first Image block is
+  the backdrop. Without that image, an overlay falls back to a plain stack. Arrangement never reorders children, so reading and focus order follow the editor order.
 {% enddoc %}
 <div
   class="kova-layout kova-layout--{{ block.settings.arrangement }} kova-layout--space-{{ block.settings.spacing }} kova-layout--align-{{ block.settings.alignment }}"
@@ -21,18 +21,19 @@
   .kova-layout--stack { grid-template-columns: minmax(0, 1fr); align-content: start; }
   .kova-layout--stack > .kova-layout--stack { gap: var(--ad-space-300); }
 
-  .kova-layout--overlay { grid-template-areas: 'stage'; min-height: var(--kova-overlay-height, 80svh); isolation: isolate; }
-  .kova-layout--overlay > * { grid-area: stage; }
-  .kova-layout--overlay > :first-child { z-index: -1; height: 100%; }
-  .kova-layout--overlay > :first-child .kova-media__frame { height: 100%; aspect-ratio: auto; }
-  .kova-layout--overlay > :first-child::after {
+  .kova-layout--overlay:has(> .kova-media:first-child) { grid-template-areas: 'stage'; min-height: 80svh; isolation: isolate; }
+  .kova-layout--overlay:has(> .kova-media:first-child) > * { grid-area: stage; }
+  .kova-layout--overlay > .kova-media:first-child { z-index: -1; height: 100%; }
+  .kova-layout--overlay > .kova-media:first-child .kova-media__frame { height: 100%; aspect-ratio: auto; }
+  .kova-layout--overlay > .kova-media:first-child::after {
     position: absolute;
     inset: 0;
     background: linear-gradient(to top, var(--ad-color-background-primary), transparent 65%);
     content: '';
     pointer-events: none;
   }
-  .kova-layout--overlay > :not(:first-child) { align-self: end; max-width: 56rem; padding: var(--ad-page-padding); color: var(--ad-color-text-primary); }
+  .kova-layout--overlay > .kova-media:first-child ~ * { align-self: end; max-width: 56rem; padding: var(--ad-page-padding); color: var(--ad-color-text-primary); }
+  .kova-layout--overlay:not(:has(> .kova-media:first-child)) { padding: var(--ad-page-padding); }
 
   @media (min-width: 48rem) {
     .kova-layout--split-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -61,7 +62,7 @@
         { "value": "columns-3", "label": "Three columns" },
         { "value": "overlay", "label": "Overlay on first block" }
       ],
-      "info": "Splits and columns stack on phones. Overlay uses the first block, usually an image, as the backdrop."
+      "info": "Splits and columns stack on phones. Overlay needs an Image as its first block; without one, blocks stack."
     },
     {
       "type": "select",

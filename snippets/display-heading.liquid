@@ -7,6 +7,7 @@
   @param {string} [class] - Class for the heading element
   @param {string} [tag] - Heading element: h1, h2 or h3 (default h2)
   @param {string} [attributes] - Extra attributes, output as-is
+  @param {boolean} [entities] - Text already holds HTML entities (from rich text); escapes without double-encoding them
 
   @example
   {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'manifesto__heading' %}
@@ -20,6 +21,6 @@
 -%}
 <{{ heading_tag }}{% if id != blank %} id="{{ id }}"{% endif %}{% if class != blank %} class="{{ class }}"{% endif %}{% if attributes != blank %} {{ attributes }}{% endif %}>
   {% for line in lines %}
-    <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+    <span data-reveal-line-wrap><span data-reveal-line>{% if entities %}{{ line | strip | escape_once }}{% else %}{{ line | strip | escape }}{% endif %}</span></span>
   {% endfor %}
 </{{ heading_tag }}>

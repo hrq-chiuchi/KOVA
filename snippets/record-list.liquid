@@ -6,6 +6,7 @@
   @param {string} [class] - Class for the dl element
   @param {number} [limit] - Maximum source lines read (default 50); counts lines before skipping
   @param {boolean} [keep_unlabelled] - Render lines without a colon as a value-only row (default false)
+  @param {boolean} [entities] - Text already holds HTML entities (from rich text); escapes without double-encoding them
 
   @example
   {% render 'record-list', text: kova.technical_specifications.value, class: 'signal-frame__specs', limit: 5 %}
@@ -20,12 +21,18 @@
     {% if line == blank %}{% continue %}{% endif %}
     {% if line contains ':' %}
       {% assign record_label = line | split: ':' | first %}
+      {% assign record_value = line | remove_first: record_label | remove_first: ':' | strip %}
       <div>
-        <dt>{{ record_label | strip | escape }}</dt>
-        <dd>{{ line | remove_first: record_label | remove_first: ':' | strip | escape }}</dd>
+        {% if entities %}
+          <dt>{{ record_label | strip | escape_once }}</dt>
+          <dd>{{ record_value | escape_once }}</dd>
+        {% else %}
+          <dt>{{ record_label | strip | escape }}</dt>
+          <dd>{{ record_value | escape }}</dd>
+        {% endif %}
       </div>
     {% elsif keep_unlabelled %}
-      <div><dd>{{ line | escape }}</dd></div>
+      <div><dd>{% if entities %}{{ line | escape_once }}{% else %}{{ line | escape }}{% endif %}</dd></div>
     {% endif %}
   {% endfor %}
 </dl>

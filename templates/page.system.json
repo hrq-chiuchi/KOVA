@@ -22,7 +22,7 @@
                 "lead": {
                   "type": "kova-text",
                   "settings": {
-                    "text": "<p>Every KOVA object is built to work with the others. Carry platforms and modules share one attachment standard, and each product page lists the objects it works with.</p>",
+                    "text": "<p>Every KOVA product page lists the objects it works with, from carry platforms to the small tools that clip to them.</p>",
                     "width": "reading",
                     "size": "lead",
                     "muted": true
@@ -73,7 +73,7 @@
                 "text": {
                   "type": "kova-text",
                   "settings": {
-                    "text": "<p>The Relay Grid attachment standard runs across KOVA load platforms and modules, so a pack, a vest and a pouch set index to each other.</p>",
+                    "text": "<p>Carry Systems are built on the Relay Grid attachment standard. The Gridlink Pouch Array is listed as working with each of these three.</p>",
                     "width": "narrow",
                     "size": "body",
                     "muted": true
@@ -87,10 +87,10 @@
               "settings": { "arrangement": "columns-3", "spacing": "standard", "alignment": "start" },
               "blocks": {
                 "backpack": { "type": "kova-product", "settings": { "product": "after-dark-utility-backpack", "heading_tag": "h3" } },
-                "vest": { "type": "kova-product", "settings": { "product": "relay-modular-vest", "heading_tag": "h3" } },
-                "pouches": { "type": "kova-product", "settings": { "product": "gridlink-pouch-array", "heading_tag": "h3" } }
+                "courier": { "type": "kova-product", "settings": { "product": "lowlight-courier-14", "heading_tag": "h3" } },
+                "hip_rig": { "type": "kova-product", "settings": { "product": "driftline-hip-rig", "heading_tag": "h3" } }
               },
-              "block_order": ["backpack", "vest", "pouches"]
+              "block_order": ["backpack", "courier", "hip_rig"]
             }
           },
           "block_order": ["header", "products"]

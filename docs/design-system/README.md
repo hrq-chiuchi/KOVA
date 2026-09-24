@@ -145,7 +145,7 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 KOVA's reusable art direction has three layers. None of them is a generic page builder.
 
 1. **Snippet primitives** hold implementation reuse and carry no merchant settings.
-   - `snippets/display-heading.liquid` renders one reveal line per text line and takes `tag`, `id`, `class`, and passthrough `attributes`. Thirteen sections use it.
+   - `snippets/display-heading.liquid` renders one reveal line per text line and takes `tag`, `id`, `class`, passthrough `attributes`, and `entities` for rich-text input (`escape_once` instead of `escape`). Fourteen existing sections, the rebuilt page section, and the heading block use it. The field-manual statement stays inline because its source is a multi-line metafield that must remain one line.
    - `snippets/record-list.liquid` renders `Label: value` text as a `<dl>`, with `limit` and `keep_unlabelled`. The PDP specification panel, the signal frame, and the Record block use it.
 2. **KOVA theme blocks** (`blocks/kova-*.liquid`) are what merchants compose. Every block renders nothing when its content is blank, and none of them adds JavaScript.
 
@@ -157,7 +157,7 @@ KOVA's reusable art direction has three layers. None of them is a generic page b
    | `kova-text` | Body copy | Rich text; Reading / Narrow width; Body / Lead size; quieter colour |
    | `kova-cta` | One action | Label, link, and Outline / Accent / Underlined style |
    | `kova-media` | Image | Image, phone crop, fallback alt text, shape, caption, drift on scroll. The native focal point sets `object-position` |
-   | `kova-record` + private `_kova-record-row` | Label/value facts | `Label: value` lines (connectable to a metafield) and/or row blocks |
+   | `kova-record` + private `_kova-record-row` | Label/value facts | Rich-text `Label: value` lines and/or row blocks. On a product template the lines can come from `product.metafields.custom.technical_specifications.value` (verified); `closest.product.metafields…` was rejected on upload |
    | `kova-product` | Commerce | Product and title level; renders `snippets/product-card.liquid` unchanged |
 
 3. **`sections/composition.liquid`** ("Editorial composition") owns tone, accent, width, spacing, and the motion scope, and accepts `@theme` blocks. It has three presets with nested blocks: Split story, Full-bleed statement, and System record.
@@ -168,7 +168,8 @@ Rules:
 - Only the heading block (reveal lines) and the image block (drift) have motion. Both use the existing `motion-core` hooks, so reduced motion and section lifecycle behave as in every other section. A per-block "Entrance" setting was left out: the card reveal groups every `data-reveal-card` in a scope under one trigger, which would not match what a merchant expects from a per-block setting.
 - Colour is tokens plus the section accent. On the light tone the accented heading line becomes a bar under ink text, the manifesto's contrast rule (D-018).
 - `closest.*` is only valid as a setting value, not as a Liquid expression. Blocks that need a resource therefore expose a resource setting (the eyebrow's "Count products in", the product block's "Product"), and templates set it to `{{ closest.collection }}` or `{{ closest.product }}`.
-- Dynamic sources are rejected on `textarea` settings, and `inline_richtext` rejects `<br>`. The heading therefore uses `richtext`, and a dynamic value has to be wrapped as `<p>{{ closest.collection.title }}</p>`.
+- Dynamic sources are rejected on `textarea` settings, including a template-resource metafield, and `inline_richtext` rejects `<br>`. The heading and record lines therefore use `richtext`, and a dynamic value is stored wrapped, as in `<p>{{ closest.collection.title }}</p>`. Both blocks turn paragraphs and `<br>` into lines, strip the markup, and escape with `escape_once` so rich-text entities such as `&amp;` are not double-encoded.
+- An overlay treats a first **Image** block as its backdrop (`:has(> .kova-media:first-child)`). Without an image, which is the case outside the editor when the image is blank, the children fall back to a padded stack instead of taking on backdrop styles.
 - The signature sections (hero, manifesto, signal frame, release record, editorial grid, and the PDP story sections) stay art-direction exceptions. They use the snippets and keep their section-local blocks, so no template data moved (D-022).
 
 Data-backed compositions:

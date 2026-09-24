@@ -1,14 +1,19 @@
 {% doc %}
-  A label/value record. Reads "Label: value" lines, which can be connected to a metafield such as
-  technical specifications, followed by any rows added as blocks.
+  A label/value record. Reads "Label: value" lines from rich text, which can be connected to a
+  metafield such as technical specifications, followed by any rows added as blocks.
 {% enddoc %}
-{%- if block.settings.lines != blank or block.blocks.size > 0 -%}
+{%- capture newline %}
+{% endcapture -%}
+{%- liquid
+  assign record_text = block.settings.lines | replace: '</p>', newline | replace: '<br />', newline | replace: '<br/>', newline | replace: '<br>', newline | strip_html | strip
+-%}
+{%- if record_text != blank or block.blocks.size > 0 -%}
   <div class="kova-record" {{ block.shopify_attributes }}>
     {%- if block.settings.title != blank -%}
       <p class="eyebrow kova-record__title">{{ block.settings.title | escape }}</p>
     {%- endif -%}
-    {%- if block.settings.lines != blank -%}
-      {% render 'record-list', text: block.settings.lines, class: 'kova-record__list', limit: block.settings.limit %}
+    {%- if record_text != blank -%}
+      {% render 'record-list', text: record_text, class: 'kova-record__list', limit: block.settings.limit, entities: true %}
     {%- endif -%}
     {%- if block.blocks.size > 0 -%}
       <dl class="kova-record__list">{% content_for 'blocks' %}</dl>
@@ -42,10 +47,10 @@
   "settings": [
     { "type": "text", "id": "title", "label": "Title" },
     {
-      "type": "textarea",
+      "type": "richtext",
       "id": "lines",
       "label": "Records",
-      "info": "One per line as Label: value. Connect a product metafield such as technical specifications to read it live."
+      "info": "One per line as Label: value. On product pages, connect a metafield such as technical specifications to read it live."
     },
     { "type": "range", "id": "limit", "label": "Maximum lines", "min": 1, "max": 12, "step": 1, "default": 8 }
   ],
