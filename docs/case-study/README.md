@@ -452,9 +452,11 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
   | Page | Accessibility | Performance | LCP | CLS |
   | --- | --- | --- | --- | --- |
   | Drop 001, story template | 100 | 74 | 3.4 s | 0 |
-  | System page template | 100 | 67 | 3.9 s | 0 |
+  | System page template | 100 | 67* | 3.9 s* | 0 |
   | Home | 100 | 61 | 7.2 s | 0.001 |
   | Cargo pant PDP | 100 | 44 | 7.1 s | 0 |
+
+  \* Measured before the copy and product-row correction below. Accessibility was re-measured afterwards at 100 on both templates; performance was not.
 
   The PDP score is below the earlier 47–51 range, although its HTML is byte-identical to before this phase. That points to run variance on the proxy, not a regression. It is recorded as measured.
 
@@ -462,7 +464,10 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
 
 - The actual Theme Editor UI: adding presets, adding, removing, reordering, and nesting blocks, connecting dynamic sources in the picker, and listener or ScrollTrigger counts across block edits.
 - Safari.
+- The image focal-point path. No product or collection image in the store has a focal point set, so `object-position` has not rendered with a real value.
 - The optional `edition_profile` metaobject template (not started).
+
+In the editor only, an Image block with no image shows an "Image pending" frame, and a Button without a link shows a dashed "Link pending" label. Storefront output for both is empty, as verified; the editor states are part of the pending Theme Editor pass.
 
 **Awaiting approval:**
 

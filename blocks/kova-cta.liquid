@@ -1,5 +1,6 @@
 {% doc %}
-  A single call to action. Renders nothing until it has both a label and a link.
+  A single call to action. Renders nothing until it has both a label and a link, except a
+  non-interactive pending label in the theme editor so a preset's button stays visible.
 {% enddoc %}
 {%- if block.settings.label != blank and block.settings.link != blank -%}
   {%- liquid
@@ -15,6 +16,10 @@
   <a class="kova-cta {{ cta_class }}" href="{{ block.settings.link }}" {{ block.shopify_attributes }}>
     <span>{{ block.settings.label | escape }}</span><span aria-hidden="true">→</span>
   </a>
+{%- elsif request.design_mode and block.settings.label != blank -%}
+  <span class="kova-cta kova-cta--pending" {{ block.shopify_attributes }}>
+    {{ block.settings.label | escape }} / Link pending
+  </span>
 {%- endif -%}
 
 {% stylesheet %}
@@ -31,6 +36,7 @@
     text-transform: uppercase;
   }
   .kova-cta--quiet:hover { color: var(--color-accent); }
+  .kova-cta--pending { display: inline-flex; align-items: center; padding-inline: var(--ad-space-400); border: var(--ad-border-hairline) dashed currentcolor; font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
 {% endstylesheet %}
 
 {% schema %}
