@@ -6,6 +6,11 @@
 {% endcapture -%}
 {%- liquid
   assign record_text = block.settings.lines | replace: '</p>', newline | replace: '<br />', newline | replace: '<br/>', newline | replace: '<br>', newline | strip_html | strip
+  # Paragraph markup leaves blank lines between rows; collapse them so the limit counts rows.
+  assign blank_line = newline | append: newline
+  for i in (1..4)
+    assign record_text = record_text | replace: blank_line, newline
+  endfor
 -%}
 {%- if record_text != blank or block.blocks.size > 0 -%}
   <div class="kova-record" {{ block.shopify_attributes }}>

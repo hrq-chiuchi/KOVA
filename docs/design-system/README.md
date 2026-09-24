@@ -140,7 +140,7 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 
 ### Composition model — Theme blocks + section (Phase 8)
 
-**Implemented and checked in the development preview (2026-09-24). Actual Theme Editor UI verification is pending.**
+**Implemented; verified in the development preview and in the actual Theme Editor UI (2026-09-24).** Safari is **Unavailable** (no macOS or iOS device).
 
 KOVA's reusable art direction has three layers. None of them is a generic page builder.
 
@@ -166,6 +166,8 @@ Rules:
 
 - Arrangement never reorders children with CSS. Reading and focus order are editor order, and the overlay's backdrop is always the first child.
 - Only the heading block (reveal lines) and the image block (drift) have motion. Both use the existing `motion-core` hooks, so reduced motion and section lifecycle behave as in every other section. A per-block "Entrance" setting was left out: the card reveal groups every `data-reveal-card` in a scope under one trigger, which would not match what a merchant expects from a per-block setting.
+- Every Layout is an inline-size container (`container-type: inline-size`). Heading sizes are capped by their column (`min(token, 14cqi)` for Title, `16cqi` for Display, `10cqi` for Statement), so a long single word such as "BACKPACK" never breaks mid-word in a narrow split column. Wide columns keep the token size.
+- The Record block collapses the blank lines that rich-text paragraphs leave between rows, so its "Maximum lines" counts rows.
 - Colour is tokens plus the section accent. On the light tone the accented heading line becomes a bar under ink text, the manifesto's contrast rule (D-018).
 - `closest.*` is only valid as a setting value, not as a Liquid expression. Blocks that need a resource therefore expose a resource setting (the eyebrow's "Count products in", the product block's "Product"), and templates set it to `{{ closest.collection }}` or `{{ closest.product }}`.
 - Dynamic sources are rejected on `textarea` settings, including a template-resource metafield, and `inline_richtext` rejects `<br>`. The heading and record lines therefore use `richtext`, and a dynamic value is stored wrapped, as in `<p>{{ closest.collection.title }}</p>`. Both blocks turn paragraphs and `<br>` into lines, strip the markup, and escape with `escape_once` so rich-text entities such as `&amp;` are not double-encoded.
@@ -239,8 +241,8 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Drop 001 catalogue and collections | Templates / merchandising | Shopify products, collections, files | **Locally verified:** 16 published products, 62 variants, 7 published smart collections rendering 16/4/3/5/3/2/3 cards with no horizontal overflow |
 | Cart page and global footer | Sections | `sections/cart.liquid`, `sections/footer.liquid` | **Locally verified:** empty cart, newsletter/localization rendering conditions, desktop/mobile layout |
 | Display heading and record list primitives | Primitive | `snippets/display-heading.liquid`, `snippets/record-list.liquid` | **Locally verified (2026-09-24):** normalized `<main>` HTML of home, three PDPs, Drop 001, and the blog is byte-identical before and after the refactor |
-| KOVA theme blocks | Theme blocks | `blocks/kova-*.liquid`, `blocks/_kova-record-row.liquid` | **Implemented (Theme Editor UI verification pending):** rendered through two templates at 390/768/1440/1920px |
-| Editorial composition | Section | `sections/composition.liquid` | **Implemented (Theme Editor UI verification pending):** presets not yet added through the editor |
+| KOVA theme blocks | Theme blocks | `blocks/kova-*.liquid`, `blocks/_kova-record-row.liquid` | **Verified in the actual Theme Editor (2026-09-24):** block picker, nested add, remove, and reorder; dynamic sources connected through the picker; editor pending states. Also rendered through two templates at 390/768/1440/1920px |
+| Editorial composition | Section | `sections/composition.liquid` | **Verified in the actual Theme Editor (2026-09-24):** all three presets added; setting changes and hide/show re-render with flat listener counts |
 | Collection story template | Template | `templates/collection.story.json` | **Locally verified (2026-09-24)** via `?view=story` on Drop 001: collection title as the only H1, live count 16, description; Lighthouse accessibility 100. **Planned:** assignment to a collection |
 | KOVA system page template | Template | `templates/page.system.json` | **Locally verified (2026-09-24)** via `?view=system` on an existing page; Lighthouse accessibility 100. **Planned:** page creation after copy approval |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |

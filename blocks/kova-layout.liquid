@@ -10,7 +10,8 @@
 </div>
 
 {% stylesheet %}
-  .kova-layout { display: grid; min-width: 0; }
+  /* Inline-size container so headings can cap their size to the column they sit in. */
+  .kova-layout { display: grid; min-width: 0; container-type: inline-size; }
   .kova-layout > * { min-width: 0; }
   .kova-layout--space-tight { gap: var(--ad-space-300); }
   .kova-layout--space-standard { gap: var(--ad-space-500); }

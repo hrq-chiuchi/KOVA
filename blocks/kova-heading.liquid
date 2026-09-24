@@ -31,9 +31,10 @@
 {% stylesheet %}
   .kova-heading { margin: 0; font-family: var(--font-display-family); font-weight: var(--font-display-weight); text-transform: uppercase; }
   .kova-heading [data-reveal-line-wrap] { display: block; }
-  .kova-heading--title { font-size: var(--ad-text-title); letter-spacing: -0.05em; line-height: 0.9; }
-  .kova-heading--display { font-size: var(--ad-text-display); letter-spacing: -0.07em; line-height: 0.8; }
-  .kova-heading--statement { max-width: 22ch; font-size: clamp(2rem, 4.8vw, 5.25rem); letter-spacing: -0.055em; line-height: 0.92; text-wrap: balance; }
+  /* Each size is capped by its column width (cqi) so long single words never break mid-word in narrow columns. */
+  .kova-heading--title { font-size: min(var(--ad-text-title), 14cqi); letter-spacing: -0.05em; line-height: 0.9; }
+  .kova-heading--display { font-size: min(var(--ad-text-display), 16cqi); letter-spacing: -0.07em; line-height: 0.8; }
+  .kova-heading--statement { max-width: 22ch; font-size: min(clamp(2rem, 4.8vw, 5.25rem), 10cqi); letter-spacing: -0.055em; line-height: 0.92; text-wrap: balance; }
   .kova-heading--accent [data-reveal-line-wrap]:last-child { color: var(--color-accent); }
 {% endstylesheet %}
 

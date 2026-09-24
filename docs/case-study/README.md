@@ -460,14 +460,42 @@ The brief called this phase "Phase 7: merchant-composable art direction". It is 
 
   The PDP score is below the earlier 47–51 range, although its HTML is byte-identical to before this phase. That points to run variance on the proxy, not a regression. It is recorded as measured.
 
-**Not verified yet:**
+**2026-09-24 — Actual Theme Editor verification:**
 
-- The actual Theme Editor UI: adding presets, adding, removing, reordering, and nesting blocks, connecting dynamic sources in the picker, and listener or ScrollTrigger counts across block edits.
-- Safari.
-- The image focal-point path. No product or collection image in the store has a focal point set, so `object-position` has not rendered with a real value.
+Setup:
+
+- The user signed in to the Shopify admin in a visible Chromium 151 window.
+- That window was driven over the Chrome DevTools Protocol against development theme `164481368323`, served by `shopify theme dev` from this branch.
+- A probe in the preview frame recorded `shopify:*` events, page errors, ScrollTriggers, motion scopes, and the pending states. Listener counts on `window` and `document` came from `DOMDebugger.getEventListeners`.
+- Nothing was saved. Each edit session was discarded by reloading the editor.
+
+| Action in the editor | Observed |
+| --- | --- |
+| Section picker on the homepage | The three presets are listed by name (Split story, Full-bleed statement, System record) |
+| Add each preset in turn | One `section:load` each; motion scopes 9 → 10 → 11 → 12; each shows "Image pending" and "Link pending" in the editor; one H1 on the page; no errors |
+| Toggle System record's Tone four times | `unload` → `load` → `select` each time; window/document listeners 58/57 before and after, no change by event type; the reloaded heading's reveal lines settle at `translate(0, 0)` |
+| Block picker | Lists the eight KOVA blocks. The private record row is not offered |
+| Add a Layout inside the section's Layout, then a Text inside it | Section → Layout → Layout → Text (three block levels); `block:select` opens merchant-worded settings; listeners unchanged (58/58) |
+| Drag the Record above the second stack in the sidebar | Preview DOM order changed from [stack, stack, record] to [stack, record, stack] with no section reload |
+| Remove the nested Text | Section reload, one fewer Text, no listener growth |
+| Product template: Split story, then the heading's dynamic-source button | The picker offers the closest Product's fields and metafields; choosing Title shows a connected "Título" chip, and the preview heading reads the product title |
+| Record block lines → Technical specifications through the picker | Live specification rows. This is the connection the `closest.product.metafields…` JSON form could not make |
+| Hide and show the section twice | `unload`, then `load`, each time; motion scopes 7 → 6 → 7; listeners 50/56 throughout |
+| Collection story template in the editor | The JSON-authored `closest.collection` heading shows as a connected "Título" chip; eyebrow count, H1, and the masthead toggle resolve live |
+
+Bugs found and fixed:
+
+- **Mid-word breaks.** A Title heading in the narrow column of a split broke long words mid-word, for example "BACKPA / CK". Layouts are now inline-size containers, and heading sizes are capped by column width. After the fix, the editor measured 45.9px in a 328px column with no word split across lines. The storefront templates measured no broken words at 390 and 1440px, and Drop 001's story heading now sets on two lines instead of three.
+- **Record row count.** Picker-connected record lines rendered 4 of the backpack's 5 specifications. Each rich-text paragraph left a blank line, and the line limit counted blanks. Blank lines are now collapsed first, and the editor shows all 5 rows.
+- One operator error during the run: a label heuristic clicked "Remove section" instead of "Show". It affected only the unsaved draft, and the draft was discarded.
+
+After the fixes: the story and system templates showed zero overflow and one H1 at 390, 768, 1440, and 1920px. The normalized HTML of home, a PDP, and Drop 001 is still byte-identical. Theme Check: 71 files, no offenses.
+
+**Not verified:**
+
+- Safari (**Unavailable**: Linux development machine; see the backlog).
+- The image focal-point path. No image in the store has a focal point set (see the backlog).
 - The optional `edition_profile` metaobject template (not started).
-
-In the editor only, an Image block with no image shows an "Image pending" frame, and a Button without a link shows a dashed "Link pending" label. Storefront output for both is empty, as verified; the editor states are part of the pending Theme Editor pass.
 
 ### Phase 8 backlog and open decisions
 
