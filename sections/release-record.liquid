@@ -4,7 +4,7 @@
 {% endcomment %}
 {% liquid
   assign release = section.settings.collection
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign heading_id = 'ReleaseHeading-' | append: section.id
   assign colour_names = section.settings.colour_option | downcase | split: ','
   assign colours = '|'
   assign available_count = 0
@@ -49,11 +49,7 @@
   <div class="release-record__inner section-shell">
     <header class="release-record__mark" data-reveal="section">
       <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-      <h2 id="ReleaseHeading-{{ section.id }}" class="release-record__heading">
-        {% for line in heading_lines %}
-          <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-        {% endfor %}
-      </h2>
+      {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'release-record__heading' %}
     </header>
 
     <div class="release-record__statement">{{ section.settings.statement }}</div>

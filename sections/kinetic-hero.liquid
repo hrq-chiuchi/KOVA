@@ -29,7 +29,6 @@
   if source != blank
     assign layer_products = source.products
   endif
-  assign heading_lines = heading | newline_to_br | split: '<br />'
 %}
 
 <kinetic-hero
@@ -99,11 +98,7 @@
 
   <div class="kinetic-hero__content section-shell" data-reveal="hero">
     {% if eyebrow != blank %}<p class="eyebrow" data-reveal-item="eyebrow">{{ eyebrow | escape }}</p>{% endif %}
-    <h1 class="kinetic-hero__title">
-      {% for line in heading_lines %}
-        <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-      {% endfor %}
-    </h1>
+    {% render 'display-heading', text: heading, class: 'kinetic-hero__title', tag: 'h1' %}
     <div class="kinetic-hero__footer">
       <div class="kinetic-hero__copy" data-reveal-item="detail">{{ body }}</div>
       <div class="kinetic-hero__actions" data-reveal-item="detail">

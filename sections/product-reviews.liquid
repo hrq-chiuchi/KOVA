@@ -22,9 +22,8 @@
     <header class="product-reviews__header" data-reveal="section">
       <div>
         <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-        <h2 id="ReviewsHeading-{{ section.id }}" class="section-heading">
-          <span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span>
-        </h2>
+        {% assign heading_id = 'ReviewsHeading-' | append: section.id %}
+        {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'section-heading' %}
       </div>
 
       {% if rating != blank and rating_count > 0 %}

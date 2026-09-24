@@ -3,7 +3,7 @@
   the supporting copy is pinned to an off-grid column instead of sitting under the heading.
 {% endcomment %}
 {% liquid
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign heading_id = 'ManifestoHeading-' | append: section.id
 %}
 
 <section
@@ -15,11 +15,12 @@
   <div class="manifesto__inner section-shell">
     <p class="eyebrow manifesto__eyebrow">{{ section.settings.eyebrow | escape }}</p>
 
-    <h2 id="ManifestoHeading-{{ section.id }}" class="manifesto__heading" data-reveal="section">
-      {% for line in heading_lines %}
-        <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-      {% endfor %}
-    </h2>
+    {% render 'display-heading',
+      text: section.settings.heading,
+      id: heading_id,
+      class: 'manifesto__heading',
+      attributes: 'data-reveal="section"'
+    %}
 
     <div class="manifesto__body">{{ section.settings.body }}</div>
 

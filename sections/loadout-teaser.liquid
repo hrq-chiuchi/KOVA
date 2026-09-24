@@ -6,7 +6,7 @@
 {% liquid
   assign loadout = section.settings.product
   assign components = section.settings.components
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign heading_id = 'LoadoutHeading-' | append: section.id
 
   assign total_grams = 0
   assign weight_known = true
@@ -58,11 +58,7 @@
       <div class="loadout__panel">
         <header data-reveal="section">
           <p class="eyebrow">{{ section.settings.kicker | escape }}</p>
-          <h2 id="LoadoutHeading-{{ section.id }}" class="loadout__heading">
-            {% for line in heading_lines %}
-              <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-            {% endfor %}
-          </h2>
+          {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'loadout__heading' %}
         </header>
 
         {% if section.settings.intro != blank %}<div class="loadout__intro">{{ section.settings.intro }}</div>{% endif %}

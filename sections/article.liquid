@@ -13,9 +13,7 @@
         <a href="{{ blog.url }}">{{ blog.title | escape }}</a>
         {% if article.tags.size > 0 %} / {{ article.tags.first | escape }}{% endif %}
       </p>
-      <h1 class="article-page__title">
-        <span data-reveal-line-wrap><span data-reveal-line>{{ article.title | escape }}</span></span>
-      </h1>
+      {% render 'display-heading', text: article.title, class: 'article-page__title', tag: 'h1' %}
       {% assign date = article.published_at | time_tag: format: 'date' %}
       <p class="article-page__meta">{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
     </header>

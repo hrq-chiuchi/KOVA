@@ -7,7 +7,7 @@
 {% liquid
   assign featured = section.settings.product
   assign kova = featured.metafields.custom
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+  assign heading_id = 'SignalHeading-' | append: section.id
   assign meta_lines = section.settings.meta | newline_to_br | split: '<br />'
   assign image = section.settings.image
   assign cta_url = section.settings.cta_link
@@ -53,11 +53,7 @@
       </div>
 
       <div class="signal-frame__bottom" data-reveal="section">
-        <h2 id="SignalHeading-{{ section.id }}" class="signal-frame__heading">
-          {% for line in heading_lines %}
-            <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-          {% endfor %}
-        </h2>
+        {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'signal-frame__heading' %}
         {% if section.settings.cta_label != blank and cta_url != blank %}
           <a class="signal-frame__cta" href="{{ cta_url }}">
             <span>{{ section.settings.cta_label | escape }}</span><span aria-hidden="true">→</span>
@@ -116,18 +112,7 @@
         {% endif %}
       </div>
       {% if kova.technical_specifications.value != blank %}
-        <dl class="signal-frame__specs">
-          {% assign spec_lines = kova.technical_specifications.value | newline_to_br | split: '<br />' %}
-          {% for raw_line in spec_lines limit: 5 %}
-            {% assign line = raw_line | strip %}
-            {% unless line contains ':' %}{% continue %}{% endunless %}
-            {% assign spec_label = line | split: ':' | first %}
-            <div>
-              <dt>{{ spec_label | strip | escape }}</dt>
-              <dd>{{ line | remove_first: spec_label | remove_first: ':' | strip | escape }}</dd>
-            </div>
-          {% endfor %}
-        </dl>
+        {% render 'record-list', text: kova.technical_specifications.value, class: 'signal-frame__specs', limit: 5 %}
       {% endif %}
     </div>
   {% endif %}

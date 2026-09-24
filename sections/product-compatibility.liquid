@@ -9,9 +9,8 @@
     <div class="product-compatibility__inner section-shell">
       <header class="product-compatibility__header" data-reveal="section">
         <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-        <h2 id="CompatibilityHeading-{{ section.id }}" class="section-heading">
-          <span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span>
-        </h2>
+        {% assign heading_id = 'CompatibilityHeading-' | append: section.id %}
+        {% render 'display-heading', text: section.settings.heading, id: heading_id, class: 'section-heading' %}
       </header>
 
       {% assign item_count = compatible.size | at_most: section.settings.product_limit %}

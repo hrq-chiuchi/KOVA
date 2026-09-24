@@ -6,7 +6,6 @@
   if product_source == blank
     assign product_source = collections.all.products
   endif
-  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
 %}
 
 <section
@@ -18,11 +17,7 @@
     <header class="editorial-grid__header" data-reveal="section">
       <div>
         <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-        <h2 class="section-heading">
-          {% for line in heading_lines %}
-            <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
-          {% endfor %}
-        </h2>
+        {% render 'display-heading', text: section.settings.heading, class: 'section-heading' %}
       </div>
       <div class="editorial-grid__intro">{{ section.settings.intro }}</div>
     </header>
