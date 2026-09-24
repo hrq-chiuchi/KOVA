@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -195,4 +195,16 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** Quick facts stay next to the decision point, while the storytelling sections can use art-directed type, figures, and data-led layouts. Each content item keeps one home, so nothing repeats across the page.
 
 **Tradeoff / reconsideration:** The page is longer, and a merchant who removes the field-manual section also removes the description from the PDP; the main section's jump link can be turned off for that case. Reconsider the reviews rule only if the store installs a review provider whose data does not use the standard metafields.
+
+## D-017 — Use native cross-document view transitions for a corrupted-signal page change
+
+**Context:** The portfolio needs a distinctive page transition that still feels seamless. The theme is a multi-page Shopify storefront, and the project rules require native navigation, working commerce without decorative scripts, Theme Editor safety, and a first-class reduced-motion mode.
+
+**Options considered:** a fetch-and-swap single-page layer (Barba, Swup); an outgoing WebGL glitch that delays navigation; the browser's cross-document View Transitions API with CSS and SVG filters.
+
+**Decision:** Use cross-document view transitions. Every navigation stays a real page load; supporting browsers animate the old and new snapshots with a stepped "corrupted" treatment (SVG RGB split and band tearing, clip-path bands, shear, scanline). Pin the header, morph the clicked product image into the PDP, and reverse direction on back navigation. Gate it behind reduced motion, design mode, and a Motion theme setting.
+
+**Reasoning:** A swap layer would bypass Shopify's per-page scripts, analytics, and section lifecycle. A pre-navigation WebGL glitch adds latency to every click and cannot survive the document change. View transitions keep native navigation, degrade to an ordinary page load, and run on snapshots, so no page code has to cooperate beyond naming shared elements.
+
+**Tradeoff / reconsideration:** Browsers without cross-document support, including Firefox 154, get no transition. Full-viewport SVG filters roughly halve delivered animation frames on an integrated GPU; drop to the transform/clip-only variant if real-device testing shows dropped steps. Reconsider if Firefox ships cross-document view transitions or if the stepped effect reads as jank rather than intent.
 
