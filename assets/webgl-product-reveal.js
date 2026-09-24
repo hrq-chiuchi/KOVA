@@ -1,6 +1,10 @@
 (() => {
   const MAX_ITEMS = 12;
   const MAX_TEXTURE_BYTES = 96 * 1024 * 1024;
+  // Cards that enter the viewport together reveal together: short stagger, one shared canvas.
+  const INTRO_DURATION = 0.86;
+  const INTRO_STAGGER = 0.08;
+  const INTRO_COLLECT_MS = 60;
   const VERTEX_SOURCE = `
     attribute vec2 aPosition;
     varying vec2 vUv;
@@ -95,6 +99,9 @@
       this.raf = 0;
       this.activeItem = null;
       this.introQueue = [];
+      this.introTimer = 0;
+      // A batch intro: several cards drawn into one canvas mounted over their shared container.
+      this.batch = null;
       this.observer = null;
       // Targets waiting to come near the viewport before their textures are decoded and uploaded.
       this.pending = new Set();
@@ -316,20 +323,93 @@
 
     enqueueIntro(item) {
       if (!item.textureA || this.introQueue.includes(item)) return;
+      // A card arriving while its container's batch is running joins it instead of waiting.
+      if (this.batch && this.introHost(item) === this.batch.host) {
+        this.joinBatch(item, 0);
+        return;
+      }
       this.introQueue.push(item);
-      this.playNextIntro();
+      // Collect cards whose intersections land in the same moment before starting.
+      clearTimeout(this.introTimer);
+      this.introTimer = setTimeout(() => this.playNextIntro(), INTRO_COLLECT_MS);
+    }
+
+    introHost(item) {
+      return item.target.closest('[data-reveal-card]')?.parentElement || item.target.parentElement;
     }
 
     playNextIntro() {
-      if (this.activeItem) return;
-      let item = this.introQueue.shift();
-      while (item && (!this.items.has(item.target) || !item.textureA)) item = this.introQueue.shift();
-      if (!item) return;
-      this.activeItem = item;
+      if (this.activeItem || this.batch) return;
+      this.introQueue = this.introQueue.filter((queued) => this.items.has(queued.target) && queued.textureA);
+      if (!this.introQueue.length) return;
+
+      const host = this.introHost(this.introQueue[0]);
+      const group = this.introQueue.filter((queued) => this.introHost(queued) === host);
+      this.introQueue = this.introQueue.filter((queued) => !group.includes(queued));
+
+      this.playBatch(host, group);
+    }
+
+    playBatch(host, group) {
+      // Document order reads left to right, top to bottom, so the stagger follows the layout.
+      group.sort((a, b) => (a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+      this.batch = { host, items: new Set() };
+      this.canvas.removeAttribute('style');
+      host.classList.add('is-webgl-host');
+      host.appendChild(this.canvas);
+      group.forEach((item, index) => this.joinBatch(item, index * INTRO_STAGGER));
+    }
+
+    joinBatch(item, delay) {
+      item.tween?.kill();
       item.mode = 0;
       item.progress = 0;
-      this.mountCanvas(item);
-      this.animate(item, 1, 0.86, 'power2.out');
+      item.active = true;
+      item.target.classList.add('is-webgl-animating');
+      this.batch.items.add(item);
+      const state = { progress: 0 };
+      item.tween = window.gsap.to(state, {
+        progress: 1,
+        duration: INTRO_DURATION,
+        delay,
+        ease: 'power2.out',
+        onUpdate: () => {
+          item.progress = state.progress;
+          this.requestRender();
+        },
+        onComplete: () => this.finishBatchItem(item),
+      });
+      this.requestRender();
+    }
+
+    finishBatchItem(item) {
+      item.progress = 1;
+      item.active = false;
+      item.tween = null;
+      item.target.classList.remove('is-webgl-animating');
+      if (!this.batch) return;
+      this.batch.items.delete(item);
+      if (this.batch.items.size) {
+        this.requestRender();
+        return;
+      }
+      this.endBatch();
+      this.playNextIntro();
+    }
+
+    endBatch() {
+      if (!this.batch) return;
+      this.batch.items.forEach((item) => {
+        item.tween?.kill();
+        item.tween = null;
+        item.progress = 1;
+        item.active = false;
+        item.target.classList.remove('is-webgl-animating');
+      });
+      this.batch.host.classList.remove('is-webgl-host');
+      this.batch = null;
+      this.clearCanvas();
+      this.parkCanvas();
     }
 
     mountCanvas(item) {
@@ -340,6 +420,8 @@
     playHover(item, destination) {
       if (!item.textureA || !item.textureB || !window.gsap) return;
       this.introQueue = this.introQueue.filter((queued) => queued !== item);
+      // A hover takes the single canvas; any running batch intro completes instantly.
+      this.endBatch();
       const continuing = this.activeItem === item && item.active && item.mode === 1;
       if (this.activeItem && !continuing) this.stop(this.activeItem);
       this.activeItem = item;
@@ -394,7 +476,7 @@
     }
 
     requestRender() {
-      if (this.raf || !this.gl || this.contextLost || !this.activeItem?.active) return;
+      if (this.raf || !this.gl || this.contextLost || !(this.activeItem?.active || this.batch)) return;
       this.raf = requestAnimationFrame(() => {
         this.raf = 0;
         this.render();
@@ -420,10 +502,57 @@
     }
 
     parkCanvas() {
-      if (this.canvas?.parentElement !== document.body) document.body.appendChild(this.canvas);
+      if (this.canvas && this.canvas.parentElement !== document.body) document.body.appendChild(this.canvas);
+    }
+
+    renderBatch() {
+      const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1 : 1.5);
+      const bounds = this.canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(bounds.width * dpr));
+      const height = Math.max(1, Math.round(bounds.height * dpr));
+      if (this.canvas.width !== width || this.canvas.height !== height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+      }
+      this.clearCanvas();
+      this.gl.useProgram(this.program);
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
+      this.gl.enableVertexAttribArray(this.position);
+      this.gl.vertexAttribPointer(this.position, 2, this.gl.FLOAT, false, 0, 0);
+      this.gl.enable(this.gl.SCISSOR_TEST);
+      this.batch.items.forEach((item) => {
+        const rect = item.target.getBoundingClientRect();
+        const x = Math.round((rect.left - bounds.left) * dpr);
+        const w = Math.round(rect.width * dpr);
+        const h = Math.round(rect.height * dpr);
+        // WebGL's origin is bottom-left.
+        const y = height - Math.round((rect.top - bounds.top) * dpr) - h;
+        this.gl.viewport(x, y, w, h);
+        this.gl.scissor(x, y, w, h);
+        this.drawItem(item, rect.width / rect.height);
+      });
+      this.gl.disable(this.gl.SCISSOR_TEST);
+    }
+
+    drawItem(item, targetAspect) {
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, item.textureA.texture);
+      this.gl.activeTexture(this.gl.TEXTURE1);
+      const textureB = item.textureB || item.textureA;
+      this.gl.bindTexture(this.gl.TEXTURE_2D, textureB.texture);
+      this.gl.uniform1f(this.uniforms.mode, item.mode);
+      this.gl.uniform1f(this.uniforms.progress, item.progress);
+      this.gl.uniform1f(this.uniforms.targetAspect, targetAspect);
+      this.gl.uniform1f(this.uniforms.textureAspectA, item.textureA.width / item.textureA.height);
+      this.gl.uniform1f(this.uniforms.textureAspectB, textureB.width / textureB.height);
+      this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     }
 
     render() {
+      if (this.batch) {
+        if (this.gl && this.program) this.renderBatch();
+        return;
+      }
       const item = this.activeItem;
       if (!this.gl || !this.program || !item?.active || !item.textureA) return;
       this.resize(item);
@@ -432,17 +561,7 @@
       this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
       this.gl.enableVertexAttribArray(this.position);
       this.gl.vertexAttribPointer(this.position, 2, this.gl.FLOAT, false, 0, 0);
-      this.gl.activeTexture(this.gl.TEXTURE0);
-      this.gl.bindTexture(this.gl.TEXTURE_2D, item.textureA.texture);
-      this.gl.activeTexture(this.gl.TEXTURE1);
-      this.gl.bindTexture(this.gl.TEXTURE_2D, (item.textureB || item.textureA).texture);
-      this.gl.uniform1f(this.uniforms.mode, item.mode);
-      this.gl.uniform1f(this.uniforms.progress, item.progress);
-      this.gl.uniform1f(this.uniforms.targetAspect, item.target.clientWidth / item.target.clientHeight);
-      this.gl.uniform1f(this.uniforms.textureAspectA, item.textureA.width / item.textureA.height);
-      const textureB = item.textureB || item.textureA;
-      this.gl.uniform1f(this.uniforms.textureAspectB, textureB.width / textureB.height);
-      this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+      this.drawItem(item, item.target.clientWidth / item.target.clientHeight);
     }
 
     destroy(root = document) {
@@ -451,6 +570,7 @@
         this.prepareObserver?.unobserve(target);
         this.pending.delete(target);
       }
+      if (this.batch && (root === document || root.contains?.(this.batch.host) || this.batch.host.contains?.(root))) this.endBatch();
       for (const [target, item] of Array.from(this.items.entries())) {
         if (root !== document && target !== root && !root.contains?.(target)) continue;
         this.observer?.unobserve(target);
@@ -478,6 +598,11 @@
       this.observer?.disconnect();
       this.prepareObserver?.disconnect();
       this.introQueue = [];
+      clearTimeout(this.introTimer);
+      if (this.batch) {
+        this.batch.host.classList.remove('is-webgl-host');
+        this.batch = null;
+      }
       this.items.forEach((item) => {
         item.tween?.kill();
         item.tween = null;
@@ -509,6 +634,8 @@
       this.prepareObserver = null;
       this.pending.clear();
       this.introQueue = [];
+      clearTimeout(this.introTimer);
+      this.endBatch();
       this.abort?.abort();
       this.parkCanvas();
       if (this.gl && !this.contextLost) {

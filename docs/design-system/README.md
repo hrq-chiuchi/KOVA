@@ -83,7 +83,7 @@ Required invariants:
 
 ## Component and section contracts
 
-These contracts describe the current Round 2 source. They were exercised through the Shopify CLI development theme with the store's three current products. Actual Theme Editor UI manipulation, successful add-to-cart with an available variant, and production performance remain pending.
+These contracts describe the current Round 2 source. They were first exercised through the Shopify CLI development theme with the store's three original products. Add-to-cart with an available variant was verified in Phase 3, and the actual Theme Editor UI was exercised on 2026-09-23 (see the case study). Production performance remains unmeasured.
 
 ### Editorial product card — Commerce component
 
@@ -103,19 +103,32 @@ These contracts describe the current Round 2 source. They were exercised through
 - **Surfaces:** `sections/kinetic-hero.liquid` and `assets/kinetic-hero.js`.
 - **Media fallback:** merchant image blocks, then current product media, then theme-owned placeholder art; five layers are always present.
 - **Interaction:** desktop pointer movement uses reusable `gsap.quickTo()` setters to carry the entire layered stack across the hero, with faster response at the front and restrained lag behind it; distance-based promotions stay at the pointer instead of jumping against its direction. Pointer leave returns the stack to its right-side resting composition. Coarse-pointer input advances on a non-interactive tap. Reduced motion retains a static readable stack.
-- **Merchant controls:** up to seven desktop/mobile image pairs, copy, CTA, height, pointer threshold, and section colors.
+- **Merchant controls:** up to seven desktop/mobile image pairs, copy, CTA, optional quiet secondary link, height, pointer threshold, and section colors.
+- **Content source:** `custom` (default) keeps the authored copy with product media from all products. `collection` draws the stack from a selected collection, and each blank eyebrow, heading, body or CTA link falls back to that collection's title, product count, description or URL. The homepage uses collection mode on Drop 001 with the authored heading kept.
+- **LCP:** the last layer paints on top of the stack and is the LCP image, so it alone carries `fetchpriority="high"`.
 
 ### Editorial product grid — Section
 
 - **Surface:** `sections/editorial-product-grid.liquid`.
 - **Modes:** real product data from a manual product list, selected collection, or `collections.all`; or explicitly non-purchasable editorial placeholders.
-- **Composition:** aligned or staggered three-card desktop layouts become dense two-column mobile layouts. The homepage uses one real-product release and two clearly pending editorial categories.
+- **Composition:** four layouts. `aligned` and `staggered` three-card desktop grids become dense two-column mobile grids. `feature` gives the first product a large display-titled card with the rest stacked beside it, and collapses to one full-width lead plus two-up on mobile. `strip` is a numbered horizontal object index on native scroll-snap with square media, exposed as a focusable named region. The homepage uses staggered (Current Transmission), feature (Night Uniform), and strip (Hard Goods), so three product moments no longer share one pattern.
+
+### Homepage brand-world sections — Sections
+
+The homepage alternates commerce, atmosphere, story and evidence rather than repeating product grids (D-018). Each section below is merchant-addable through a preset and uses only `--ad-*` tokens plus the per-section `accent` setting.
+
+- **Release record** (`sections/release-record.liquid`): one home for the release's facts. Product count, in-stock count, colourways (from options named `Color`/`Colour`) and status are derived from the selected collection; only the release code, optional date and copy are authored. Optional frame blocks form a native horizontal scroll-snap strip with a CSS-only "Frame pending" state. Default anchor `#field-record`.
+- **Signal frame** (`sections/signal-frame.liquid`, art-direction exception): full-bleed image with atmosphere lines, heading, CTA and up to six annotations at merchant-set coordinates, which collapse to a numbered list under the image below 48rem. An annotation linked to a product can read that product's `custom.feature_list` entry instead of typed copy. With a featured product it also shows the descriptor and up to five specifications, and its CTA defaults to the product's `#field-manual`. Used twice: campaign interlude and field test. Blank images render a CSS-only pending frame.
+- **Manifesto** (`sections/manifesto.liquid`, art-direction exception): viewport-scale heading, off-grid supporting copy, numbered pillar blocks. On the light tone the accent becomes a bar under ink text, because signal red fails 3:1 on the inverse background.
+- **Loadout teaser** (`sections/loadout-teaser.liquid`, commerce section): a real bundle product plus a merchant-listed component list (Liquid cannot read bundle components). Object count comes from the list; combined variant (shipping) weight is summed from each component and shown only when every component has one; bundle price shows its real compare-at.
+- **Field notes** (`sections/field-notes.liquid`): numbered editorial index of a Shopify blog with date, first tag, optional excerpt and image. With no blog or no articles it shows "No field notes published yet" instead of sample entries.
+- **Footer:** "End transmission" copy through settings only; the existing newsletter and wordmark carry the close.
 
 ### WebGL product reveal — Motion behavior
 
 - **Surface:** `assets/webgl-product-reveal.js` with one page-level canvas in `layout/theme.liquid`; the canvas is temporarily mounted inside the active media element.
 - **Budget:** one context, one program/buffer, at most 12 media targets, two textures per target, 96 MiB total estimated texture storage, and DPR capped at 1.5 desktop and 1 mobile.
-- **Runtime:** Product cards remain in normal document flow with no card-level fade, translation, fixed layer, or sticky layer. An `IntersectionObserver` queues a one-time block-glitch reveal when each media target enters the viewport; the canvas is an absolute child of the active media box, so it scrolls exactly with the card. Every fine-pointer entry and leave runs a fresh bidirectional block-glitch transition between the first and second product images. Rendering is request-driven only during a transition; the canvas is then cleared and returned to its page-level parking position while the corresponding canonical DOM image takes over.
+- **Runtime:** Product cards remain in normal document flow with no card-level fade, translation, fixed layer, or sticky layer. An `IntersectionObserver` queues a one-time block-glitch reveal when each media target enters the viewport. Targets that arrive within 60 ms of each other in the same card container reveal as one batch: the single canvas mounts over the container (`.is-webgl-host`) and draws each card into its own viewport/scissor rectangle with an 80 ms stagger, so a row of four starts together and finishes within about 1.1 s. A card that enters while its container's batch is running joins it. Hover transitions still mount the canvas inside the single card, and a hover ends any running batch instantly. Every fine-pointer entry and leave runs a fresh bidirectional block-glitch transition between the first and second product images. Rendering is request-driven only during a transition; the canvas is then cleared and returned to its page-level parking position while the corresponding canonical DOM image takes over.
 - **Failure handling:** shader/program/texture/CORS failure leaves DOM media visible. Context loss restores the primary DOM media immediately. Section unload deletes textures, tweens, observer registrations, queued intros, and pointer listeners; context resources are disposed when no targets remain.
 
 ### Commerce templates — Sections
@@ -132,7 +145,9 @@ These contracts describe the current Round 2 source. They were exercised through
 3. `AfterdarkWebGL.init(root)` reuses the page context and ignores existing targets; `destroy(root)` deletes only resources owned by that root.
 4. `prefers-reduced-motion` creates no reveal ScrollTriggers or WebGL textures and leaves the DOM hierarchy visible.
 5. `shopify:section:load` initializes both layers; unload destroys both; select and load/font events refresh layout-dependent state.
-6. Repeated section load is idempotent: the exercised homepage remained at three motion scopes, three WebGL targets, and nine ScrollTriggers after reloading the same section twice.
+6. Repeated section load is idempotent: the exercised homepage remained at three motion scopes, three WebGL targets, and nine ScrollTriggers after reloading the same section twice. After the 2026-09-24 homepage restructure, synthetic unload/load of all eight non-hero sections twice kept 9 motion scopes and 14 ScrollTriggers (0 under reduced motion) with no page errors.
+7. Card reveals animate opacity only. `autoAlpha` set `visibility: hidden` on unrevealed cards, which removed links inside them from the tab order.
+8. A motion hook must not share an element with inline positioning styles: reduced motion runs `clearProps: 'all'`, which removes the element's whole `style` attribute.
 
 ## Controlled art direction
 
@@ -150,7 +165,7 @@ Nightkidz is a quality reference, not a template. The transferable principles ar
 
 ## Inventory
 
-Statuses below use Shopify CLI Theme Check and the live local Shopify CLI development preview; they do not imply production performance or actual Theme Editor UI verification.
+Statuses below use Shopify CLI Theme Check and the live local Shopify CLI development preview. The homepage sections and the product template were also exercised in the actual Theme Editor UI on 2026-09-23. None of this implies production performance.
 
 | System item | Classification | Code surface | Status |
 | --- | --- | --- | --- |
@@ -162,12 +177,25 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Header and modal navigation | Section | `sections/header.liquid`, `assets/theme.js` | **Locally verified:** scroll state, focus entry/return, Escape cleanup, mobile/desktop layouts |
 | Progressive cart drawer | Section / commerce component | `sections/cart-drawer.liquid`, `assets/theme.js` | **Locally verified:** empty state, Section Rendering refresh, open/close; available-item mutation pending |
 | Kinetic image-stack hero | Section / motion behavior | `sections/kinetic-hero.liquid`, `assets/kinetic-hero.js` | **Locally verified:** deterministic first and repeated pointer entry, full-width pointer following, directional layer promotion, right-side rest, touch advance, fallback layers, reduced-motion static state |
-| Editorial category grid | Section | `sections/editorial-product-grid.liquid` | **Locally verified:** three homepage instances in product mode: a hand-picked Drop 001 lead set, Outerwear, and Field Objects, with no repeated product; editorial-block mode remains available but unused |
+| Editorial category grid | Section | `sections/editorial-product-grid.liquid` | **Locally verified (2026-09-24):** three homepage instances in product mode using the staggered, feature, and strip layouts at 1440px and 390px; editorial-block mode remains available but unused |
+| Hero collection mode | Section setting | `sections/kinetic-hero.liquid` | **Locally verified (2026-09-24):** Drop 001 images, CTA to the collection, authored heading kept; custom mode rendered in the preview. Toggling inside the actual Theme Editor UI has not been exercised |
+| Release record | Section | `sections/release-record.liquid` | **Locally verified (2026-09-24):** 16 products (the bundle counts as one), 16/16 in stock, Black / Ash Gray, Active, three pending frames |
+| Signal frame | Section / art-direction exception | `sections/signal-frame.liquid` | **Locally verified (2026-09-24):** two homepage instances, positioned annotations on desktop and list fallback on mobile, field-test annotations and specifications read from Blacksite Shell Jacket data. **Deferred:** campaign photography, so both frames show the pending state |
+| Manifesto | Section / art-direction exception | `sections/manifesto.liquid` | **Locally verified (2026-09-24):** light tone, three pillars, accent bar passes the Lighthouse contrast audit |
+| Loadout teaser | Commerce section | `sections/loadout-teaser.liquid` | **Locally verified (2026-09-24):** Night Transit Set 03, three linked components, combined variant weight 518 g (shown as 1.14 lb in the store unit), $169.00 vs $188.00 compare-at. **Planned:** Loadout Builder; nothing on the page implies it exists |
+| Field notes | Section / snippet | `sections/field-notes.liquid`, `snippets/field-note-row.liquid` | **Locally verified (2026-09-24):** four published articles in the `field-notes` blog render as numbered rows; the empty state was verified before publication. The row snippet is shared with the blog listing |
+| Blog and article pages | Sections | `sections/blog.liquid`, `sections/article.liquid` | **Locally verified (2026-09-24):** blog listing reuses the Field Notes row; article page has an editorial header, a reading-width body, and a back link; comments markup retained but untested (comments are off on the blog) |
 | Single-context WebGL reveal | Motion behavior | `assets/webgl-product-reveal.js` | **Locally verified:** static document-flow cards, localized absolute canvas, queued viewport glitch reveal, three repeatable bidirectional hover cycles, request-driven rendering, DOM-image handoff, reduced-motion and context-loss fallbacks; textures prepared only within half a viewport of a card |
 | Editorial product card | Commerce component | `snippets/product-card.liquid` | **Locally verified:** responsive primary/alternate media, current catalogue prices/availability, WebGL hover enhancement, and CSS fallback; one tab stop per card (media link hidden as a duplicate), sold-out state announced, configurable `h2`/`h3` title |
 | Collection browsing | Section | `sections/collection.liquid` | **Locally verified:** current products, filter/sort controls, desktop/mobile layouts |
 | Product purchase surface | Section | `sections/product.liquid`, `assets/theme.js` | **Locally verified:** real media/options, linked colour swatches, variant and quantity state, genuine sold-out state on the unproduced colourway, and a successful add-to-cart on single-variant, multi-variant, and bundle products after the single-variant matcher fix. Custom-data presentation (descriptor, positioning, drop code, specifications, fit, material, compatibility, edition, package, reference guide) renders on five representative PDPs; the Features list renders five entries on all 16 products after the catalogue data fix |
-| Product recommendations | Section | `sections/product-recommendations.liquid` | **Implemented:** curated complementary sets resolve through the recommendation endpoint; `intent=related` stays empty until the store has order history |
+| Product recommendations | Section | `sections/product-recommendations.liquid` | **Locally verified (2026-09-24):** the section requests the curated `complementary` intent by default (merchant-selectable); a corrected bug had hardcoded `intent=related`, which served Shopify's generic `collection_fallback` picks on every product; tone setting added (dark on the product template) |
+| Product field manual | Section / art-direction exception | `sections/product-field-manual.liquid` | **Locally verified:** positioning as a display statement, full description only when it adds to the positioning, numbered build notes, second product image as a figure or an enlarged detail crop for single-image products |
+| Product edition record | Section / art-direction exception | `sections/product-edition.liquid` | **Locally verified:** edition quantity as the display figure (drop code when unnumbered), record list, release note, decorative CSS tick band (one gradient, `aria-hidden`) |
+| Product compatibility | Section / art-direction exception | `sections/product-compatibility.liquid` | **Locally verified:** current object as an accent-outlined anchor tile, joined by `+` to up to three compatible products rendered with `snippets/product-card.liquid`; column count follows the data |
+| Product FAQ | Section | `sections/product-faq.liquid` | **Locally verified:** merchant question blocks on native `<details>`, optional shipping/returns question that links store policies when they exist and otherwise uses the checkout-confirmation fallback |
+| Product reviews | Section | `sections/product-reviews.liquid` | **Implemented; empty state verified:** reads only Shopify's standard `reviews.rating`/`reviews.rating_count` metafields and `@app` review blocks; no review app is installed, so every product currently shows the empty state |
+| Corrupted-signal page transition | Motion behavior | `snippets/page-transition.liquid`, `assets/page-transition.css`, `assets/page-transition.js`, `layout/theme.liquid` | **Locally verified in Chromium 151 (2026-09-24):** cross-document view transition with SVG RGB-split/band-tear filters, pinned header, scanline sweep, card-to-PDP image morph, reversed tear on back navigation, single-name guard, bfcache cleanup, hover prefetch; off for reduced motion, in the Theme Editor, and by the Motion theme setting. **Unavailable in Firefox 154** (no cross-document view transitions; plain navigation) |
 | Catalog custom-data model | Foundation (Shopify custom data) | Shopify metafield/metaobject definitions; recorded in `docs/case-study/README.md` | **Implemented:** 10 product metafield definitions, 3 reusable metaobject definitions, 24 entries, all `PUBLIC_READ` for storefront consumption |
 | Drop 001 catalogue and collections | Templates / merchandising | Shopify products, collections, files | **Locally verified:** 16 published products, 62 variants, 7 published smart collections rendering 16/4/3/5/3/2/3 cards with no horizontal overflow |
 | Cart page and global footer | Sections | `sections/cart.liquid`, `sections/footer.liquid` | **Locally verified:** empty cart, newsletter/localization rendering conditions, desktop/mobile layout |

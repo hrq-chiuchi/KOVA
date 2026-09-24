@@ -5,27 +5,43 @@
   https://shopify.dev/docs/storefronts/themes/architecture/templates/blog
 {% endcomment %}
 
-<h1>{{ blog.title }}</h1>
+<section class="blog-index full-width" data-motion-scope>
+  <div class="blog-index__inner section-shell">
+    <header class="blog-index__header" data-reveal="section">
+      <p class="eyebrow">Journal / {{ blog.articles_count }} entries</p>
+      <h1 class="section-heading">
+        <span data-reveal-line-wrap><span data-reveal-line>{{ blog.title | escape }}</span></span>
+      </h1>
+    </header>
 
-{% paginate blog.articles by 5 %}
-  {% for article in blog.articles %}
-    <div>
-      {% if article.image %}
-        {{ article.image | image_url: width: 1000 | image_tag }}
+    {% paginate blog.articles by 12 %}
+      {% if blog.articles.size > 0 %}
+        <ol class="blog-index__list" role="list">
+          {% for article in blog.articles %}
+            {% assign position = paginate.current_offset | plus: forloop.index %}
+            {% render 'field-note-row', article: article, index: position, show_excerpt: true, heading_tag: 'h2' %}
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="blog-index__empty">No entries published yet.</p>
       {% endif %}
-      <h2>
-        {{ article.title | link_to: article.url }}
-      </h2>
-      {% assign date = article.published_at | time_tag: format: 'date' %}
-      <p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
-      <p>{{ article.excerpt }}</p>
-    </div>
-  {% endfor %}
 
-  {%- if paginate.pages > 1 -%}
-    {{- paginate | default_pagination -}}
-  {%- endif -%}
-{% endpaginate %}
+      {%- if paginate.pages > 1 -%}
+        <nav class="blog-index__pagination" aria-label="Pagination">{{- paginate | default_pagination -}}</nav>
+      {%- endif -%}
+    {% endpaginate %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .blog-index { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .blog-index__inner { padding-block: var(--ad-space-500) var(--ad-section-space); }
+  .blog-index__header { margin-block-end: var(--ad-space-700); }
+  .blog-index__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .blog-index__list { margin: 0; padding: 0; list-style: none; border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .blog-index__empty { color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+  .blog-index__pagination { display: flex; margin-block-start: var(--ad-space-600); gap: var(--ad-space-300); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+{% endstylesheet %}
 
 {% schema %}
 {

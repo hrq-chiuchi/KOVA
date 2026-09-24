@@ -81,5 +81,17 @@
         "label": "Signal accent"
       }
     ]
+  },
+  {
+    "name": "Motion",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "page_transitions",
+        "label": "Corrupted-signal page transitions",
+        "info": "Glitch transition between pages in browsers that support cross-document view transitions. Always off for reduced motion and in the theme editor.",
+        "default": true
+      }
+    ]
   }
 ]

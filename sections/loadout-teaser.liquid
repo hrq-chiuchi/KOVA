@@ -1,0 +1,162 @@
+{% comment %}
+  Editorial teaser for a loadout: a real bundle product plus its components. Liquid cannot read a
+  bundle's components, so the merchant lists them. Object count and combined weight are derived from
+  those products and weight is shown only when every component has one.
+{% endcomment %}
+{% liquid
+  assign loadout = section.settings.product
+  assign components = section.settings.components
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+
+  assign total_grams = 0
+  assign weight_known = true
+  for component in components
+    assign variant = component.selected_or_first_available_variant
+    # variant.weight is always grams; weight_with_unit converts to the shop's unit for display.
+    if variant.weight > 0
+      assign total_grams = total_grams | plus: variant.weight
+    else
+      assign weight_known = false
+    endif
+  endfor
+  if components.size == 0
+    assign weight_known = false
+  endif
+
+  assign image = section.settings.image
+  if image == blank and loadout != blank
+    assign image = loadout.featured_image
+  endif
+%}
+
+{% if loadout != blank %}
+  <section
+    class="loadout full-width loadout--{{ section.settings.tone }}"
+    data-motion-scope
+    style="--loadout-accent: {{ section.settings.accent }};"
+    aria-labelledby="LoadoutHeading-{{ section.id }}"
+  >
+    <div class="loadout__inner section-shell">
+      <figure class="loadout__figure">
+        <a class="loadout__media" href="{{ loadout.url }}" tabindex="-1" aria-hidden="true">
+          {% if image != blank %}
+            {{ image
+              | image_url: width: 1800
+              | image_tag:
+                widths: '540, 720, 960, 1200, 1500, 1800',
+                sizes: '(max-width: 767px) 100vw, 56vw',
+                loading: 'lazy',
+                alt: ''
+            }}
+          {% else %}
+            {{ 'product-2' | placeholder_svg_tag: 'loadout__placeholder' }}
+          {% endif %}
+        </a>
+        <figcaption class="eyebrow">{{ section.settings.eyebrow | escape }}</figcaption>
+      </figure>
+
+      <div class="loadout__panel">
+        <header data-reveal="section">
+          <p class="eyebrow">{{ section.settings.kicker | escape }}</p>
+          <h2 id="LoadoutHeading-{{ section.id }}" class="loadout__heading">
+            {% for line in heading_lines %}
+              <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+            {% endfor %}
+          </h2>
+        </header>
+
+        {% if section.settings.intro != blank %}<div class="loadout__intro">{{ section.settings.intro }}</div>{% endif %}
+
+        {% if components.size > 0 %}
+          <ol class="loadout__components" role="list">
+            {% for component in components %}
+              <li data-reveal-card>
+                <span class="loadout__index" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+                <a href="{{ component.url }}">{{ component.title | escape }}</a>
+                <span class="loadout__type">{{ component.type | escape }}</span>
+              </li>
+            {% endfor %}
+          </ol>
+        {% endif %}
+
+        <dl class="loadout__record">
+          <div><dt>Set</dt><dd>{{ loadout.title | escape }}</dd></div>
+          {% if components.size > 0 %}
+            <div><dt>Objects</dt><dd>{{ components.size }}</dd></div>
+          {% endif %}
+          {% if weight_known %}
+            <div><dt>Combined weight</dt><dd>{{ total_grams | weight_with_unit }}</dd></div>
+          {% endif %}
+          <div>
+            <dt>Price</dt>
+            <dd>
+              {% unless loadout.available %}<span class="visually-hidden">Sold out.</span>{% endunless %}
+              {{ loadout.price | money }}
+              {% if loadout.compare_at_price > loadout.price %}
+                <s><span class="visually-hidden">Separately</span> {{ loadout.compare_at_price | money }}</s>
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+
+        {% if section.settings.cta_label != blank %}
+          <a class="button button--accent loadout__cta" href="{{ loadout.url }}">
+            {{ section.settings.cta_label | escape }} <span aria-hidden="true">→</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .loadout { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); --color-accent: var(--loadout-accent); }
+  .loadout--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .loadout__inner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr); gap: var(--ad-content-gap); align-items: end; padding-block: var(--ad-section-space); }
+  .loadout__figure { margin: 0; }
+  .loadout__media { position: relative; display: block; overflow: hidden; aspect-ratio: 5 / 6; background: var(--ad-color-background-elevated); }
+  .loadout__media img,
+  .loadout__placeholder { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .loadout__figure figcaption { margin-block-start: var(--ad-space-300); color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .loadout__heading { margin: var(--ad-space-200) 0 0; font-family: var(--font-display-family); font-size: clamp(3rem, 6.5vw, 6.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.86; text-transform: uppercase; }
+  .loadout__intro { margin-block-start: var(--ad-space-400); color: color-mix(in srgb, currentcolor 70%, transparent); }
+  .loadout__intro > * { margin: 0; }
+  .loadout__components { margin: var(--ad-space-500) 0 0; padding: 0; list-style: none; border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .loadout__components li { display: grid; grid-template-columns: 2.5rem 1fr; padding-block: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); }
+  .loadout__index { grid-row: span 2; color: var(--loadout-accent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; }
+  .loadout__components a { font-weight: 700; text-decoration: none; text-transform: uppercase; }
+  .loadout__components a:hover { text-decoration: underline; }
+  .loadout__type { color: color-mix(in srgb, currentcolor 60%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .loadout__record { margin: var(--ad-space-400) 0 0; }
+  .loadout__record > div { display: flex; padding-block: var(--ad-space-200); justify-content: space-between; gap: var(--ad-space-300); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .loadout__record dt { color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .loadout__record dd { margin: 0; font-weight: 700; text-align: end; }
+  .loadout__record s { margin-inline-start: var(--ad-space-100); font-weight: 400; opacity: 0.7; }
+  .loadout__cta { width: 100%; margin-block-start: var(--ad-space-500); }
+
+  @media (max-width: 47.99rem) {
+    .loadout__inner { grid-template-columns: 1fr; }
+    .loadout__media { aspect-ratio: 4 / 5; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loadout teaser",
+  "tag": "div",
+  "class": "section-loadout-teaser",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Loadout product", "info": "The bundle or set customers buy." },
+    { "type": "product_list", "id": "components", "label": "Components", "limit": 8, "info": "Products inside the loadout. Combined variant weight is shown only if every component has one." },
+    { "type": "image_picker", "id": "image", "label": "Image", "info": "Defaults to the loadout product's image." },
+    { "type": "text", "id": "eyebrow", "label": "Image caption", "default": "Loadout / Field objects" },
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "Loadout 03" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "NIGHT\nTRANSIT" },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "text", "id": "cta_label", "label": "Button label", "default": "Explore loadout" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "presets": [{ "name": "Loadout teaser" }]
+}
+{% endschema %}

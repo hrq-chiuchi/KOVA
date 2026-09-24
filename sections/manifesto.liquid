@@ -1,0 +1,95 @@
+{% comment %}
+  Typographic brand statement. Art-direction exception: the heading fills most of the viewport and
+  the supporting copy is pinned to an off-grid column instead of sitting under the heading.
+{% endcomment %}
+{% liquid
+  assign heading_lines = section.settings.heading | newline_to_br | split: '<br />'
+%}
+
+<section
+  class="manifesto full-width manifesto--{{ section.settings.tone }}"
+  data-motion-scope
+  style="--manifesto-accent: {{ section.settings.accent }};"
+  aria-labelledby="ManifestoHeading-{{ section.id }}"
+>
+  <div class="manifesto__inner section-shell">
+    <p class="eyebrow manifesto__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+
+    <h2 id="ManifestoHeading-{{ section.id }}" class="manifesto__heading" data-reveal="section">
+      {% for line in heading_lines %}
+        <span data-reveal-line-wrap><span data-reveal-line>{{ line | strip | escape }}</span></span>
+      {% endfor %}
+    </h2>
+
+    <div class="manifesto__body">{{ section.settings.body }}</div>
+
+    {% if section.blocks.size > 0 %}
+      <ol class="manifesto__pillars" role="list">
+        {% for block in section.blocks %}
+          <li class="manifesto__pillar" data-reveal-card {{ block.shopify_attributes }}>
+            <span class="manifesto__index" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <h3>{{ block.settings.title | escape }}</h3>
+            {% if block.settings.text != blank %}<p>{{ block.settings.text | escape }}</p>{% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .manifesto { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .manifesto--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .manifesto__inner { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--ad-content-gap); padding-block: var(--ad-section-space); }
+  .manifesto__eyebrow { grid-column: 1 / -1; margin: 0 0 var(--ad-space-500); }
+  .manifesto__heading { grid-column: 1 / 10; grid-row: 2 / 4; margin: 0; font-family: var(--font-display-family); font-size: clamp(4.5rem, 14.5vw, 15rem); font-weight: var(--font-display-weight); letter-spacing: -0.08em; line-height: 0.78; text-transform: uppercase; }
+  .manifesto__heading [data-reveal-line-wrap]:last-child { color: var(--manifesto-accent); }
+  /* Light tone: accent text fails 3:1 on the inverse background, so the accent becomes a bar under ink text. */
+  .manifesto--inverse .manifesto__heading [data-reveal-line-wrap]:last-child { color: inherit; }
+  .manifesto--inverse .manifesto__heading [data-reveal-line-wrap]:last-child [data-reveal-line] { display: inline-block; box-shadow: inset 0 -0.14em 0 var(--manifesto-accent); }
+  .manifesto__body { grid-column: 10 / -1; grid-row: 3; align-self: end; max-width: 22rem; color: color-mix(in srgb, currentcolor 72%, transparent); }
+  .manifesto__body > * { margin: 0; }
+  .manifesto__body > * + * { margin-block-start: var(--ad-space-300); }
+  .manifesto__pillars { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--ad-content-gap); margin: var(--ad-space-800) 0 0; padding: 0; list-style: none; }
+  .manifesto__pillar { padding-block-start: var(--ad-space-300); border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .manifesto__index { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; }
+  .manifesto__pillar h3 { margin: var(--ad-space-300) 0 var(--ad-space-200); font-family: var(--font-display-family); font-size: clamp(1.75rem, 3vw, 3rem); font-weight: var(--font-display-weight); letter-spacing: -0.045em; line-height: 0.95; text-transform: uppercase; }
+  .manifesto__pillar p { max-width: 24rem; margin: 0; color: color-mix(in srgb, currentcolor 68%, transparent); }
+
+  @media (max-width: 63.99rem) {
+    .manifesto__heading { grid-column: 1 / -1; grid-row: auto; font-size: clamp(3.75rem, 17vw, 9rem); }
+    .manifesto__body { grid-column: 4 / -1; grid-row: auto; margin-block-start: var(--ad-space-600); }
+  }
+
+  @media (max-width: 47.99rem) {
+    .manifesto__body { grid-column: 1 / -1; }
+    .manifesto__pillars { margin-block-start: var(--ad-space-700); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Manifesto",
+  "tag": "div",
+  "class": "section-manifesto",
+  "max_blocks": 4,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "KOVA / Point of view" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "BUILT\nFOR THE\nHOURS\nBETWEEN." },
+    { "type": "richtext", "id": "body", "label": "Body", "default": "<p>KOVA makes apparel and field objects for movement after daylight.</p>" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
+  ],
+  "blocks": [
+    {
+      "type": "pillar",
+      "name": "Pillar",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Movement" },
+        { "type": "textarea", "id": "text", "label": "Text" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Manifesto", "blocks": [{ "type": "pillar" }, { "type": "pillar" }, { "type": "pillar" }] }]
+}
+{% endschema %}

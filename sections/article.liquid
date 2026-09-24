@@ -6,17 +6,32 @@
   https://shopify.dev/docs/storefronts/themes/architecture/templates/article
 {% endcomment %}
 
-{% if article.image %}
-  {{ article.image | image_url: width: 1000 | image_tag }}
-{% endif %}
+<article class="article-page full-width" data-motion-scope>
+  <div class="article-page__inner section-shell">
+    <header class="article-page__header" data-reveal="section">
+      <p class="eyebrow">
+        <a href="{{ blog.url }}">{{ blog.title | escape }}</a>
+        {% if article.tags.size > 0 %} / {{ article.tags.first | escape }}{% endif %}
+      </p>
+      <h1 class="article-page__title">
+        <span data-reveal-line-wrap><span data-reveal-line>{{ article.title | escape }}</span></span>
+      </h1>
+      {% assign date = article.published_at | time_tag: format: 'date' %}
+      <p class="article-page__meta">{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
+    </header>
 
-<h1>{{ article.title }}</h1>
+    {% if article.image %}
+      <figure class="article-page__figure">
+        {{ article.image
+          | image_url: width: 1800
+          | image_tag: widths: '720, 1080, 1440, 1800', sizes: '(max-width: 767px) 100vw, 80vw', alt: article.image.alt | default: article.title
+        }}
+      </figure>
+    {% endif %}
 
-{% assign date = article.published_at | time_tag: format: 'date' %}
-<p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
+    <div class="article-page__body">{{ article.content }}</div>
 
-{{ article.content }}
-
+    <a class="article-page__back" href="{{ blog.url }}"><span aria-hidden="true">←</span> <span>All {{ blog.title | escape }}</span></a>
 {% if blog.comments_enabled? %}
   <h2>{{ 'blog.article_comments' | t }}</h2>
 
@@ -59,6 +74,28 @@
     <input type="submit" value="{{ 'blog.comment_form_submit' | t }}">
   {% endform %}
 {% endif %}
+  </div>
+</article>
+
+{% stylesheet %}
+  .article-page { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .article-page__inner { padding-block: var(--ad-space-500) var(--ad-section-space); }
+  .article-page__header { max-width: 60rem; margin-block-end: var(--ad-space-700); }
+  .article-page__header .eyebrow a { text-decoration: none; }
+  .article-page__title { margin: var(--ad-space-300) 0 0; font-family: var(--font-display-family); font-size: var(--ad-text-title); font-weight: var(--font-display-weight); letter-spacing: -0.055em; line-height: 0.9; text-transform: uppercase; }
+  .article-page__meta { margin: var(--ad-space-400) 0 0; color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .article-page__figure { margin: 0 0 var(--ad-space-700); }
+  .article-page__figure img { display: block; width: 100%; height: auto; }
+  .article-page__body { max-width: 40rem; margin-inline-start: clamp(0rem, 16vw, 18rem); font-size: var(--ad-text-lead); line-height: 1.6; }
+  .article-page__body > * { margin: 0; }
+  .article-page__body > * + * { margin-block-start: var(--ad-space-400); }
+  .article-page__body > p:first-child { font-size: clamp(1.375rem, 2.2vw, 1.875rem); line-height: 1.35; }
+  .article-page__back { display: inline-flex; min-height: var(--ad-control-minimum); margin-block-start: var(--ad-space-700); align-items: center; gap: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid currentcolor; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-decoration: none; text-transform: uppercase; }
+
+  @media (max-width: 47.99rem) {
+    .article-page__body { margin-inline-start: 0; }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {

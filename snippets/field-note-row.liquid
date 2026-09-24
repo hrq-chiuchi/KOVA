@@ -1,0 +1,55 @@
+{% doc %}
+  Renders one numbered editorial row for a blog article. Shared by the homepage Field Notes
+  section and the blog listing so both indexes read the same.
+
+  @param {article} article - Article to render.
+  @param {number} index - One-based position, shown as a three-digit index.
+  @param {boolean} [show_excerpt] - Show the excerpt, or the start of the content when there is none.
+  @param {string} [heading_tag] - Title heading element, `h2` or `h3` (default) to fit the page outline.
+{% enddoc %}
+
+{% assign heading_tag = heading_tag | default: 'h3' %}
+<li class="field-note-row{% if article.image %} field-note-row--image{% endif %}" data-reveal-card>
+  <span class="field-note-row__index" aria-hidden="true">{{ index | prepend: '00' | slice: -3, 3 }}</span>
+  <div>
+    <{{ heading_tag }} class="field-note-row__title"><a href="{{ article.url }}">{{ article.title | escape }}</a></{{ heading_tag }}>
+    <p class="field-note-row__meta">
+      <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">{{ article.published_at | date: '%d.%m.%y' }}</time>
+      {% if article.tags.size > 0 %}<span>{{ article.tags.first | escape }}</span>{% endif %}
+    </p>
+    {% if show_excerpt %}
+      {% assign excerpt = article.excerpt | default: article.content | strip_html | truncatewords: 24 %}
+      <p class="field-note-row__excerpt">{{ excerpt | strip_html | escape }}</p>
+    {% endif %}
+  </div>
+  {% if article.image %}
+    <div class="field-note-row__media" aria-hidden="true">
+      {{ article.image
+        | image_url: width: 720
+        | image_tag: widths: '360, 540, 720', sizes: '(max-width: 767px) 40vw, 16vw', loading: 'lazy', alt: ''
+      }}
+    </div>
+  {% endif %}
+</li>
+
+{% stylesheet %}
+  .field-note-row { position: relative; display: grid; grid-template-columns: minmax(4rem, 0.4fr) minmax(0, 2fr); gap: var(--ad-content-gap); padding-block: var(--ad-space-500); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); }
+  .field-note-row--image { grid-template-columns: minmax(4rem, 0.4fr) minmax(0, 2fr) minmax(8rem, 0.6fr); }
+  .field-note-row__index { color: var(--notes-accent, var(--color-accent)); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; }
+  .field-note-row__title { margin: 0; font-family: var(--font-display-family); font-size: clamp(1.75rem, 4vw, 3.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.05em; line-height: 0.92; text-transform: uppercase; }
+  .field-note-row__title a { text-decoration: none; }
+  .field-note-row__title a::after { position: absolute; inset: 0; content: ''; }
+  .field-note-row__title a:focus-visible { outline: 0; }
+  .field-note-row__title a:focus-visible::after { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  .field-note-row:hover .field-note-row__title { color: var(--notes-accent, var(--color-accent)); }
+  .field-note-row__meta { display: flex; flex-wrap: wrap; gap: var(--ad-space-300); margin: var(--ad-space-300) 0 0; color: color-mix(in srgb, currentcolor 62%, transparent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .field-note-row__excerpt { max-width: 40rem; margin: var(--ad-space-300) 0 0; color: color-mix(in srgb, currentcolor 72%, transparent); }
+  .field-note-row__media { overflow: hidden; aspect-ratio: 4 / 3; background: var(--ad-color-background-elevated); }
+  .field-note-row__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  @media (max-width: 47.99rem) {
+    .field-note-row,
+    .field-note-row--image { grid-template-columns: 3rem minmax(0, 1fr); gap: var(--ad-space-300); }
+    .field-note-row__media { grid-column: 2; }
+  }
+{% endstylesheet %}

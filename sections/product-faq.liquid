@@ -1,0 +1,130 @@
+{% liquid
+  assign policy_links = ''
+  if shop.shipping_policy != blank
+    assign policy_links = policy_links | append: '<a href="' | append: shop.shipping_policy.url | append: '">' | append: shop.shipping_policy.title | escape | append: '</a>'
+  endif
+  if shop.refund_policy != blank
+    if policy_links != blank
+      assign policy_links = policy_links | append: ' · '
+    endif
+    assign policy_links = policy_links | append: '<a href="' | append: shop.refund_policy.url | append: '">' | append: shop.refund_policy.title | escape | append: '</a>'
+  endif
+  assign question_count = section.blocks.size
+  if section.settings.show_policy_question
+    assign question_count = question_count | plus: 1
+  endif
+%}
+
+{% if question_count > 0 %}
+  <section
+    class="product-faq full-width product-faq--{{ section.settings.tone }}"
+    data-motion-scope
+    aria-labelledby="FaqHeading-{{ section.id }}"
+  >
+    <div class="product-faq__inner section-shell">
+      <header class="product-faq__header" data-reveal="section">
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }} / {{ question_count | prepend: '0' | slice: -2, 2 }}</p>
+        <h2 id="FaqHeading-{{ section.id }}" class="section-heading">
+          <span data-reveal-line-wrap><span data-reveal-line>{{ section.settings.heading | escape }}</span></span>
+        </h2>
+        {% if section.settings.intro != blank %}
+          <div class="product-faq__intro">{{ section.settings.intro }}</div>
+        {% endif %}
+      </header>
+
+      <div class="product-faq__list">
+        {% for block in section.blocks %}
+          <details class="product-faq__item" {{ block.shopify_attributes }}>
+            <summary>
+              <span class="product-faq__index" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <span class="product-faq__question">{{ block.settings.question | escape }}</span>
+              <span class="product-faq__toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="product-faq__answer">{{ block.settings.answer }}</div>
+          </details>
+        {% endfor %}
+
+        {% if section.settings.show_policy_question %}
+          {% assign policy_index = section.blocks.size | plus: 1 %}
+          <details class="product-faq__item">
+            <summary>
+              <span class="product-faq__index" aria-hidden="true">{{ policy_index | prepend: '0' | slice: -2, 2 }}</span>
+              <span class="product-faq__question">{{ section.settings.policy_question | escape }}</span>
+              <span class="product-faq__toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="product-faq__answer">
+              {{ section.settings.policy_fallback }}
+              {% if policy_links != blank %}<p>{{ policy_links }}</p>{% endif %}
+            </div>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .product-faq { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .product-faq--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .product-faq__inner { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--ad-content-gap); padding-block: var(--ad-section-space); align-items: start; }
+  .product-faq__header { position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-400)); }
+  .product-faq__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .product-faq__intro { max-width: 26rem; margin-block-start: var(--ad-space-400); color: color-mix(in srgb, currentcolor 68%, transparent); }
+  .product-faq__intro > * { margin: 0; }
+  .product-faq__list { border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .product-faq__item { border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 28%, transparent); }
+  .product-faq__item summary { display: grid; grid-template-columns: 3.5rem 1fr var(--ad-control-minimum); min-height: var(--ad-control-minimum); padding-block: var(--ad-space-400); align-items: center; cursor: pointer; list-style: none; }
+  .product-faq__item summary::-webkit-details-marker { display: none; }
+  .product-faq__index { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; opacity: 0.56; }
+  .product-faq__question { font-family: var(--font-display-family); font-size: clamp(1.25rem, 2vw, 1.9rem); font-weight: var(--font-display-weight); letter-spacing: -0.03em; line-height: 1.05; text-transform: uppercase; }
+  .product-faq__toggle { position: relative; justify-self: end; width: 1rem; height: 1rem; }
+  .product-faq__toggle::before,
+  .product-faq__toggle::after { position: absolute; inset: 50% 0 auto; height: 2px; margin-block-start: -1px; background: currentcolor; content: ''; transition: transform var(--ad-duration-fast) var(--ad-ease-standard); }
+  .product-faq__toggle::after { transform: rotate(90deg); }
+  .product-faq__item[open] .product-faq__toggle::after { transform: rotate(0deg); }
+  .product-faq__answer { max-width: 40rem; padding: 0 0 var(--ad-space-500) 3.5rem; color: color-mix(in srgb, currentcolor 72%, transparent); line-height: 1.55; }
+  .product-faq__answer > * { margin: 0; }
+  .product-faq__answer > * + * { margin-block-start: var(--ad-space-300); }
+
+  @media (max-width: 47.99rem) {
+    .product-faq__inner { grid-template-columns: 1fr; }
+    .product-faq__header { position: static; }
+    .product-faq__item summary { grid-template-columns: 2.5rem 1fr var(--ad-control-minimum); }
+    .product-faq__answer { padding-inline-start: 2.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-faq__toggle::before,
+    .product-faq__toggle::after { transition: none; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product FAQ",
+  "tag": "div",
+  "class": "section-product-faq",
+  "enabled_on": { "templates": ["product"] },
+  "max_blocks": 12,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Field questions" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "FAQ" },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "checkbox", "id": "show_policy_question", "label": "Add shipping and returns question", "info": "Links to the store's shipping and refund policies when they exist.", "default": true },
+    { "type": "text", "id": "policy_question", "label": "Shipping question", "default": "How do shipping and returns work?" },
+    { "type": "richtext", "id": "policy_fallback", "label": "Shipping answer", "default": "<p>Dispatch timing and return eligibility are confirmed at checkout.</p>" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Question" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Answer</p>" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Product FAQ", "blocks": [{ "type": "question" }] }]
+}
+{% endschema %}

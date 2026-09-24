@@ -27,6 +27,8 @@
 
     {{ content_for_header }}
 
+    {% render 'page-transition', part: 'head' %}
+
     <script src="{{ 'gsap.min.js' | asset_url }}" defer></script>
     <script src="{{ 'ScrollTrigger.min.js' | asset_url }}" defer></script>
     <script src="{{ 'motion-core.js' | asset_url }}" defer></script>
@@ -46,5 +48,6 @@
 
     <canvas class="webgl-reveal-canvas" data-webgl-reveal-canvas aria-hidden="true"></canvas>
     {% sections 'footer-group' %}
+    {% render 'page-transition', part: 'body' %}
   </body>
 </html>

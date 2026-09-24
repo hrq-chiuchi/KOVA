@@ -174,7 +174,7 @@ Meaningful implementation boundaries:
 Capture only after the event occurs:
 
 1. A live Shopify preview with real products, responsive media, navigation/account settings, and representative merchant copy.
-2. The actual Shopify Theme Editor UI loading, unloading, selecting, and reordering sections, including duplicate-listener and duplicate-ScrollTrigger checks.
+2. ~~The actual Shopify Theme Editor UI loading, unloading, selecting, and reordering sections, including duplicate-listener and duplicate-ScrollTrigger checks.~~ Captured 2026-09-23 (Phase 4 Theme Editor log).
 3. No-JavaScript commerce/navigation behavior and live keyboard traversal beyond the fixture dialog path.
 4. Screenshots of meaningful iterations, including a mobile crop/composition and one controlled grid break.
 5. Concrete bugs involving section lifecycle, focus/state continuity, responsive media, or commerce boundaries.
@@ -316,7 +316,93 @@ Observed at the time: several product descriptions repeated the positioning sent
 - Fixed: the product-card media link duplicated the title link and failed Lighthouse's label-in-name audit. It is now `tabindex="-1"` and `aria-hidden`, and the sold-out state is announced beside the price. Collection-page cards take an `h2` title to keep heading order. The unbranded Buy it now button (white on `#1990c6`, contrast 3.59:1) now uses theme tokens. Shopify's injected hCaptcha badge suppressed the focus ring on its Privacy and Terms links, so a scoped rule restores it.
 - Fixed (performance): a V8 CPU profile of the PDP under 4× throttling attributed about 812 ms of self time to `loadTexture` in `assets/webgl-product-reveal.js`, which decoded and uploaded textures for every card at startup and forced offscreen lazy images to download. Cards now wait in a pending set until they come within half a viewport. After the change, `loadTexture` fell out of the top profile entries, and page transfer dropped by about 1.2–1.6 MB. Lighthouse's `bootup-time` attributes about 7 s to `ScrollTrigger.min.js`, but the CPU profile does not show that cost, so it was treated as an attribution artefact rather than a defect.
 - Fixed (LCP): the PDP's primary image, which is the LCP element, was `loading="lazy"`. It now loads eagerly with `fetchpriority="high"`. The homepage LCP is a kinetic-hero layer. All seven layers already load eagerly, and the top layer depends on script state, so the hero was left unchanged. Choosing a single high-priority layer is a follow-up.
-- Not verified, and why: the Shopify Theme Editor UI needs an authenticated admin browser session that this environment does not drive. Checkout completion would create a real order unless a test payment gateway is configured on the store, so it was not attempted.
+- Not verified, and why: checkout completion would create a real order unless a test payment gateway is configured on the store, so it was not attempted. The Theme Editor was verified afterwards; see the next entry.
 
 **2026-09-23 — Catalogue copy trimmed (D-015):** Descriptions were backed up, then 15 were rewritten through `productUpdate` to keep only their opening paragraph. The removed "Materials and construction" and "Care" sections were covered by each product's material profile, and "Field note" was identical boilerplate on every product. `Night Transit Set 03` was left unchanged: it has no material profile, and its "What is included" and "Why these three" sections are unique. The update returned no user errors. PDPs render the shortened description without Liquid errors, and the cargo pant PDP's Lighthouse accessibility score moved from 98 to 100 because the description's orphaned `h3` headings are gone.
+
+**2026-09-23 — Actual Theme Editor verification:** The user signed in to the Shopify admin in a visible Chromium window. That window was then driven over the Chrome DevTools Protocol against development theme `164481368323`, served by `shopify theme dev` from this repository at commit `57bf022`. A probe inside the preview frame recorded `shopify:section:*` events, page errors, ScrollTrigger count, motion scopes, and WebGL targets. Listener counts were read through `DOMDebugger.getEventListeners`. No change was saved: the edit session was discarded, and afterwards the dev theme's homepage rendered its original four sections in the original order.
+
+| Action in the editor | Observed |
+| --- | --- |
+| Load homepage | `Shopify.designMode` true; 4 sections, 3 ScrollTriggers, 3 motion scopes, 9 WebGL targets (0 prepared while offscreen), 7 hero layers, no hidden cards |
+| Select the Night Uniform grid | `section:select`; preview scrolled to it; 6 targets prepared as they neared the viewport; no errors |
+| Edit the eyebrow text | Text patched in place without a section reload |
+| Toggle Tone three times (three reloads) | `unload` → `load` → `select` each time; ScrollTrigger, motion-scope, target, and card counts identical after every cycle; heading lines revealed, 3 cards re-prepared |
+| Drag Field Objects above Night Uniform | `section:reorder`; DOM order updated; all 9 targets prepared; a synthetic hover on a moved card mounted the canvas, animated, and parked it back on `body` in both directions |
+| Hide and show the kinetic hero | `unload`, then `load`; 7 layers restored; `window`/`document` listener counts identical before and after; the hero element holds exactly one `pointerenter`/`pointermove`/`pointerleave` listener; a synthetic pointer sweep moved and re-stacked the layers, which settled back to rest |
+| Add an Editorial product grid | `section:load` with preset defaults, catalogue fallback products, a new motion scope, and one new ScrollTrigger |
+| Product template, Night Shift Cargo Pant | 8 panels, 5 features, 2 swatches, 4 recommendation cards; `Ash Gray` → `SOLD OUT` disabled, `Black` → `ADD TO BAG` enabled |
+| Hide and show Product recommendations | Re-fetched 4 cards, all WebGL-prepared, no errors |
+
+Findings:
+
+- No theme listener, ScrollTrigger, or WebGL target accumulated across reloads, reorders, or hide/show cycles.
+- After a section re-render, `document` gained one `shopify:section:load`/`unload`/`reorder` listener and one `scroll` listener. Tracing them to source showed they come from Shopify's `storefront-modules` bundle, not the theme; the theme's own handlers stayed at exactly one each. This is platform behaviour in design mode and was left alone.
+- Mouse input could not be delivered into the preview frame, because the editor's selection overlay received it. Hover was therefore exercised with synthetic pointer events, which do not set the CSS `:hover` state that picks the resting image after a card hover. Real-cursor hover was verified outside the editor in Phase 2.
+
+## Phase 5 product storytelling log
+
+**2026-09-23 — Implementation (D-016):** The PDP is split into a buying fold and a storytelling sequence. The first fold keeps identity, media, options, purchase, and quick-reference panels for Specifications, Fit, Material, and Delivery, plus a "Read the field manual" jump link. Positioning, description, features, compatibility, and edition content moved out of the accordions into five template sections, alternating tone in this order: field manual (light), edition record (dark), works with (light), FAQ (dark), reviews (light), then recommendations (now dark). Each section is `enabled_on` the product template, has a preset for the Theme Editor, uses the shared motion-core reveal attributes, and renders nothing when a product lacks its data. FAQ answers were written only from facts the catalogue already records: drop codes, the unproduced colourway, compatibility, and fit/spec locations. The drop-code answer was narrowed to "numbered editions" after a check showed that `Relay Modular Vest` sits in Limited Editions without a suffix. The store has no shipping or refund policy pages, so the shipping question uses the existing checkout-confirmation wording. The shared product card now stacks its action under the title below 30rem, fixing a pre-existing overlap in two-up grids at 390px.
+
+**2026-09-23 — Verification against the development preview:**
+
+- Theme Check: 53 files, no offenses. No `Liquid error` on the Night Shift Cargo Pant, Sector 05 Field Flask, Night Transit Set 03, Blacksite Shell Jacket, and Nullfold Card Wallet PDPs. Each rendered the seven template sections in order.
+- Data coverage checked through the storefront Liquid console: every product has an edition profile and at least one compatible product. Three editions are numbered: Blacksite 180, Night Shift 240, and Dead Channel 300. Thirteen products have a single image and receive the detail-crop figure. The bundle's description differs from its positioning and renders in full.
+- Full-page headless Chromium captures at 1440px and 390px, with reduced motion and with motion enabled, showed no horizontal overflow; with motion enabled, the scroll reveals completed.
+- Keyboard traversal (CDP, 140 Tab stops) at 1440px and 390px: 138 stops, all with a visible focus indicator, in reading order through the first-fold panels, compatibility cards, FAQ questions, and recommendations.
+- Lighthouse 12.8.2 (local dev proxy, mobile emulation): accessibility 100 on the cargo pant and flask PDPs; performance 47 and 49, LCP 6.9 s and 6.4 s, CLS 0.
+
+Not verified: behaviour in the actual Theme Editor for the new sections, a populated reviews state (no review app is installed), and production performance.
+
+**2026-09-24 — Bug found and fixed (recommendations intent):** While testing page transitions, every PDP's Related equipment rail showed the same four products, with `pr_prod_strat=collection_fallback` in their URLs. `assets/theme.js` hardcoded `intent=related`, which has no order history to work from, so the curated complementary sets recorded in Phase 3 were never requested by the theme; only direct endpoint calls had exercised them. The intent is now a section setting that defaults to `complementary`. Afterwards the backpack PDP rendered Gridlink Pouch Array, Sector 05 Field Flask, and Signal Carabiner System, and the carabiner PDP rendered Nullfold Card Wallet and Night Transit Set 03, each tagged `pr_prod_strat=pinned`.
+
+## Phase 6 page transition log
+
+**2026-09-24 — Implementation (D-017):** Same-origin navigations use the browser's cross-document View Transitions API, opted in with `@view-transition { navigation: auto; }` inside `prefers-reduced-motion: no-preference`, and not emitted in design mode or when the new Motion › page transitions setting is off. The outgoing snapshot tears for 180 ms and the incoming one resolves over about 330 ms, overlapping by roughly 50 ms. Keyframes are held with `step-end`, alternating clip-path bands, horizontal shears, and two inline SVG filters that displace the image along a fixed band map and offset red against cyan. A hidden fixed element supplies a transition group that carries an acid scanline in `difference` blend. The header is named and held still. On `pageswap`, the clicked product card's media is named `kova-product-media`, and on `pagereveal` the PDP's primary media takes the same name, so the image morphs intact while the page around it corrupts. Back/forward navigations add a `back` type that mirrors the tear direction. Named elements are cleared after the transition and on bfcache restore. An in-flight WebGL hover is handed back to the DOM image before capture. The script is inlined (2.9 KB) because `pagereveal` fires before deferred scripts run. `rel=expect` holds the first frame until `#MainContent` parses, and a moderate-eagerness Speculation Rules prefetch covers every same-origin link except cart, checkout, and account routes.
+
+**2026-09-24 — Verification (headless Chromium 151 over CDP, local dev proxy):**
+
+- Card → PDP: `pagereveal` delivered a transition, `ready` and `finished` resolved, and the PDP primary media was named. Screencast frames at 0.2× playback showed the RGB-split tear, scanline sweep, intact image morph from card to gallery, and a static header.
+- Back navigation: `types` was `["back"]` and the transition finished. A plain footer link also transitioned. Reduced motion: `pagereveal` received no transition.
+- Duplicate guard: on the Signal Carabiner System PDP, Static-5 Panel Cap appears in both Works with and Related equipment. Clicking the recommendation named only that card (tagged `recs`), and the transition completed.
+- Cost: headless Chromium defaults to SwiftShader software rendering, so frame timing was re-measured with `--enable-gpu --use-angle=vulkan` on the development machine's AMD Radeon (Renoir) integrated GPU. Three runs each: with filters, 7–8 animation frames, max gap 133–183 ms, 517–600 ms total; without filters, 12–19 frames, max gap 117–133 ms, 517–550 ms total. The filters roughly halve delivered frames without lengthening the transition; the effect is intentionally stepped at about 75 ms per frame. The first filter version generated `feTurbulence` noise per frame, and it was replaced by a 1px band image (`feImage`) and fewer filtered keyframes.
+- Firefox 154 (headless, WebDriver BiDi): `document.startViewTransition` exists, but `PageRevealEvent` and `CSSViewTransitionRule` do not, so Firefox falls back to ordinary navigation.
+
+Not verified: Safari (supports cross-document view transitions from 18.2, but SVG filters on transition pseudo-elements were not tested), real-device frame timing on discrete or mobile GPUs, the Theme Editor exclusion in the actual editor, and the specific WebGL hover-handoff path in isolation.
+
+## Phase 7 homepage brand-world log
+
+**2026-09-24 — Implementation:** The homepage moved from four sections to ten: release hero (collection mode) → release record → Current Transmission (staggered) → campaign signal frame → manifesto → Night Transit loadout → Night Uniform (feature) → field-test signal frame → Hard Goods (strip) → Field Notes, closing on the footer's end-transmission copy. See D-018 to D-020.
+
+**Bugs found and fixed during verification:**
+
+- Reduced motion's `clearProps: 'all'` wiped the inline `--x/--y` positions of signal-frame annotations. The reveal hook now sits on an inner element.
+- `motion-core.js` revealed cards with `autoAlpha`, whose `visibility: hidden` removed links inside unrevealed cards from the tab order. Cards now animate opacity only.
+- Pre-existing: `webgl-product-reveal.js` `parkCanvas()` called `appendChild(undefined)` on section unload under reduced motion, where no canvas is ever acquired. It is now guarded.
+- The manifesto's signal-red line measured 2.94:1 on the light tone. On that tone the accent is now a bar under ink text.
+- Five inline placeholder SVGs added 320 KB to the HTML and pushed LCP from 6.8 s to 7.2–9.2 s. They were replaced with CSS-only pending states, and the front hero layer gained `fetchpriority="high"`.
+
+**Verification (local `theme dev` proxy, Chromium 151 via Playwright):**
+
+- Theme Check: 59 files, no offenses. `node --check` passes for the touched JS.
+- All ten sections render with no `Liquid error` at 1440px and 390px, with zero horizontal overflow and one `h1`.
+- Derived values match the store: 16 products (the bundle counts as one), 16/16 in stock, Black / Ash Gray, Active; loadout combined variant weight 518 g (1.14 lb), $169.00 vs $188.00; field-test features and five specifications from Blacksite Shell Jacket.
+- Synthetic `shopify:section:unload`/`load` of all eight non-hero sections, twice: 9 motion scopes and 14 ScrollTriggers before and after (0 under reduced motion), with no page errors after the WebGL fix. The actual Theme Editor UI was not exercised for the new sections.
+- Keyboard: 47 tab stops from the hero to the footer at 1440px. Every link in the annotations, loadout components and product cards is reachable with a visible focus outline, and focused links scroll into view and reveal.
+
+**Lighthouse (12.8.2, default mobile emulation, same proxy caveats as the Metrics table):**
+
+| Page | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT | Transfer |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Previous 4-section template with the new hero code (incl. `fetchpriority`), same day | 57–60 | 100 | 57 | 92 | 6.8 s | — | 500–580 ms | 5,337 KiB |
+| New home, before fixes | 50–53 | 96 | 75 | 92 | 8.6–9.2 s | 0.001 | 430–540 ms | 5,345 KiB |
+| New home, after fixes (3 runs) | 58–59 | 100 | 57–75 | 92 | 6.6–6.8 s | 0.001 | 480–500 ms | 5,007–5,041 KiB |
+
+The LCP element is the front hero layer in every run. Best-practices variance comes from the proxy and platform artefacts described under Metrics.
+
+**2026-09-24 — Synchronized glitch reveal:** In the Hard Goods strip, the four WebGL intros ran one after another (about 0.86 s each), because the single shared canvas was mounted inside one card at a time. Intros are now batched per card container on the same canvas and context, using per-card viewports and an 80 ms stagger. Measured in Chromium with SwiftShader WebGL: all four Hard Goods cards start at the same frame and finish at +852, +928, +1016 and +1093 ms. In the staggered Current Transmission grid, the third card joins the running batch as it scrolls in instead of waiting. After a batch, hover transitions still mount in the hovered card and the canvas returns to `body`. Section reloads stay at 9 motion scopes and 14 ScrollTriggers with no errors.
+
+**2026-09-24 — Field Notes published:** With user approval, the `Field Notes` blog (`field-notes`) and four articles by "KOVA" were created through `shopify store execute`, after `shopify store auth` requested `read_content,write_content`. The copy was checked against each product's storefront positioning, features and description, and it claims no test or event. The homepage section, `/blogs/field-notes`, and the article pages return 200 with no Liquid errors, one `h1`, and no horizontal overflow at 1440px and 390px. Published dates show 23.09.26 because the store's time zone is behind the UTC publish time.
+
+**Open:** campaign photography (Deferred; frames show pending), Loadout Builder (Planned), and verifying the hero mode toggle and the new sections in the actual Theme Editor UI.
 

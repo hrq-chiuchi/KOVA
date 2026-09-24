@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 (2026-09-23).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -184,3 +184,75 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** Channels that show only the description (Shop app, Google Shopping) lose material and care detail. Reconsider if channel conversion depends on that copy; the fix would then be a channel-specific description feed, not re-duplicating the storefront copy. The originals were backed up before the change.
 
+## D-016 — Split the PDP into a buying fold and storytelling sections
+
+**Context:** After Phase 4, almost all product content lived in accordions next to the purchase controls. For a portfolio PDP, that hid the strongest material: edition runs, compatibility, and build notes. The user asked for real sections below the fold, including an FAQ and customer reviews.
+
+**Options considered:** keep everything in accordions; move everything into long-form sections; keep quick-reference accordions in the buying fold and give narrative content its own sections.
+
+**Decision:** Keep Specifications, Fit, Material, and Delivery as accordions beside the buy button. Move positioning, description, and features into a field-manual section; edition data into an edition-record section; and compatibility into a works-with section. Add an FAQ section built from merchant blocks and a reviews section. Reviews render only from Shopify's standard `reviews` metafields and `@app` blocks: no authored, sample, or placeholder reviews ship with the theme, and the section shows an honest empty state until a review app provides data.
+
+**Reasoning:** Quick facts stay next to the decision point, while the storytelling sections can use art-directed type, figures, and data-led layouts. Each content item keeps one home, so nothing repeats across the page.
+
+**Tradeoff / reconsideration:** The page is longer, and a merchant who removes the field-manual section also removes the description from the PDP; the main section's jump link can be turned off for that case. Reconsider the reviews rule only if the store installs a review provider whose data does not use the standard metafields.
+
+## D-017 — Use native cross-document view transitions for a corrupted-signal page change
+
+**Context:** The portfolio needs a distinctive page transition that still feels seamless. The theme is a multi-page Shopify storefront, and the project rules require native navigation, working commerce without decorative scripts, Theme Editor safety, and a first-class reduced-motion mode.
+
+**Options considered:** a fetch-and-swap single-page layer (Barba, Swup); an outgoing WebGL glitch that delays navigation; the browser's cross-document View Transitions API with CSS and SVG filters.
+
+**Decision:** Use cross-document view transitions. Every navigation stays a real page load; supporting browsers animate the old and new snapshots with a stepped "corrupted" treatment (SVG RGB split and band tearing, clip-path bands, shear, scanline). Pin the header, morph the clicked product image into the PDP, and reverse direction on back navigation. Gate it behind reduced motion, design mode, and a Motion theme setting.
+
+**Reasoning:** A swap layer would bypass Shopify's per-page scripts, analytics, and section lifecycle. A pre-navigation WebGL glitch adds latency to every click and cannot survive the document change. View transitions keep native navigation, degrade to an ordinary page load, and run on snapshots, so no page code has to cooperate beyond naming shared elements.
+
+**Tradeoff / reconsideration:** Browsers without cross-document support, including Firefox 154, get no transition. Full-viewport SVG filters roughly halve delivered animation frames on an integrated GPU; drop to the transform/clip-only variant if real-device testing shows dropped steps. Reconsider if Firefox ships cross-document view transitions or if the stepped effect reads as jank rather than intent.
+
+
+## D-018 — Restructure the homepage as a brand world, built mostly from existing systems
+
+**Context:** The homepage ran hero → three near-identical product grids → footer. It looked finished but read as a catalogue. An external scope proposal suggested twelve beats alternating commerce, atmosphere, story and evidence, built on four brand systems: Drops, Loadouts, Field Manuals and Field Notes. Taken literally it would add twelve bespoke sections, two of which repeat the same facts, and it contained invented data (a release date equal to the day it was written, a "Black / Graphite / Signal" colour system).
+
+**Options considered:** build all twelve beats as proposed; add only visual interludes; consolidate the beats onto existing patterns and derive every fact from the store.
+
+**Decision:** Consolidate. The "Drop Transmission" and "Drop Record" beats become one release-record section. The campaign interlude and field test share one annotated full-bleed section. Night Uniform and Hard Goods become two new layouts of the existing editorial grid rather than new sections. The end transmission is footer copy. That leaves five new sections. Every fact is derived from the store: product count, stock, colourways, combined variant weight, bundle price, and field-test copy from `custom.feature_list` and specifications. Atmosphere lines are editorial text in a clearly labelled setting. Image-led sections without campaign photography render a CSS-only pending state, following D-010.
+
+**Reasoning:** Each fact keeps one home (the D-016 rule). Reusing the grid and the frame keeps the system small while the page rhythm changes. Deriving data means the page cannot drift from the catalogue.
+
+**Tradeoff / reconsideration:** The pending frames make the page visibly unfinished until photography exists. Shopify's placeholder illustrations were tried first and dropped: five of them inlined 320 KB of SVG into a 437 KB document and delayed the hero LCP. Replace pending frames as soon as approved campaign imagery exists. Promote the signal frame's annotation model only if a third use appears.
+
+## D-019 — Let the hero follow a collection without losing the authored hero
+
+**Context:** The user wanted to keep the current statement hero and also be able to point the hero at a release.
+
+**Options considered:** replace the hero with a release hero; add a second hero section; add a content-source setting to the existing hero.
+
+**Decision:** Add `content_source` (`custom` | `collection`). Custom is unchanged. Collection mode draws the image stack from the collection, and each blank text setting falls back to the collection's title, product count, description or URL. A quiet secondary link can point to the release record.
+
+**Reasoning:** One section keeps one motion lifecycle, and merchants switch modes without rebuilding the section.
+
+**Tradeoff / reconsideration:** Authored copy overrides collection copy field by field, so a merchant must clear a field to see the fallback. Reconsider with an explicit per-field toggle if that confuses merchants.
+
+## D-020 — Field Notes are real blog articles or nothing
+
+**Context:** A journal index makes a fictional brand feel active, but sample entries would be invented content presented as published writing.
+
+**Options considered:** ship sample entries; defer the section; build a blog-backed section with an honest empty state, and publish articles only after copy approval.
+
+**Decision:** `sections/field-notes.liquid` reads only a Shopify blog. With no blog or no articles it says "No field notes published yet". Articles are drafted as brand and design notes, never as claims that tests or events happened, and are published only after user approval.
+
+**Reasoning:** This follows the reviews rule in D-016: the theme never ships authored stand-in content.
+
+**Tradeoff / reconsideration:** The homepage shows an empty journal until articles are approved and published. Four articles were approved and published on 2026-09-24.
+
+## D-021 — Batch WebGL intros on the single shared context
+
+**Context:** D-009 bounds the reveal to one WebGL context and canvas, which was mounted inside one card per intro. A row of four cards therefore glitched one after another, over more than three seconds, which reads as lag rather than a signal.
+
+**Options considered:** one canvas per card (breaks the context budget); a fixed full-viewport overlay (drifts against native scroll between frames); mounting the same canvas over the cards' shared container and drawing each card into its own viewport.
+
+**Decision:** Batch intros that arrive together in the same container. The canvas mounts absolutely inside the container, so it scrolls with the cards, and each card draws with `gl.viewport`/`gl.scissor` at its measured offset with an 80 ms stagger. Hover keeps the single-card mount.
+
+**Reasoning:** The context, program and texture budgets are unchanged, native scrolling is untouched, and the whole row reads as one moment with slight desynchronisation.
+
+**Tradeoff / reconsideration:** A batch canvas covers the whole container, so its pixel area is larger than one card for the length of the intro. Reconsider if a container grows very tall (for example a long collection grid revealing in one batch) and frame pacing suffers on low-end GPUs.

@@ -1,0 +1,141 @@
+/*
+ * Corrupted-signal page transition (Motion behavior).
+ * Applies only while a cross-document view transition runs. Frames are held with step timing so
+ * the discrete SVG filter swaps read as dropped video frames rather than a smooth blend.
+ */
+
+:root {
+  --kova-transition-out: var(--ad-duration-fast);
+  --kova-transition-in: calc(var(--ad-duration-base) - var(--ad-duration-fast) / 2);
+  --kova-dir: 1;
+}
+
+/* Back and forward navigation tears in the opposite direction. */
+html:active-view-transition-type(back) {
+  --kova-dir: -1;
+}
+
+.page-transition-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.site-header {
+  view-transition-name: kova-site-header;
+}
+
+.page-signal {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  view-transition-name: kova-signal;
+}
+
+/* Page body: tear out, then resolve in. */
+::view-transition-old(root) {
+  animation: kova-corrupt-out var(--kova-transition-out) step-end both;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: kova-corrupt-in var(--kova-transition-in) step-end calc(var(--kova-transition-out) * 0.7) both;
+  mix-blend-mode: normal;
+}
+
+/* The header is identical on both pages, so it holds still while everything under it corrupts. */
+::view-transition-group(kova-site-header) {
+  z-index: 5;
+  animation: none;
+}
+
+::view-transition-old(kova-site-header) {
+  display: none;
+}
+
+::view-transition-new(kova-site-header) {
+  animation: none;
+}
+
+/* Signal layer: an inverted scanline band sweeps the screen once, across the cut. */
+::view-transition-group(kova-signal) {
+  z-index: 10;
+  animation: kova-signal-sweep var(--ad-duration-base) linear both;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--kova-scan, 0%) - 4%),
+      var(--color-accent) calc(var(--kova-scan, 0%) - 4%) calc(var(--kova-scan, 0%) - 3.4%),
+      transparent calc(var(--kova-scan, 0%) - 3.4%) 100%
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--ad-color-background-primary) 36%, transparent) 0 1px,
+      transparent 1px 3px
+    );
+  mix-blend-mode: difference;
+}
+
+::view-transition-old(kova-signal),
+::view-transition-new(kova-signal) {
+  display: none;
+}
+
+/* A product image that is named on both pages travels intact while the page around it corrupts. */
+::view-transition-group(kova-product-media) {
+  z-index: 4;
+  animation-duration: var(--ad-duration-base);
+  animation-timing-function: var(--ad-ease-standard);
+}
+
+::view-transition-old(kova-product-media),
+::view-transition-new(kova-product-media) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: normal;
+}
+
+@property --kova-scan {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@keyframes kova-signal-sweep {
+  0% { --kova-scan: 0%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { --kova-scan: 108%; opacity: 0; }
+}
+
+@keyframes kova-corrupt-out {
+  0% { transform: none; clip-path: inset(0); opacity: 1; }
+  18% { filter: url('#kova-corrupt-a'); transform: translateX(calc(-2vw * var(--kova-dir))); clip-path: inset(0); }
+  36% { filter: none; transform: translateX(calc(3vw * var(--kova-dir))) skewX(calc(-6deg * var(--kova-dir))); clip-path: inset(8% 0 22% 0); }
+  54% { filter: url('#kova-corrupt-b'); transform: translateX(calc(-1vw * var(--kova-dir))); clip-path: inset(30% 0 34% 0); }
+  72% { filter: none; transform: translateX(calc(4vw * var(--kova-dir))); clip-path: inset(46% 0 48% 0); }
+  90%, 100% { filter: none; opacity: 0; }
+}
+
+@keyframes kova-corrupt-in {
+  0% { opacity: 0; }
+  1% { filter: url('#kova-corrupt-b'); transform: translateX(calc(-4vw * var(--kova-dir))); clip-path: inset(44% 0 44% 0); opacity: 1; }
+  18% { filter: none; transform: translateX(calc(2vw * var(--kova-dir))); clip-path: inset(18% 0 30% 0); }
+  36% { filter: url('#kova-corrupt-a'); transform: translateX(calc(-1.5vw * var(--kova-dir))) skewX(calc(4deg * var(--kova-dir))); clip-path: inset(4% 0 10% 0); }
+  54% { filter: url('#kova-corrupt-c'); transform: translateX(calc(0.6vw * var(--kova-dir))); clip-path: inset(0); }
+  72% { filter: none; transform: none; clip-path: inset(0); }
+  100% { filter: none; transform: none; clip-path: none; opacity: 1; }
+}
+
+/* Belt and braces: the opt-in is already withheld for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
