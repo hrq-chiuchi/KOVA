@@ -1,0 +1,9 @@
+{
+  "heading": "Field Locker",
+  "loadout": "{{name}}: {{objects}}",
+  "fallbackName": "Loadout",
+  "documents": "Documents",
+  "guide": "{{title}}: reference guide (PDF)",
+  "guidePending": "{{title}}: reference guide pending",
+  "open": "Open your Field Locker"
+}

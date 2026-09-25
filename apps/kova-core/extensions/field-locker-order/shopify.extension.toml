@@ -1,0 +1,14 @@
+api_version = "2026-07"
+
+[[extensions]]
+name = "Field Locker order notes"
+handle = "field-locker-order"
+type = "ui_extension"
+uid = "5202c1b0-a60a-f593-3e8a-cd6f9a59a14125e42f2f"
+
+[[extensions.targeting]]
+module = "./src/FieldLockerOrder.jsx"
+target = "customer-account.order-status.block.render"
+
+[extensions.capabilities]
+api_access = true

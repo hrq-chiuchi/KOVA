@@ -8,6 +8,7 @@
         "heading": "BUILD THE\nLOADOUT",
         "intro": "<p>Choose one carry platform, then the modules it carries. The set goes to the bag as one loadout at one price.</p>",
         "cta_label": "Add loadout to bag",
+        "field_locker_url": "",
         "tone": "dark"
       }
     }

@@ -255,6 +255,8 @@
       this.status = this.querySelector('[data-status]');
       this.addButton = this.querySelector('[data-add-button]');
       this.estimate = this.querySelector('[data-summary-estimate]');
+      this.saveLink = this.querySelector('[data-save-link]');
+      if (this.saveLink) this.saveLink.dataset.baseUrl ||= this.saveLink.href;
       try {
         this.rules = JSON.parse(this.querySelector('[data-loadout-rules]')?.textContent || '{}');
       } catch (_) {
@@ -268,7 +270,7 @@
       if (!this.form) return;
       this.form.addEventListener('change', (event) => this.onChange(event), { signal });
       this.form.addEventListener('submit', (event) => this.onSubmit(event), { signal });
-      if (!this.hasAttribute('data-locked')) this.applyPlatformParam();
+      this.applyLoadoutParams();
       this.querySelectorAll('[data-slot-fieldset]').forEach((fieldset) => this.enforceMax(fieldset));
       this.update();
     }
@@ -277,13 +279,47 @@
       this.controller?.abort();
     }
 
-    // Liquid cannot read the query string, so links such as ?platform=relay-sling-8 preselect here.
-    applyPlatformParam() {
-      const handle = new URL(window.location.href).searchParams.get('platform');
-      if (!handle) return;
-      const input = Array.from(this.querySelectorAll('[data-loadout-choice][data-slot="platform"]'))
-        .find((candidate) => candidate.dataset.handle === handle);
-      if (input && !input.disabled) input.checked = true;
+    // Liquid cannot read the query string, so links preselect here: ?platform=relay-sling-8 alone,
+    // or a whole build from the Field Locker (?platform=handle:variant&modules=handle:variant,…).
+    // The format and its limits mirror decodeLoadoutParams in apps/kova-core/shared/field-locker.ts;
+    // anything that does not parse is ignored, and the cart functions stay authoritative.
+    applyLoadoutParams() {
+      const params = new URL(window.location.href).searchParams;
+      const pick = (raw) => {
+        const match = /^([a-z0-9][a-z0-9-]{0,99})(?::(\d{1,20}))?$/.exec(raw || '');
+        return match ? { handle: match[1], variant: match[2] || null } : null;
+      };
+      const choose = (input, variant) => {
+        if (!input || input.disabled || input.checked) return;
+        const fieldset = input.closest('[data-slot-fieldset]');
+        if (fieldset && input.type === 'checkbox'
+          && fieldset.querySelectorAll('[data-loadout-choice]:checked').length >= (Number(fieldset.dataset.max) || 1)) return;
+        input.checked = true;
+        const select = input.closest('.loadout-option')?.querySelector('[data-variant-select]');
+        const option = variant && select ? Array.from(select.options).find((entry) => entry.value === variant) : null;
+        if (option && !option.disabled) select.value = variant;
+      };
+      const choices = Array.from(this.querySelectorAll('[data-loadout-choice]'));
+      const platform = pick(params.get('platform'));
+      if (platform && !this.hasAttribute('data-locked')) {
+        choose(choices.find((input) => input.dataset.slot === 'platform' && input.dataset.handle === platform.handle), platform.variant);
+      }
+      const modules = (params.get('modules') || '').split(',').filter(Boolean);
+      if (modules.length > 8) return;
+      modules.map(pick).filter(Boolean).forEach((module) => {
+        choose(choices.find((input) => input.dataset.slot !== 'platform' && input.dataset.handle === module.handle), module.variant);
+      });
+    }
+
+    // Points "Save to Field Locker" at the current build, or hides it while the build is invalid.
+    updateSaveLink({ platform, modules }, problem) {
+      if (!this.saveLink) return;
+      this.saveLink.hidden = Boolean(problem);
+      if (problem) return;
+      const encode = (input) => `${input.dataset.handle}:${this.variantOf(input).id}`;
+      const url = new URL(this.saveLink.dataset.baseUrl);
+      url.search = `loadout=${this.dataset.loadoutHandle}&platform=${encode(platform)}&modules=${modules.map(encode).join(',')}`;
+      this.saveLink.href = url.toString();
     }
 
     state() {
@@ -381,6 +417,7 @@
         requestAnimationFrame(() => requestAnimationFrame(() => this.estimate.removeAttribute('data-changed')));
       }
       this.hint.textContent = problem ? problem.message : '';
+      this.updateSaveLink(state, problem);
     }
 
     async onSubmit(event) {

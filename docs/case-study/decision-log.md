@@ -406,3 +406,101 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** The trail is the behaviour the user asked for, and it already existed after the first leave; the followers only suppressed it. Removing them also drops the 14 follower tweens (x and y for each of seven layers).
 
 **Tradeoff / reconsideration:** Between promotions the top card no longer tracks the pointer, so small movements under the threshold do nothing. Lower the section's pointer threshold if the hero feels unresponsive.
+
+## D-030 — Build the Field Locker on customer account extensions and keep orders native
+
+**Context:** The KOVA Core brief asks for a customer area branded FIELD LOCKER, with orders, loadouts, equipment, documents and saved items. It rules out "a fake customer dashboard if the real account-extension surface can provide the experience". The store uses new customer accounts: the header renders `<shopify-account>`, and the theme has no `customers/*` templates.
+
+**Options considered:**
+- Theme pages that rebuild an account area from Liquid's `customer` object.
+- A customer account full-page extension in KOVA Core, with a block on Shopify's native order page.
+
+**Decision:**
+- `extensions/field-locker` renders on `customer-account.page.render`. It has four sections: Orders, Loadouts, Equipment and Documents.
+- **Orders** lists the latest three orders and links to Shopify's own order pages; it does not rebuild them.
+- `extensions/field-locker-order` renders on `customer-account.order-status.block.render` and adds the order's loadout and documents to the native page. A full-page target cannot share an extension with other targets, so there are two extensions.
+- **Equipment** is every product the customer has ordered, dated by the first order that contained it. The hidden "KOVA Loadout" parent is excluded.
+- Manual registration of gear bought elsewhere is **Deferred**. Saved items (a wishlist) are **Deferred**.
+- Customer data comes from the Customer Account API with the `customer_read_customers`, `customer_read_orders` and `customer_write_customers` scopes. Product data comes from the Storefront API (`api_access`). The extensions read no name, email, address or phone field.
+
+**Reasoning:** Only the account surface has real customer and order state, and it already carries sign-in, the order pages and their "Buy again" flow. The spike showed that a merged loadout is recorded on the order as its component lines, each with its `_kova_loadout` and `_kova_slot` attributes. So Equipment lists real objects, and purchased loadouts can be regrouped without any extra data.
+
+**Tradeoff / reconsideration:**
+- The extensions use Polaris web components and the store's checkout and accounts branding, not the theme's tokens. This is a surface boundary, not a second token source.
+- The extension strings are English only. Dates are formatted in the buyer's locale, so a pt-BR browser shows mixed-language text.
+
+## D-031 — Save loadouts to an app-owned customer metafield, handed over by a deep link
+
+**Context:** Saved loadouts must reach the customer from the storefront builder. The theme cannot write customer metafields, and KOVA Core has no backend.
+
+**Options considered:**
+- An app proxy (`/apps/kova/locker`) backed by a hosted server.
+- Saving only loadouts that were purchased.
+- A link from the builder to the Field Locker page that carries the build in its query, where the extension writes the metafield with the Customer Account API.
+
+**Decision:**
+- `$app:saved_loadouts` is a JSON customer metafield declared in `shopify.app.toml`, with `customer_account` read/write and admin read. It holds at most 12 entries, newest first. Saving the same objects again moves the entry to the top instead of adding a duplicate.
+- The builder shows "Save to Field Locker" when its `field_locker_url` setting is set, customer accounts are enabled, and the build is valid. The link carries `loadout`, `platform` and `modules` as `handle:variant` picks.
+- The page shows a confirm banner, then writes with `metafieldsSet` and clears the query. Declaring the definition also needs the Admin `write_customers` scope.
+- `apps/kova-core/shared/field-locker.ts` owns the format. The extension decodes strictly: any invalid part rejects the whole link. The theme preselect is lenient: it ignores invalid parts and stops at each slot's maximum, because the cart functions still judge what is added.
+- "Rebuild in the loadout builder" links back to `/pages/build-a-loadout` in the same format, so every add still goes through the builder and the functions.
+
+**Reasoning:** The spike showed the query reaches the page through `navigation.currentEntry.url`. The hand-off therefore needs no server, no secret and no token in storefront JavaScript. The customer confirms every save on a page Shopify has authenticated.
+
+**Tradeoff / reconsideration:**
+- The page URL is set by hand in the section setting, and it changes between the development preview and the released extension.
+- The builder's preselect is a second copy of the format in JavaScript, like the `judgeGroup` mirror (D-027).
+- Saved loadouts store handles and variant ids. A renamed handle or a deleted variant is shown by handle and cannot be rebuilt until it is saved again.
+
+## D-032 — Show only the documents KOVA has
+
+**Context:** The brief lists field manuals, care guides, product PDFs and warranty material. The catalogue has `custom.reference_guide` PDFs on 15 Drop 001 products and care text on `material_system` profiles. No warranty content exists anywhere.
+
+**Decision:**
+- Documents lists each owned product's reference guide, or "Reference guide pending" when there is none (the five Drop 002 products).
+- Care text appears under its material's name.
+- Warranty is **Unavailable** and is not rendered.
+
+**Reasoning:** AGENTS.md forbids invented artifacts. A pending line tells the truth, and it resolves without code changes once a guide is attached to the product.
+
+**Tradeoff / reconsideration:** Adding warranty terms needs real terms from the owner and a new metafield or metaobject.
+
+## D-033 — Brand checkout and customer accounts from the theme tokens
+
+**Context:** The Field Locker rendered in Shopify's default light account style. Account extensions cannot load theme CSS, fonts or tokens (D-030), so their look comes only from the store's checkout and accounts branding. On 2026-09-25 the user approved applying KOVA branding to accounts, sign-in and checkout together.
+
+**Decision:**
+- `apps/kova-core/scripts/brand-accounts.mjs` writes the published checkout and accounts configuration through `checkoutAndAccountsConfigurationUpdate` (Admin API 2026-07).
+- **Colours:** `#080808` background, `#191919` sections, `#f4f3ed` text, a `#343434` border (the opaque stand-in for `--ad-color-border-subtle`), the `#dfff00` accent and primary buttons, and `#ff4f2e` for critical.
+- **Type:** Work Sans. Headings and buttons are bold, uppercase and loosely tracked.
+- **Shape:** square corners and hairline borders on sections, controls, buttons and thumbnails.
+- The same values go to the shared components and to each surface: customer accounts, checkout (including the order summary) and sign-in.
+- Before writing, the script saves the current branding to `scripts/.branding-backup-<id>.json`, which is git-ignored because it is store state.
+- The store CLI needs `read_` and `write_checkout_and_accounts_configurations` for this, granted by the user. KOVA Core's own scopes are unchanged.
+
+**Reasoning:** Branding is the only supported way to restyle Shopify's account and checkout surfaces. Copying token values keeps one source of truth (`design-system/tokens`), and the script's comments name the token behind each value.
+
+**Tradeoff / reconsideration:**
+- The values are a hand copy of the tokens. A token change needs a script re-run.
+- The branding API refuses `0` for its global radius tokens, so square corners are set per component.
+- "Continue with Shop" keeps Shopify's purple.
+- Checkout inherits the dark look. It was not seen, because the password-protected storefront blocks the route to checkout.
+
+## D-034 — Release KOVA Core 1.1.0
+
+**Context:** Phase 11 was verified through `shopify app dev`. On 2026-09-25 the user asked for the release and the commit.
+
+**Decision:**
+- `shopify app deploy --allow-updates --version kova-core-1.1.0` created and released the version. It adds `field-locker` and `field-locker-order`, the customer scopes, and the `$app:saved_loadouts` definition. The store had already granted every new scope.
+- The user placed the order block in the checkout and accounts editor through `…/editor/profiles/<id>?page=order-status`. The page switcher did not offer that page.
+- The user added the page to the customer account menu under Content → Menus, as a `CUSTOMER_ACCOUNT_PAGE` item. The editor's page switcher does not list app pages.
+- The released page's address is `…/account/pages/01a0d688-091e-7e68-af62-9d4bd009b57d`, taken from the menu link. It is not the extension's TOML `uid`.
+
+**Result:**
+- **The order block is verified in production** on #1002, with no `app dev` running.
+- **The Field Locker page is not working in production.** A new browser that signed in with an emailed code and no preview state gets "There's a problem loading this page".
+  - The host's `MarketConfiguration` lists only Shopify's returns extensions as activated, so it never loads `field-locker`.
+  - The same happens after `shopify app dev clean`.
+- The builder's `field_locker_url` is left blank, so "Save to Field Locker" stays hidden until the page renders. Direct links from the order block and the menu still lead to the error.
+
+**Tradeoff / reconsideration:** the missing activation step is unknown. Shopify's docs say that `customer-account.page.render` pages allow direct links by default and are added through the account menu, which was done. The next steps are to re-check after propagation, then to look in the editor's Apps panel and the app's Dev Dashboard version for a per-page activation.

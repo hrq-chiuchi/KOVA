@@ -34,3 +34,6 @@ shared/types/graphql
 *.njsproj
 *.sln
 *.sw?
+# Store branding snapshots written by scripts/brand-accounts.mjs
+scripts/.branding-backup-*.json
+extensions/*/manifest.json
