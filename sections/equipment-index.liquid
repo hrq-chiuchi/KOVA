@@ -95,7 +95,7 @@
           {% endif %}
 
           {% if paginate.pages > 1 %}
-            <nav class="collection-pagination" aria-label="Index pages">{{ paginate | default_pagination }}</nav>
+            <nav class="equipment-index__pagination" aria-label="Index pages">{{ paginate | default_pagination }}</nav>
           {% endif %}
         </div>
       </index-filters>
@@ -118,6 +118,8 @@
   .equipment-index__views a:hover { color: var(--ad-color-text-primary); }
   .equipment-index__views [aria-current] { color: var(--color-accent); }
   .equipment-index__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ad-space-600) clamp(0.75rem, 2vw, 2rem); }
+  .equipment-index__pagination { display: flex; margin-block-start: var(--ad-space-700); justify-content: center; }
+  .equipment-index__pagination .pagination { display: flex; gap: var(--ad-space-200); }
   .equipment-index__empty { display: grid; min-height: 24rem; place-content: center; justify-items: center; gap: var(--ad-space-300); }
 
   @media (max-width: 47.99rem) {
