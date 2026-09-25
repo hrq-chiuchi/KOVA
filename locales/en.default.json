@@ -44,9 +44,27 @@
   },
   "search": {
     "title": "Search",
-    "placeholder": "Search articles, pages, or products",
+    "placeholder": "Search the index",
     "submit": "Search",
-    "no_results_html": "No results found for {{ terms }}",
-    "results_for_html": "{{ count }} results found for {{ terms }}"
+    "no_results_html": "Nothing in the index matches “{{ terms }}”.",
+    "results_for_html": "{{ count }} results for “{{ terms }}”",
+    "command": {
+      "label": "Search KOVA",
+      "results_label": "Search suggestions",
+      "close": "Close",
+      "hint": "↑ ↓ to move / Enter to open / Esc to close",
+      "equipment": "Equipment",
+      "field_notes": "Field Notes",
+      "collections": "Collections",
+      "pages": "Pages",
+      "objects": "objects",
+      "from": "From",
+      "no_matches": "No direct matches for “{{ terms }}”.",
+      "all_results_group": "All results",
+      "all_results": "Search all results for “{{ terms }}”",
+      "status_one": "1 suggestion. Use the arrow keys to review.",
+      "status_other": "{{ count }} suggestions. Use the arrow keys to review.",
+      "status_none": "No suggestions. Press Enter to search all results."
+    }
   }
 }

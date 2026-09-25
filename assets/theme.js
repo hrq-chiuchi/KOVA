@@ -40,6 +40,57 @@
       document.addEventListener('afterdark:cart-count', () => this.updateCartCount(), { signal });
       window.addEventListener('scroll', () => this.updateScrollState(), { signal, passive: true });
       this.updateScrollState();
+
+      // The search link opens the search command dialog; without JavaScript it goes to /search.
+      this.searchTrigger = this.querySelector('[data-search-open]');
+      this.searchDialog = this.querySelector('[data-search-dialog]');
+      if (this.searchTrigger && this.searchDialog) {
+        this.searchTrigger.setAttribute('role', 'button');
+        this.searchTrigger.setAttribute('aria-haspopup', 'dialog');
+        this.searchTrigger.setAttribute('aria-expanded', 'false');
+        this.searchTrigger.addEventListener('click', (event) => {
+          event.preventDefault();
+          this.openSearch();
+        }, { signal });
+        this.searchTrigger.addEventListener('keydown', (event) => {
+          if (event.key === ' ') {
+            event.preventDefault();
+            this.openSearch();
+          }
+        }, { signal });
+        this.searchDialog.addEventListener('click', (event) => {
+          if (event.target === this.searchDialog) this.searchDialog.close();
+        }, { signal });
+        this.searchDialog.addEventListener('close', () => {
+          this.searchTrigger.setAttribute('aria-expanded', 'false');
+          this.searchReturnFocus?.focus();
+        }, { signal });
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+          const target = event.target;
+          if (target.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+          if (document.querySelector('dialog[open]')) return;
+          event.preventDefault();
+          this.openSearch();
+        }, { signal });
+      }
+    }
+
+    async openSearch() {
+      const dialog = this.searchDialog;
+      if (!dialog || dialog.open) return;
+      this.searchReturnFocus = document.activeElement;
+      dialog.showModal();
+      this.searchTrigger.setAttribute('aria-expanded', 'true');
+      const input = dialog.querySelector('[data-search-input]');
+      input?.focus();
+      input?.select();
+      if (customElements.get('kova-search')) return;
+      try {
+        await import(dialog.dataset.moduleUrl);
+      } catch (_) {
+        window.location.assign(this.searchTrigger.href);
+      }
     }
 
     disconnectedCallback() {

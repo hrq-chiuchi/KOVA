@@ -33,7 +33,17 @@
     </a>
 
     <div class="site-header__actions">
-      {% if section.settings.show_search %}<a class="site-header__utility" href="{{ routes.search_url }}">Search</a>{% endif %}
+      {% if section.settings.show_search %}
+        <a
+          class="site-header__utility site-header__search"
+          href="{{ routes.search_url }}"
+          data-search-open
+          aria-controls="SearchCommand-{{ section.id }}"
+        >
+          {{- 'search.title' | t -}}
+          <kbd class="site-header__key" aria-hidden="true">/</kbd>
+        </a>
+      {% endif %}
       {% if shop.customer_accounts_enabled %}
         <shopify-account menu="{{ section.settings.customer_account_menu }}">
           <span class="visually-hidden">Account</span>
@@ -69,6 +79,53 @@
       </div>
     </div>
   </dialog>
+
+  {% if section.settings.show_search %}
+    <dialog
+      id="SearchCommand-{{ section.id }}"
+      class="search-command"
+      data-search-dialog
+      data-module-url="{{ 'search-command.js' | asset_url }}"
+      aria-label="{{ 'search.command.label' | t }}"
+    >
+      <kova-search
+        class="search-command__panel"
+        data-url="{{ routes.predictive_search_url }}"
+        data-status-one="{{ 'search.command.status_one' | t }}"
+        data-status-other="{{ 'search.command.status_other' | t: count: '[count]' }}"
+        data-status-none="{{ 'search.command.status_none' | t }}"
+      >
+        <form class="search-command__form" action="{{ routes.search_url }}" method="get" role="search">
+          <label class="visually-hidden" for="SearchCommandInput-{{ section.id }}">{{ 'search.command.label' | t }}</label>
+          <input
+            id="SearchCommandInput-{{ section.id }}"
+            class="search-command__input"
+            type="search"
+            name="q"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="{{ 'search.placeholder' | t }}"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="SearchCommandResults-{{ section.id }}"
+            data-search-input
+          >
+          <input type="hidden" name="options[prefix]" value="last">
+          <button class="search-command__close" type="button" data-search-close>{{ 'search.command.close' | t }}</button>
+        </form>
+        <div
+          id="SearchCommandResults-{{ section.id }}"
+          class="search-command__results"
+          role="listbox"
+          aria-label="{{ 'search.command.results_label' | t }}"
+          data-search-results
+        ></div>
+        <p class="search-command__hint" aria-hidden="true">{{ 'search.command.hint' | t }}</p>
+        <p class="visually-hidden" role="status" data-search-status></p>
+      </kova-search>
+    </dialog>
+  {% endif %}
 </afterdark-header>
 
 {% stylesheet %}
@@ -151,14 +208,51 @@
   .site-menu__nav a > span:last-child { font-family: var(--font-primary--family); font-size: var(--ad-text-label); letter-spacing: 0.12em; }
   .site-menu__utility { display: flex; padding-block-start: var(--ad-space-400); justify-content: space-between; gap: var(--ad-space-300); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: 0.8rem; }
 
+  .site-header__search { display: inline-flex; align-items: center; gap: var(--ad-space-100); }
+  .site-header__key { display: inline-grid; min-width: 1.25rem; min-height: 1.25rem; place-items: center; border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-family: inherit; font-size: 0.625rem; }
+
+  .search-command { width: min(52rem, 100% - (2 * var(--ad-page-padding))); max-width: none; max-height: min(44rem, 100dvh - 6rem); margin: clamp(1rem, 10vh, 6rem) auto auto; padding: 0; border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: var(--ad-color-background-elevated); color: var(--ad-color-text-primary); }
+  .search-command::backdrop { background: rgb(0 0 0 / 70%); backdrop-filter: blur(6px); }
+  .search-command[open] { display: flex; }
+  .search-command__panel { display: flex; width: 100%; min-height: 0; flex-direction: column; }
+  .search-command__form { display: flex; align-items: center; gap: var(--ad-space-300); padding: var(--ad-space-300) var(--ad-space-400); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .search-command__input { min-width: 0; min-height: var(--ad-control-minimum); flex: 1; padding: 0; border: 0; background: transparent; color: inherit; font-family: var(--font-display-family); font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.03em; text-transform: uppercase; }
+  .search-command__input::placeholder { color: var(--ad-color-text-muted); opacity: 0.6; }
+  .search-command__input:focus-visible { outline: none; }
+  .search-command__form:focus-within { box-shadow: inset 0 -2px 0 var(--color-accent); }
+  .search-command__input::-webkit-search-cancel-button { display: none; }
+  .search-command__close { min-height: var(--ad-control-minimum); padding: 0; border: 0; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .search-command__results { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: var(--ad-space-300) var(--ad-space-400); }
+  .search-command__results:empty { display: none; }
+  .search-command__hint { margin: 0; padding: var(--ad-space-200) var(--ad-space-400); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .search-command__panel[aria-busy='true'] .search-command__form { box-shadow: inset 0 -2px 0 var(--ad-color-text-muted); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .search-command[open] { animation: search-command-in var(--ad-duration-base) var(--ad-ease-standard); }
+    .search-command[open]::backdrop { animation: search-command-fade var(--ad-duration-fast) linear; }
+  }
+
+  @keyframes search-command-in {
+    from { clip-path: inset(0 0 100% 0); opacity: 0; }
+    to { clip-path: inset(0 0 0 0); opacity: 1; }
+  }
+
+  @keyframes search-command-fade {
+    from { opacity: 0; }
+  }
+
   @media (max-width: 61.99rem) {
     .site-header__nav { display: none; }
     .site-header__left { gap: 0; }
   }
 
   @media (max-width: 34rem) {
-    .site-header__utility,
-    .site-header shopify-account { display: none; }
+    .site-header shopify-account,
+    .site-header__key { display: none; }
+    .search-command { width: 100%; max-height: 100dvh; margin: 0; border-inline: 0; border-block-start: 0; }
+    .search-command__form { padding-inline: var(--ad-page-padding); }
+    .search-command__results { padding-inline: var(--ad-page-padding); }
+    .search-command__hint { display: none; }
     .site-header__actions { gap: var(--ad-space-100); }
     .site-header__cart > span:first-child { display: none; }
     .site-header__menu-button { font-size: 0; }
