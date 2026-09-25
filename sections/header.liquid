@@ -25,7 +25,12 @@
           {% for link in section.settings.menu.links limit: 3 %}
             {% assign panel_position = forloop.index | append: '' %}
             <div class="site-header__nav-item" data-mega-item>
-              <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+              {%- comment -%} A `#` placeholder URL is a group label, not a destination. {%- endcomment -%}
+              {% if link.url == '#' %}
+                <span class="site-header__nav-label">{{ link.title | escape }}</span>
+              {% else %}
+                <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+              {% endif %}
               {% if link.links != blank %}
                 <button
                   class="site-header__nav-toggle"
@@ -133,11 +138,13 @@
                 <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
               </summary>
               <ul class="site-menu__sublist" role="list">
-                <li>
-                  <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-                    View all<span class="visually-hidden"> {{ link.title | escape }}</span>
-                  </a>
-                </li>
+                {% unless link.url == '#' %}
+                  <li>
+                    <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                      View all<span class="visually-hidden"> {{ link.title | escape }}</span>
+                    </a>
+                  </li>
+                {% endunless %}
                 {% for child in link.links %}
                   <li>
                     <a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
@@ -285,6 +292,7 @@
   .site-header__menu-button { display: inline-flex; min-height: var(--ad-control-minimum); padding: 0; align-items: center; gap: var(--ad-space-100); }
   .site-header__menu-button span { font-size: 0.9rem; }
   .site-header__nav a,
+  .site-header__nav-label,
   .site-header__utility { padding-block: var(--ad-space-200); }
   .site-header shopify-account svg { width: 1.2rem; }
   .site-header__cart { display: flex; align-items: center; gap: var(--ad-space-100); }
@@ -340,8 +348,10 @@
   .mega-panel { position: absolute; inset-inline: 0; top: 100%; max-height: calc(100dvh - var(--ad-header-height)); overflow-y: auto; border-block: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: var(--ad-color-background-primary); text-transform: none; letter-spacing: normal; font-weight: 400; }
   .mega-panel[hidden] { display: none; }
   .mega-panel__inner { display: grid; width: min(100% - (2 * var(--ad-page-padding)), var(--ad-container-width)); margin-inline: auto; padding-block: var(--ad-space-500) var(--ad-space-600); grid-template-columns: minmax(0, 1fr) auto; gap: var(--ad-content-gap); }
-  .mega-panel__columns { display: grid; margin: 0; padding: 0; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); align-content: start; column-gap: var(--ad-space-400); list-style: none; }
-  .mega-panel__link { display: flex; padding-block: var(--ad-space-200); align-items: baseline; justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(1.5rem, 2.4vw, 2.25rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+  .mega-panel__columns { display: grid; margin: 0; padding: 0; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); align-content: start; column-gap: var(--ad-space-500); list-style: none; }
+  .mega-panel__link { display: flex; padding-block: var(--ad-space-200); align-items: baseline; justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(1.375rem, 1.8vw, 2rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+  .mega-panel__link > span:first-child { min-width: 0; overflow-wrap: break-word; }
+  .mega-panel__link > span:last-child { flex: none; }
   .mega-panel__link > span:last-child,
   .mega-panel__heading { font-family: var(--font-primary--family); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .mega-panel__link > span:last-child { color: var(--ad-color-text-muted); }
