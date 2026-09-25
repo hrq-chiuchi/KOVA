@@ -52,28 +52,14 @@
       this.zIndex = this.layers.length;
     }
 
+    // Moving across the hero promotes the next layer and drops it at the pointer every `threshold`
+    // pixels; the other layers stay where they were dropped, so the path leaves a spaced trail.
+    // Layers are only placed by advance() and settle(): continuous pointer-following tweens would
+    // pull the whole stack onto the pointer and close those gaps.
     enablePointer() {
-      const { gsap } = window;
       const { signal } = this.controller;
-      this.followers = this.layers.map((layer, index) => {
-        const offset = index - ((this.layers.length - 1) / 2);
-        const lag = this.layers.length - 1 - index;
-        return {
-          layer,
-          offset,
-          x: gsap.quickTo(layer, 'x', { duration: 0.18 + lag * 0.055, ease: 'power3.out' }),
-          y: gsap.quickTo(layer, 'y', { duration: 0.18 + lag * 0.055, ease: 'power3.out' }),
-        };
-      });
-
-      this.followers.forEach((follow) => {
-        follow.x(follow.offset * 12);
-        follow.x.tween.progress(1);
-        follow.y(follow.offset * -8);
-        follow.y.tween.progress(1);
-      });
       this.addEventListener('pointerenter', (event) => this.onPointerEnter(event), { signal, passive: true });
-      this.addEventListener('pointermove', (event) => this.onPointerMove(event), { signal, passive: true });
+      this.addEventListener('pointermove', (event) => this.updatePointer(event), { signal, passive: true });
       this.addEventListener('pointerleave', () => this.settle(), { signal });
     }
 
@@ -87,27 +73,15 @@
     onPointerEnter(event) {
       this.settleTweens.forEach((tween) => tween.kill());
       this.settleTweens = [];
-      this.updatePointer(event, false, true);
+      this.updatePointer(event, false);
     }
 
-    updatePointer(event, allowAdvance = true, immediate = false) {
+    updatePointer(event, allowAdvance = true) {
       const rect = this.getBoundingClientRect();
-      const x = event.clientX - rect.left - rect.width * 0.69;
-      const y = event.clientY - rect.top - rect.height * 0.5;
-      this.currentPoint = { x, y };
-      this.followers.forEach((follow) => {
-        const layerX = x + follow.offset * 12;
-        const layerY = y - follow.offset * 8;
-        if (immediate) {
-          follow.x(layerX);
-          follow.x.tween.progress(1);
-          follow.y(layerY);
-          follow.y.tween.progress(1);
-        } else {
-          follow.x(layerX);
-          follow.y(layerY);
-        }
-      });
+      this.currentPoint = {
+        x: event.clientX - rect.left - rect.width * 0.69,
+        y: event.clientY - rect.top - rect.height * 0.5,
+      };
 
       if (!allowAdvance || !this.lastPoint) {
         this.lastPoint = { x: event.clientX, y: event.clientY };
@@ -119,10 +93,6 @@
         this.advance();
         this.lastPoint = { x: event.clientX, y: event.clientY };
       }
-    }
-
-    onPointerMove(event) {
-      this.updatePointer(event);
     }
 
     advance() {
@@ -157,7 +127,6 @@
     resetListeners() {
       this.controller?.abort();
       this.controller = new AbortController();
-      this.followers = null;
       this.lastPoint = null;
       this.settleTweens?.forEach((tween) => tween.kill());
       this.settleTweens = [];

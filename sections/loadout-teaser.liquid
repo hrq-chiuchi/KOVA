@@ -100,6 +100,11 @@
             {{ section.settings.cta_label | escape }} <span aria-hidden="true">→</span>
           </a>
         {% endif %}
+        {% if section.settings.builder_page != blank and section.settings.builder_label != blank %}
+          <a class="button loadout__builder-link" href="{{ section.settings.builder_page.url }}">
+            {{ section.settings.builder_label | escape }}
+          </a>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -129,6 +134,7 @@
   .loadout__record dd { margin: 0; font-weight: 700; text-align: end; }
   .loadout__record s { margin-inline-start: var(--ad-space-100); font-weight: 400; opacity: 0.7; }
   .loadout__cta { width: 100%; margin-block-start: var(--ad-space-500); }
+  .loadout__builder-link { width: 100%; margin-block-start: var(--ad-space-200); }
 
   @media (max-width: 47.99rem) {
     .loadout__inner { grid-template-columns: 1fr; }
@@ -150,6 +156,8 @@
     { "type": "textarea", "id": "heading", "label": "Heading", "default": "NIGHT\nTRANSIT" },
     { "type": "richtext", "id": "intro", "label": "Introduction" },
     { "type": "text", "id": "cta_label", "label": "Button label", "default": "Explore loadout" },
+    { "type": "page", "id": "builder_page", "label": "Loadout builder page", "info": "A page using the loadout template. Adds a second button that links to it." },
+    { "type": "text", "id": "builder_label", "label": "Builder button label", "default": "Build your own" },
     { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] },
     { "type": "color", "id": "accent", "label": "Accent", "default": "#dfff00" }
   ],

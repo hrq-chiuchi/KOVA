@@ -1,0 +1,298 @@
+{% comment %}
+  Loadout Builder: a platform plus modules from the named slots of a `loadout` metaobject, added to
+  the bag as one group that the KOVA Core cart transform merges and prices (D-024, D-027).
+
+  On a product page the section finds the loadout whose platforms include the product and locks the
+  platform to it; for any other product it renders nothing. On a page it uses the chosen loadout and
+  starts with a platform step. The client-side checks mirror `judgeGroup` in
+  apps/kova-core/shared/loadout-rules.ts, but the functions stay authoritative.
+{% endcomment %}
+{% liquid
+  assign loadout = blank
+  assign locked_platform = blank
+  if template.name == 'product'
+    for candidate in shop.metaobjects.loadout.values
+      for platform in candidate.platforms.value
+        if platform.id == product.id
+          assign loadout = candidate
+          assign locked_platform = platform
+          break
+        endif
+      endfor
+      if loadout != blank
+        break
+      endif
+    endfor
+  else
+    assign loadout = section.settings.loadout
+  endif
+
+  assign prefix = 'Loadout-' | append: section.id
+  assign heading_id = prefix | append: '-heading'
+  assign hint_id = prefix | append: '-hint'
+  assign status_id = prefix | append: '-status'
+  assign heading_tag = 'h2'
+  assign summary_tag = 'h3'
+  if template.name == 'page'
+    assign heading_tag = 'h1'
+    assign summary_tag = 'h2'
+  endif
+%}
+
+{% if loadout != blank %}
+  {% liquid
+    assign slots = loadout.slots.value
+    assign min_modules = loadout.min_modules.value | default: 2
+    assign tier_two = loadout.tier_two_percent.value | default: 0
+    assign tier_three = loadout.tier_three_percent.value | default: 0
+  %}
+  <section
+    class="loadout-builder full-width loadout-builder--{{ section.settings.tone }}"
+    data-motion-scope
+    aria-labelledby="{{ heading_id }}"
+  >
+    <div class="loadout-builder__inner section-shell">
+      <header class="loadout-builder__header" data-reveal="section">
+        <p class="eyebrow">{{ section.settings.eyebrow | escape }} / {{ loadout.name.value | escape }}</p>
+        {% render 'display-heading',
+          text: section.settings.heading,
+          id: heading_id,
+          class: 'loadout-builder__heading',
+          tag: heading_tag
+        %}
+        {% if section.settings.intro != blank %}<div class="loadout-builder__intro">{{ section.settings.intro }}</div>{% endif %}
+        <p class="loadout-builder__terms">
+          At least {{ min_modules }} modules.
+          {% if tier_two > 0 %}{{ tier_two }}% off with two{% endif %}{% if tier_three > 0 %}, {{ tier_three }}% off with three or more{% endif %}.
+        </p>
+      </header>
+
+      <loadout-builder
+        class="loadout-builder__body"
+        data-cart-add-url="{{ routes.cart_add_url }}"
+        data-currency="{{ cart.currency.iso_code }}"
+        data-locale="{{ request.locale.iso_code }}"
+        {% if locked_platform != blank %}data-locked{% endif %}
+      >
+        <script type="application/json" data-loadout-rules>
+          {
+            "minModules": {{ min_modules | json }},
+            "tiers": [
+              { "modules": 2, "percent": {{ tier_two | json }} },
+              { "modules": 3, "percent": {{ tier_three | json }} }
+            ]
+          }
+        </script>
+
+        <form class="loadout-builder__form" novalidate data-loadout-form>
+          <div class="loadout-builder__steps">
+            <fieldset class="loadout-builder__step" data-platform-fieldset tabindex="-1">
+              <legend class="loadout-builder__legend">
+                <span class="loadout-builder__index" aria-hidden="true">01</span>
+                <span>Platform</span>
+                <span class="loadout-builder__rule">{% if locked_platform != blank %}This object{% else %}Required, choose one{% endif %}</span>
+              </legend>
+              <div class="loadout-builder__options">
+                {% if locked_platform != blank %}
+                  {% render 'loadout-option',
+                    product: locked_platform,
+                    type: 'radio',
+                    name: 'platform',
+                    slot: 'platform',
+                    id_prefix: prefix,
+                    checked: true
+                  %}
+                {% else %}
+                  {% for platform in loadout.platforms.value %}
+                    {% render 'loadout-option',
+                      product: platform,
+                      type: 'radio',
+                      name: 'platform',
+                      slot: 'platform',
+                      id_prefix: prefix
+                    %}
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </fieldset>
+
+            {% for slot in slots %}
+              {% liquid
+                assign slot_key = slot.key.value
+                assign slot_max = slot.max_items.value | default: 1
+                assign slot_required = slot.required.value
+                assign slot_name = prefix | append: '-' | append: slot_key
+                assign slot_index = forloop.index | plus: 1 | prepend: '0' | slice: -2, 2
+                if slot_max > 1
+                  assign slot_type = 'checkbox'
+                else
+                  assign slot_type = 'radio'
+                endif
+              %}
+              <fieldset
+                class="loadout-builder__step"
+                data-slot-fieldset
+                data-slot-key="{{ slot_key | escape }}"
+                data-slot-label="{{ slot.label.value | escape }}"
+                data-max="{{ slot_max }}"
+                {% if slot_required %}data-required{% endif %}
+                tabindex="-1"
+              >
+                <legend class="loadout-builder__legend">
+                  <span class="loadout-builder__index" aria-hidden="true">{{ slot_index }}</span>
+                  <span>{{ slot.label.value | escape }}</span>
+                  <span class="loadout-builder__rule">
+                    {% if slot_required %}Required{% else %}Optional{% endif %},
+                    {% if slot_max > 1 %}up to {{ slot_max }}{% else %}choose one{% endif %}
+                  </span>
+                </legend>
+                <div class="loadout-builder__options">
+                  {% if slot_type == 'radio' and slot_required != true %}
+                    <div class="loadout-option loadout-option--none">
+                      <input
+                        class="loadout-option__input visually-hidden"
+                        type="radio"
+                        id="{{ slot_name }}-none"
+                        name="{{ slot_name }}"
+                        value=""
+                        checked
+                      >
+                      <label class="loadout-option__label" for="{{ slot_name }}-none">
+                        <span class="loadout-option__title">No {{ slot.label.value | downcase | escape }} module</span>
+                      </label>
+                    </div>
+                  {% endif %}
+                  {% for module in slot.products.value %}
+                    {% render 'loadout-option',
+                      product: module,
+                      type: slot_type,
+                      name: slot_name,
+                      slot: slot_key,
+                      id_prefix: slot_name
+                    %}
+                  {% endfor %}
+                </div>
+              </fieldset>
+            {% endfor %}
+          </div>
+
+          <aside class="loadout-builder__summary" aria-labelledby="{{ prefix }}-summary">
+            <{{ summary_tag }} class="form-legend" id="{{ prefix }}-summary">Your loadout</{{ summary_tag }}>
+            <ol class="loadout-builder__picked" role="list" data-summary-list></ol>
+            <dl class="loadout-builder__record">
+              <div><dt>Modules</dt><dd data-summary-count>0</dd></div>
+              <div><dt>Separately</dt><dd data-summary-separate>—</dd></div>
+              <div><dt>Loadout discount</dt><dd data-summary-percent>—</dd></div>
+              <div class="loadout-builder__estimate"><dt>Estimated price</dt><dd data-summary-estimate>—</dd></div>
+            </dl>
+            <p class="loadout-builder__note">Estimate only. The bag shows the final price.</p>
+            <p class="loadout-builder__hint" id="{{ hint_id }}" data-hint></p>
+            <button
+              class="button button--accent loadout-builder__add"
+              type="submit"
+              aria-describedby="{{ hint_id }} {{ status_id }}"
+              data-add-button
+            >
+              {{ section.settings.cta_label | escape }}
+            </button>
+            <p class="status-message" id="{{ status_id }}" role="status" aria-live="polite" data-status></p>
+          </aside>
+        </form>
+
+        <div class="loadout-builder__fallback">
+          <p>The builder needs JavaScript. Each object below can still be bought on its own; the loadout price applies only when the loadout is built here.</p>
+          <ul role="list">
+            {% if locked_platform != blank %}
+              <li><a href="{{ locked_platform.url }}">{{ locked_platform.title | escape }}</a></li>
+            {% else %}
+              {% for platform in loadout.platforms.value %}
+                <li><a href="{{ platform.url }}">{{ platform.title | escape }}</a></li>
+              {% endfor %}
+            {% endif %}
+            {% for slot in slots %}
+              {% for module in slot.products.value %}
+                <li><a href="{{ module.url }}">{{ module.title | escape }}</a> <span>{{ slot.label.value | escape }}</span></li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      </loadout-builder>
+    </div>
+  </section>
+{% elsif request.design_mode and template.name != 'product' %}
+  <div class="loadout-builder section-shell">
+    <p class="status-message">Choose a loadout in the section settings.</p>
+  </div>
+{% endif %}
+
+{% stylesheet %}
+  .loadout-builder { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .loadout-builder--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
+  .loadout-builder__inner { display: grid; gap: var(--ad-space-600); padding-block: var(--ad-section-space); }
+  .loadout-builder__header { display: grid; gap: var(--ad-space-300); max-width: 48rem; }
+  .loadout-builder__heading { margin: 0; font-family: var(--font-display-family); font-size: clamp(2.75rem, 6vw, 6rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.86; text-transform: uppercase; }
+  .loadout-builder__intro,
+  .loadout-builder__terms { margin: 0; color: color-mix(in srgb, currentcolor 70%, transparent); }
+  .loadout-builder__intro > * { margin: 0; }
+  .loadout-builder__terms { font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .loadout-builder__form { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr); gap: var(--ad-content-gap); align-items: start; }
+  .loadout-builder__steps { display: grid; gap: var(--ad-space-600); }
+  .loadout-builder__step { min-width: 0; margin: 0; padding: 0; border: 0; }
+  .loadout-builder__step:focus-visible { outline: 2px solid var(--color-accent); outline-offset: var(--ad-space-200); }
+  .loadout-builder__legend { display: flex; width: 100%; margin-block-end: var(--ad-space-300); padding: 0 0 var(--ad-space-200); flex-wrap: wrap; align-items: baseline; gap: var(--ad-space-100) var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid currentcolor; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .loadout-builder__index { color: var(--color-accent); }
+  .loadout-builder--inverse .loadout-builder__index { color: currentcolor; }
+  .loadout-builder__rule { margin-inline-start: auto; color: color-mix(in srgb, currentcolor 62%, transparent); font-weight: 400; }
+  .loadout-builder__options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); gap: var(--ad-space-200); }
+  .loadout-option--none .loadout-option__label { grid-template-columns: minmax(0, 1fr); }
+  .loadout-builder__summary { position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-400)); display: grid; padding: var(--ad-space-400); gap: var(--ad-space-300); border: var(--ad-border-hairline) solid currentcolor; }
+  .loadout-builder__summary .form-legend { margin: 0; }
+  .loadout-builder__picked { display: grid; margin: 0; padding: 0; gap: var(--ad-space-100); list-style: none; font-size: 0.9rem; }
+  .loadout-builder__picked:empty { display: none; }
+  .loadout-builder__picked li { display: flex; justify-content: space-between; gap: var(--ad-space-200); }
+  .loadout-builder__picked li span:last-child { color: color-mix(in srgb, currentcolor 62%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .loadout-builder__record { margin: 0; border-block-start: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); }
+  .loadout-builder__record > div { display: flex; padding-block: var(--ad-space-200); justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .loadout-builder__record dt { color: color-mix(in srgb, currentcolor 62%, transparent); }
+  .loadout-builder__record dd { margin: 0; font-weight: 700; text-align: end; }
+  .loadout-builder__estimate dd { font-family: var(--font-display-family); font-size: 1.5rem; letter-spacing: 0; transition: opacity var(--ad-duration-fast) var(--ad-ease-standard), transform var(--ad-duration-fast) var(--ad-ease-standard); }
+  .loadout-builder__estimate dd[data-changed] { opacity: 0.4; transform: translateY(0.15em); }
+  .loadout-builder__note,
+  .loadout-builder__hint { margin: 0; color: color-mix(in srgb, currentcolor 62%, transparent); font-size: 0.85rem; }
+  .loadout-builder__hint:empty { display: none; }
+  .loadout-builder .status-message { margin: 0; color: inherit; }
+  .loadout-builder__add { width: 100%; min-height: var(--ad-control-minimum); }
+  .loadout-builder__fallback { display: none; }
+  .loadout-builder__fallback ul { display: grid; margin: var(--ad-space-300) 0 0; padding: 0; gap: var(--ad-space-200); list-style: none; }
+  .loadout-builder__fallback li span { margin-inline-start: var(--ad-space-200); color: color-mix(in srgb, currentcolor 62%, transparent); font-size: var(--ad-text-label); text-transform: uppercase; }
+  html:not(.js) .loadout-builder__form { display: none; }
+  html:not(.js) .loadout-builder__fallback { display: block; }
+
+  @media (max-width: 61.99rem) {
+    .loadout-builder__form { grid-template-columns: minmax(0, 1fr); }
+    .loadout-builder__summary { position: static; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loadout-builder__estimate dd,
+    .loadout-builder__estimate dd[data-changed] { transform: none; transition: none; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Loadout builder",
+  "tag": "div",
+  "class": "section-loadout-builder",
+  "enabled_on": { "templates": ["page", "product"] },
+  "settings": [
+    { "type": "metaobject", "id": "loadout", "label": "Loadout", "metaobject_type": "loadout", "info": "Used on pages. On a product page the section finds the loadout whose platforms include the product, and renders nothing for other products." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Loadout builder" },
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "BUILD THE\nLOADOUT" },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "text", "id": "cta_label", "label": "Button label", "default": "Add loadout to bag" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
+  ],
+  "presets": [{ "name": "Loadout builder" }]
+}
+{% endschema %}

@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "builder": {
+      "type": "loadout-builder",
+      "settings": {
+        "loadout": "relay-grid-loadout",
+        "eyebrow": "Loadout builder",
+        "heading": "BUILD THE\nLOADOUT",
+        "intro": "<p>Choose one carry platform, then the modules it carries. The set goes to the bag as one loadout at one price.</p>",
+        "cta_label": "Add loadout to bag",
+        "tone": "dark"
+      }
+    }
+  },
+  "order": ["builder"]
+}

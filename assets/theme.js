@@ -1,11 +1,14 @@
 (() => {
   document.documentElement.classList.add('js');
 
-  async function addProduct(form) {
-    const response = await fetch(`${form.action}.js`, {
+  // Posts to /cart/add.js. `body` is FormData from a product form, or an object such as
+  // `{ items: [...] }`, which is sent as JSON so several lines are added in one atomic request.
+  async function addToCart(url, body) {
+    const isForm = body instanceof FormData;
+    const response = await fetch(`${url}.js`, {
       method: 'POST',
-      headers: { Accept: 'application/json' },
-      body: new FormData(form),
+      headers: isForm ? { Accept: 'application/json' } : { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: isForm ? body : JSON.stringify(body),
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.description || 'Unable to add this item.');
@@ -228,13 +231,199 @@
       this.addButton.disabled = true;
       this.status.textContent = 'Adding to bag…';
       try {
-        await addProduct(this.form);
+        await addToCart(this.form.action, new FormData(this.form));
         this.status.textContent = 'Added to bag.';
       } catch (error) {
         this.status.textContent = error.message;
       } finally {
         this.addButton.disabled = false;
       }
+    }
+  }
+
+  // Builds a KOVA loadout and adds it as one group. Every line carries the same `_kova_loadout` id
+  // and its `_kova_slot`; the KOVA Core cart transform merges a valid group into one priced line
+  // and the validation refuses an invalid one. These checks mirror `judgeGroup` in
+  // apps/kova-core/shared/loadout-rules.ts so customers see problems before the request.
+  class LoadoutBuilder extends HTMLElement {
+    connectedCallback() {
+      this.controller?.abort();
+      this.controller = new AbortController();
+      const { signal } = this.controller;
+      this.form = this.querySelector('[data-loadout-form]');
+      this.hint = this.querySelector('[data-hint]');
+      this.status = this.querySelector('[data-status]');
+      this.addButton = this.querySelector('[data-add-button]');
+      this.estimate = this.querySelector('[data-summary-estimate]');
+      try {
+        this.rules = JSON.parse(this.querySelector('[data-loadout-rules]')?.textContent || '{}');
+      } catch (_) {
+        this.rules = {};
+      }
+      try {
+        this.money = new Intl.NumberFormat(this.dataset.locale || undefined, { style: 'currency', currency: this.dataset.currency });
+      } catch (_) {
+        this.money = null;
+      }
+      if (!this.form) return;
+      this.form.addEventListener('change', (event) => this.onChange(event), { signal });
+      this.form.addEventListener('submit', (event) => this.onSubmit(event), { signal });
+      if (!this.hasAttribute('data-locked')) this.applyPlatformParam();
+      this.querySelectorAll('[data-slot-fieldset]').forEach((fieldset) => this.enforceMax(fieldset));
+      this.update();
+    }
+
+    disconnectedCallback() {
+      this.controller?.abort();
+    }
+
+    // Liquid cannot read the query string, so links such as ?platform=relay-sling-8 preselect here.
+    applyPlatformParam() {
+      const handle = new URL(window.location.href).searchParams.get('platform');
+      if (!handle) return;
+      const input = Array.from(this.querySelectorAll('[data-loadout-choice][data-slot="platform"]'))
+        .find((candidate) => candidate.dataset.handle === handle);
+      if (input && !input.disabled) input.checked = true;
+    }
+
+    state() {
+      const chosen = Array.from(this.querySelectorAll('[data-loadout-choice]:checked'));
+      const platform = chosen.find((input) => input.dataset.slot === 'platform') || null;
+      return { platform, modules: chosen.filter((input) => input !== platform) };
+    }
+
+    variantOf(input) {
+      const select = input.closest('.loadout-option')?.querySelector('[data-variant-select]');
+      const option = select?.selectedOptions[0];
+      return {
+        id: Number(option?.value || input.dataset.variantId),
+        price: Number(option?.dataset.price || input.dataset.price) || 0,
+        title: option ? option.textContent.trim() : '',
+      };
+    }
+
+    problem({ platform, modules }) {
+      const platformFieldset = this.querySelector('[data-platform-fieldset]');
+      if (!platform) return { message: 'Choose a platform.', target: platformFieldset };
+      if (platform.disabled) return { message: `${platform.dataset.title} is sold out.`, target: platformFieldset };
+      for (const fieldset of this.querySelectorAll('[data-slot-fieldset][data-required]')) {
+        if (!fieldset.querySelector('[data-loadout-choice]:checked')) {
+          return { message: `Choose a ${fieldset.dataset.slotLabel.toLowerCase()} module.`, target: fieldset };
+        }
+      }
+      const minimum = Number(this.rules.minModules) || 0;
+      if (modules.length < minimum) {
+        const missing = minimum - modules.length;
+        return {
+          message: `Choose ${missing} more module${missing === 1 ? '' : 's'}. A loadout needs at least ${minimum}.`,
+          target: this.querySelector('[data-slot-fieldset]'),
+        };
+      }
+      return null;
+    }
+
+    percentFor(count) {
+      return (this.rules.tiers || [])
+        .filter((tier) => count >= tier.modules)
+        .reduce((best, tier) => Math.max(best, tier.percent), 0);
+    }
+
+    formatMoney(cents) {
+      return this.money ? this.money.format(cents / 100) : (cents / 100).toFixed(2);
+    }
+
+    // A multi-item slot caps at its maximum: once full, the unchosen products are disabled, which
+    // also keeps each product to one line per loadout (D-024).
+    enforceMax(fieldset, changed) {
+      const maximum = Number(fieldset.dataset.max) || 1;
+      if (maximum < 2) return;
+      const boxes = Array.from(fieldset.querySelectorAll('[data-loadout-choice]'));
+      const full = boxes.filter((box) => box.checked).length >= maximum;
+      boxes.forEach((box) => {
+        if (!box.checked) box.disabled = full || box.hasAttribute('data-sold-out');
+      });
+      if (full && changed?.checked) this.status.textContent = `${fieldset.dataset.slotLabel} is full: up to ${maximum}.`;
+    }
+
+    onChange(event) {
+      this.status.textContent = '';
+      const fieldset = event.target.closest('[data-slot-fieldset]');
+      if (fieldset && event.target.matches('[data-loadout-choice]')) this.enforceMax(fieldset, event.target);
+      this.update();
+    }
+
+    update() {
+      const state = this.state();
+      const lines = [state.platform, ...state.modules].filter(Boolean);
+      this.querySelector('[data-summary-list]')?.replaceChildren(...lines.map((input) => {
+        const variant = this.variantOf(input);
+        const item = document.createElement('li');
+        const name = document.createElement('span');
+        const role = document.createElement('span');
+        name.textContent = variant.title ? `${input.dataset.title} / ${variant.title}` : input.dataset.title;
+        role.textContent = input.dataset.slot === 'platform'
+          ? 'Platform'
+          : input.closest('[data-slot-fieldset]')?.dataset.slotLabel || '';
+        item.append(name, role);
+        return item;
+      }));
+
+      const separate = lines.reduce((sum, input) => sum + this.variantOf(input).price, 0);
+      const problem = this.problem(state);
+      const percent = problem ? 0 : this.percentFor(state.modules.length);
+      this.querySelector('[data-summary-count]').textContent = String(state.modules.length);
+      this.querySelector('[data-summary-separate]').textContent = lines.length ? this.formatMoney(separate) : '—';
+      this.querySelector('[data-summary-percent]').textContent = percent ? `−${percent}%` : '—';
+      const estimate = problem ? '—' : this.formatMoney(Math.round((separate * (100 - percent)) / 100));
+      if (this.estimate && this.estimate.textContent !== estimate) {
+        this.estimate.textContent = estimate;
+        this.estimate.setAttribute('data-changed', '');
+        requestAnimationFrame(() => requestAnimationFrame(() => this.estimate.removeAttribute('data-changed')));
+      }
+      this.hint.textContent = problem ? problem.message : '';
+    }
+
+    async onSubmit(event) {
+      event.preventDefault();
+      if (this.busy) return;
+      const state = this.state();
+      const problem = this.problem(state);
+      if (problem) {
+        this.status.textContent = problem.message;
+        problem.target?.focus();
+        return;
+      }
+
+      // Unique per build, so two loadouts in one cart never share a group.
+      const group = window.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      const items = [state.platform, ...state.modules].map((input) => ({
+        id: this.variantOf(input).id,
+        quantity: 1,
+        properties: { _kova_loadout: group, _kova_slot: input.dataset.slot },
+      }));
+
+      this.busy = true;
+      this.addButton.disabled = true;
+      this.status.textContent = 'Adding loadout to bag…';
+      try {
+        await addToCart(this.dataset.cartAddUrl, { items });
+        this.status.textContent = 'Loadout added to bag.';
+        this.resetModules(state.platform);
+      } catch (error) {
+        this.status.textContent = error.message;
+      } finally {
+        this.busy = false;
+        this.addButton.disabled = false;
+      }
+    }
+
+    // After a successful add the platform stays chosen and the modules clear, so a second build
+    // starts clean.
+    resetModules(platform) {
+      this.form.reset();
+      if (platform) platform.checked = true;
+      this.querySelectorAll('[data-slot-fieldset]').forEach((fieldset) => this.enforceMax(fieldset));
+      this.update();
     }
   }
 
@@ -270,6 +459,7 @@
   if (!customElements.get('afterdark-header')) customElements.define('afterdark-header', AfterdarkHeader);
   if (!customElements.get('cart-drawer')) customElements.define('cart-drawer', CartDrawer);
   if (!customElements.get('product-purchase')) customElements.define('product-purchase', ProductPurchase);
+  if (!customElements.get('loadout-builder')) customElements.define('loadout-builder', LoadoutBuilder);
   if (!customElements.get('product-recommendations')) customElements.define('product-recommendations', ProductRecommendations);
 
   document.addEventListener('submit', async (event) => {
@@ -279,7 +469,7 @@
     const submitter = event.submitter;
     submitter?.setAttribute('disabled', '');
     try {
-      await addProduct(form);
+      await addToCart(form.action, new FormData(form));
     } catch (_) {
       form.submit();
     } finally {
