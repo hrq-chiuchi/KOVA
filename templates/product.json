@@ -16,6 +16,15 @@
         "care_copy": "<p>Follow the care instructions supplied with the object.</p>"
       }
     },
+    "loadout_builder": {
+      "type": "loadout-builder",
+      "settings": {
+        "eyebrow": "Loadout builder",
+        "heading": "BUILD ON\nTHIS PLATFORM",
+        "cta_label": "Add loadout to bag",
+        "tone": "inverse"
+      }
+    },
     "recommendations": {
       "type": "product-recommendations",
       "settings": {
@@ -109,6 +118,7 @@
   },
   "order": [
     "main",
+    "loadout_builder",
     "field_manual",
     "edition",
     "compatibility",

@@ -1,0 +1,92 @@
+{% doc %}
+  One choosable object in the Loadout Builder: a platform or a slot module. The input's value is the
+  product id; the variant sent to the cart is `data-variant-id` or, for a product with options, the
+  select beside it. Sold-out products are disabled, and sold-out variants cannot be picked.
+
+  @param {product} product - Product to offer
+  @param {string} type - Input type: 'radio' or 'checkbox'
+  @param {string} name - Input name, shared by the options of one choice
+  @param {string} slot - `_kova_slot` value sent with the line: 'platform' or the slot key
+  @param {string} id_prefix - Unique prefix for element ids, including the section id
+  @param {boolean} [checked] - Selected on load
+
+  @example
+  {% render 'loadout-option', product: platform, type: 'radio', name: 'platform', slot: 'platform', id_prefix: 'Loadout-1-platform' %}
+{% enddoc %}
+{% liquid
+  assign input_id = id_prefix | append: '-' | append: product.id
+  assign variant = product.selected_or_first_available_variant
+%}
+<div class="loadout-option{% unless product.available %} loadout-option--sold-out{% endunless %}">
+  <input
+    class="loadout-option__input visually-hidden"
+    type="{{ type }}"
+    id="{{ input_id }}"
+    name="{{ name }}"
+    value="{{ product.id }}"
+    data-loadout-choice
+    data-slot="{{ slot }}"
+    data-handle="{{ product.handle }}"
+    data-title="{{ product.title | escape }}"
+    data-variant-id="{{ variant.id }}"
+    data-price="{{ variant.price }}"
+    {% if checked %}checked{% endif %}
+    {% unless product.available %}disabled data-sold-out{% endunless %}
+  >
+  <label class="loadout-option__label" for="{{ input_id }}">
+    <span class="loadout-option__media" aria-hidden="true">
+      {% if product.featured_image != blank %}
+        {{ product.featured_image
+          | image_url: width: 320
+          | image_tag: widths: '160, 240, 320', sizes: '5rem', loading: 'lazy', alt: ''
+        }}
+      {% else %}
+        {% render 'media-pending', title: product.title, compact: true %}
+      {% endif %}
+    </span>
+    <span class="loadout-option__title">{{ product.title | escape }}</span>
+    <span class="loadout-option__price">
+      {% if product.available %}
+        {% if product.price_varies %}From {% endif %}{{ product.price_min | money }}
+      {% else %}
+        Sold out
+      {% endif %}
+    </span>
+  </label>
+  {% unless product.has_only_default_variant %}
+    <label class="loadout-option__variant">
+      <span class="visually-hidden">{{ product.title | escape }}:</span>
+      <span>{{ product.options | join: ' / ' | escape }}</span>
+      <select data-variant-select{% unless product.available %} disabled{% endunless %}>
+        {% for option_variant in product.variants %}
+          <option
+            value="{{ option_variant.id }}"
+            data-price="{{ option_variant.price }}"
+            {% if option_variant.id == variant.id %}selected{% endif %}
+            {% unless option_variant.available %}disabled{% endunless %}
+          >
+            {{ option_variant.title | escape }}{% unless option_variant.available %} (sold out){% endunless %}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+  {% endunless %}
+</div>
+
+{% stylesheet %}
+  .loadout-option { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ad-space-100); }
+  .loadout-option__label { display: grid; grid-template-columns: 4rem minmax(0, 1fr) auto; min-height: var(--ad-control-minimum); padding: var(--ad-space-200); align-items: center; gap: var(--ad-space-300); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); cursor: pointer; transition: border-color var(--ad-duration-fast) var(--ad-ease-standard), background-color var(--ad-duration-fast) var(--ad-ease-standard); }
+  .loadout-option__label:hover { border-color: currentcolor; }
+  .loadout-option__input:checked + .loadout-option__label { border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+  .loadout-option__input:focus-visible + .loadout-option__label { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  .loadout-option__input:disabled + .loadout-option__label { cursor: not-allowed; opacity: 0.45; }
+  .loadout-option__media { display: block; aspect-ratio: 1; overflow: hidden; background: var(--ad-color-background-elevated); }
+  .loadout-option__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .loadout-option__media .media-pending { padding: var(--ad-space-100); }
+  .loadout-option__media .media-pending__label { font-size: 0.5rem; letter-spacing: 0.02em; }
+  .loadout-option__title { font-weight: 700; text-transform: uppercase; overflow-wrap: anywhere; }
+  .loadout-option__price { font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+  .loadout-option__variant { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ad-space-200) var(--ad-space-300); padding-inline-start: calc(4rem + var(--ad-space-500)); color: color-mix(in srgb, currentcolor 70%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .loadout-option__variant select { min-width: 0; max-width: 100%; min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-200); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; color: inherit; font: inherit; }
+  .loadout-option__variant option { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+{% endstylesheet %}

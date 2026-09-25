@@ -234,6 +234,8 @@
       "type": "loadout-teaser",
       "settings": {
         "product": "night-transit-set-03",
+        "builder_page": "build-a-loadout",
+        "builder_label": "Build your own",
         "components": [
           "sector-05-field-flask",
           "signal-carabiner-system",
