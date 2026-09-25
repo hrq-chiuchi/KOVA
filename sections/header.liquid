@@ -228,9 +228,12 @@
     background: rgb(8 8 8 / 88%);
     color: var(--ad-color-text-primary);
     backdrop-filter: blur(18px);
+    transform: translateY(var(--ad-header-shift, 0px));
     transition: background-color var(--ad-duration-fast) var(--ad-ease-standard), border-color var(--ad-duration-fast) var(--ad-ease-standard);
   }
 
+  /* Without JavaScript the header cannot track the announcement bar, so it sits below it and scrolls away. */
+  html:not(.js) body:has([data-announcement]) .site-header { position: absolute; top: auto; }
   .site-header[data-overlay='true']:not([data-scrolled]) { background: transparent; backdrop-filter: none; }
   .site-header[data-scrolled],
   .site-header[data-overlay='false'] { border-color: var(--ad-color-border-subtle); }

@@ -1,0 +1,16 @@
+{% doc %}
+  Outputs `true` when the free-shipping rate can apply to this visitor (D-041): the Field Supply setting is
+  on, a threshold is set, the visitor's country is in the eligible list, and the cart is in the store
+  currency (the threshold is in the store currency). Outputs nothing otherwise. Capture it to use it.
+
+  @example
+  {% capture free_shipping_eligible %}{% render 'free-shipping-eligible' %}{% endcapture %}
+{% enddoc %}
+{%- liquid
+  assign threshold = settings.free_shipping_threshold | default: 0
+  assign country = localization.country.iso_code | default: '' | upcase
+  assign countries = settings.free_shipping_countries | upcase | remove: ' ' | split: ','
+  if settings.free_shipping_enabled and threshold > 0 and countries contains country and cart.currency.iso_code == shop.currency
+    echo 'true'
+  endif
+-%}

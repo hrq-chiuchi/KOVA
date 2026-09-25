@@ -50,7 +50,12 @@
       document.addEventListener('afterdark:cart-updated', () => this.updateCartCount(), { signal });
       document.addEventListener('afterdark:cart-count', () => this.updateCartCount(), { signal });
       window.addEventListener('scroll', () => this.updateScrollState(), { signal, passive: true });
-      this.updateScrollState();
+      // The announcement bar sits in the page flow above the fixed header. The header is shifted down
+      // by the part of the bar still on screen, so it never covers it and closes the gap on scroll.
+      this.announcementObserver = new ResizeObserver(() => this.measureAnnouncement());
+      this.observeAnnouncement();
+      document.addEventListener('shopify:section:load', () => this.observeAnnouncement(), { signal });
+      document.addEventListener('shopify:section:unload', () => requestAnimationFrame(() => this.observeAnnouncement()), { signal });
 
       // The search link opens the search command dialog; without JavaScript it goes to /search.
       this.searchTrigger = this.querySelector('[data-search-open]');
@@ -190,6 +195,7 @@
 
     disconnectedCallback() {
       this.controller?.abort();
+      this.announcementObserver?.disconnect();
       clearTimeout(this.hoverTimer);
       document.body.classList.remove('menu-open');
     }
@@ -214,8 +220,25 @@
       this.previouslyFocused?.focus();
     }
 
+    observeAnnouncement() {
+      this.announcementObserver.disconnect();
+      this.announcement = document.querySelector('[data-announcement]');
+      if (this.announcement) this.announcementObserver.observe(this.announcement);
+      this.measureAnnouncement();
+    }
+
+    measureAnnouncement() {
+      this.announcementHeight = this.announcement?.isConnected ? this.announcement.offsetHeight : 0;
+      this.updateScrollState();
+    }
+
     updateScrollState() {
       this.toggleAttribute('data-scrolled', window.scrollY > 24);
+      const shift = `${Math.max(0, (this.announcementHeight || 0) - window.scrollY)}px`;
+      if (shift !== this.headerShift) {
+        this.headerShift = shift;
+        this.style.setProperty('--ad-header-shift', shift);
+      }
     }
 
     async updateCartCount() {
