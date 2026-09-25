@@ -48,6 +48,12 @@
     "submit": "Search",
     "no_results_html": "Nothing in the index matches “{{ terms }}”.",
     "results_for_html": "{{ count }} results for “{{ terms }}”",
+    "filter_label": "Filter the results",
+    "field_notes_and_pages": "Field Notes and pages",
+    "empty_hint": "Try a product name, a system such as Modular, or browse every object in the Equipment Index.",
+    "empty_action": "Open the Equipment Index",
+    "start_hint": "Search products, Field Notes and pages.",
+    "pages_label": "Result pages",
     "command": {
       "label": "Search KOVA",
       "results_label": "Search suggestions",
