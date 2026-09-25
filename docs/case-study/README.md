@@ -791,7 +791,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 | STATUS | `custom.status` | Drop 001 16, Drop 002 5, Limited 3, Archive 0 |
 | COLOUR | `Color` option, linked to `shopify.color-pattern` | Existing swatches |
 
-`seed-index-facets.mjs` created the four definitions and set 74 values. It cleared 10 empty lists, and a second run went through the update path without errors. An Admin query then matched the approved table on all 21 products, and the KOVA Loadout parent has no values. The `all` smart collection already excludes the parent (`product_type != Loadout`), and `seo.hidden` keeps it out of search.
+`seed-index-facets.mjs` created the four definitions and set 74 values. It cleared 10 empty lists, and a second run went through the update path without errors. An Admin query then matched the approved table on all 21 products, and the KOVA Loadout parent has no values. The `all` smart collection already excludes the parent (`product_type != Loadout`). `/search?q=loadout` and its suggestions return only Night Transit Set 03, which confirms `seo.hidden` keeps the parent out of search.
 
 ### Surfaces
 
@@ -835,6 +835,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
   - A price ceiling of $100 narrows it to 3 products. Once a product filter is active, articles drop out of the results. This is native behaviour.
   - The empty state and the no-query state both link to the Equipment Index.
 - **Archive check:** covered in D-038. No product is archived at the end of the check.
+- **In-place swaps:** a window marker survived one filter change on the Index rows, the grid view (the URL keeps `view=index-grid`) and `/search`, with focus kept on the changed checkbox each time. Grid view at 390px has no overflow.
 - **Theme Editor lifecycle (simulated):** after three section replacements with `shopify:section:unload`/`load`, one filter change sent exactly one section request, and Back sent one.
 - **Checks:**
   - Lighthouse 12.8.2 accessibility is 100 on `/collections/all` (Equipment Index) and on `/search?q=relay`.
@@ -850,6 +851,6 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 
 - **Manual store setup:**
   - Add the four facet filters and the Colour swatch filter in Search & Discovery.
-  - Add an "Equipment Index" link to `/collections/all` in the header menu. The CLI's store auth lacks the menu scope.
+  - The header has no menu assigned, so the site menu's coded fallback is used. Its first link now reads "Equipment Index" and goes to `/collections/all`. If a menu is assigned later, it needs its own "Equipment Index" link. The CLI's store auth has no menu scope.
 - **Deferred:** Markets-aware facet labels, and hardware generations (V1/V2).
 - **Photography:** the Drop 002 products and the Field Notes still show empty thumbnails in search suggestions.
