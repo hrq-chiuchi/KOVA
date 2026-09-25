@@ -648,7 +648,7 @@ Phase 10 adds the storefront surface for Phase 9's loadouts: a builder on its ow
 
 ## Phase 11 Field Locker log
 
-Phase 11 adds the customer side of KOVA Core: a Field Locker page in customer accounts and a block on Shopify's order page (D-030 to D-032). The results below come from `shopify app dev` and `shopify theme dev` on 2026-09-25, unless marked as production. `kova-core-1.1.0` was released the same day (D-034). The order block works in production. The Field Locker page does not render in production yet.
+Phase 11 adds the customer side of KOVA Core: a Field Locker page in customer accounts and a block on Shopify's order page (D-030 to D-032). The results below come from `shopify app dev` and `shopify theme dev` on 2026-09-25, unless marked as production. `kova-core-1.1.0` and `1.1.1` were released the same day (D-034), and the page, the save flow and the order block were then verified in production.
 
 ### Architecture
 
@@ -758,17 +758,19 @@ There was no horizontal overflow. Checkout was not seen (**Unavailable**: passwo
 
 ### Release (D-034, 2026-09-25)
 
-- `kova-core-1.1.0` was deployed and released. All new scopes were already granted.
-- **Order block, production:** on #1002 it shows the loadout, four pending guides and the Field Locker link, with no `app dev` running.
-- **Field Locker page, production: not working.**
-  - The menu item links to `…/account/pages/01a0d688-091e-7e68-af62-9d4bd009b57d`, which shows "There's a problem loading this page", both in a new signed-in browser and after `shopify app dev clean`.
-  - The account host's `MarketConfiguration.activatedExtensions` holds only Shopify's returns extensions, so it never requests the page's script.
-  - The signed-out save path did keep its query through sign-in in production.
-- `field_locker_url` is blank in both templates, so the Save link stays hidden.
+- `kova-core-1.1.0` was released, then `kova-core-1.1.1`. 1.1.1 keeps only exact handle matches from Storefront product lookups. A fuzzy `handle:` search had been replacing the owned products' records, so every guide showed "pending" whenever a save link was open.
+- **Activation:** the Field Locker page renders only after it is added from the editor's Apps panel. Before that, the host's activated-extension list left it out and every visit showed Shopify's error page. The order block was placed through `?page=order-status`.
+- **Definition:** neither release created the `saved_loadouts` definition, so the first production save failed with "Access to this namespace and key on Metafields for this resource type is not allowed". It was created through `shopify app execute` as KOVA Core.
+- **Production results** (no `app dev`; a new browser signed in with an emailed code):
+  - builder save link → sign-in → banner → Save;
+  - the entry survives a reload, and Remove deletes it;
+  - Documents shows 3 PDFs, 6 care notes and 5 pending guides;
+  - the order block's link opens the page;
+  - no overflow at 390px, and no page errors.
 
 ### Phase 11 backlog
 
-- **Blocks the merge — Field Locker page activation:** find why the released page is not activated. Re-check after propagation, then look at the editor's Apps panel and the Dev Dashboard version. Once it renders, set `field_locker_url` to `https://shopify.com/84211761411/account/pages/01a0d688-091e-7e68-af62-9d4bd009b57d` in both templates and repeat the save test.
+- **Store setup is manual:** adding the Field Locker page in the editor's Apps panel, placing the order block, and creating the `saved_loadouts` definition. Script the definition, or confirm that a later CLI deploy creates it.
 - **Mirror drift:** the theme's link preselect copies `decodeLoadoutParams`.
 - **Deferred:** equipment registration for gear bought elsewhere, a saved-items wishlist, and translated extension strings.
 - **Unavailable:** warranty documents, until real terms exist.

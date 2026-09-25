@@ -100,7 +100,10 @@ export async function loadCatalogue(query, productIds, handles) {
   }));
   if (errors?.length) throw new Error(errors.map((error) => error.message).join('; '));
   const products = new Map();
-  for (const product of [...(data.owned ?? []), ...(data.named?.nodes ?? [])]) {
+  // `handle:` in a Storefront products query is a fuzzy search that can return unrelated products,
+  // so keep only exact matches.
+  const named = (data.named?.nodes ?? []).filter((product) => handles.includes(product.handle));
+  for (const product of [...(data.owned ?? []), ...named]) {
     if (!product?.id) continue;
     const record = { ...products.get(product.id), ...product };
     products.set(product.id, record);

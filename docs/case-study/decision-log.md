@@ -486,21 +486,28 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - "Continue with Shop" keeps Shopify's purple.
 - Checkout inherits the dark look. It was not seen, because the password-protected storefront blocks the route to checkout.
 
-## D-034 — Release KOVA Core 1.1.0
+## D-034 — Release KOVA Core 1.1.0 and 1.1.1
 
 **Context:** Phase 11 was verified through `shopify app dev`. On 2026-09-25 the user asked for the release and the commit.
 
 **Decision:**
-- `shopify app deploy --allow-updates --version kova-core-1.1.0` created and released the version. It adds `field-locker` and `field-locker-order`, the customer scopes, and the `$app:saved_loadouts` definition. The store had already granted every new scope.
-- The user placed the order block in the checkout and accounts editor through `…/editor/profiles/<id>?page=order-status`. The page switcher did not offer that page.
-- The user added the page to the customer account menu under Content → Menus, as a `CUSTOMER_ACCOUNT_PAGE` item. The editor's page switcher does not list app pages.
-- The released page's address is `…/account/pages/01a0d688-091e-7e68-af62-9d4bd009b57d`, taken from the menu link. It is not the extension's TOML `uid`.
+- **Releases:**
+  - `shopify app deploy --allow-updates` released `kova-core-1.1.0`, with both extensions and the customer scopes. The store had already granted the scopes.
+  - `kova-core-1.1.1` followed with a fix: Storefront `products(query: "handle:…")` is a fuzzy search, so product lookups now keep only exact handle matches and merge records instead of replacing them.
+- **The Field Locker page must be added from the checkout and accounts editor's Apps panel** (grid icon → KOVA Core → Field Locker → ⊕). The account menu link and the page switcher do not activate it.
+  - Before it was added, the host's `MarketConfiguration.activatedExtensions` did not list `field-locker`, and the page showed "There's a problem loading this page".
+  - A menu item made before activation pointed at a stale id (`01a0d688-…`). After activation, the menu and the page use `…/account/pages/01a0d72a-61ed-77b8-88ed-ec877b8e2118`, which is not the TOML `uid`.
+- **The order block was placed** through `…/editor/profiles/<id>?page=order-status`.
+- **The saved-loadouts definition had to be created by hand.** `$app:saved_loadouts` existed only while `app dev` ran and vanished with `app dev clean`. Neither release created it from `shopify.app.toml`, and the CLI removes `include_config_on_deploy` when it rewrites the file.
+  - The definition was created with `metafieldDefinitionCreate` through `shopify app execute`, as KOVA Core (`app--427925766145`, customer account read/write, merchant read), matching the TOML declaration.
+- **The builder's `field_locker_url`** points at the activated page.
 
-**Result:**
-- **The order block is verified in production** on #1002, with no `app dev` running.
-- **The Field Locker page is not working in production.** A new browser that signed in with an emailed code and no preview state gets "There's a problem loading this page".
-  - The host's `MarketConfiguration` lists only Shopify's returns extensions as activated, so it never loads `field-locker`.
-  - The same happens after `shopify app dev clean`.
-- The builder's `field_locker_url` is left blank, so "Save to Field Locker" stays hidden until the page renders. Direct links from the order block and the menu still lead to the error.
+**Result (production, no `app dev`, a new browser signed in with an emailed code):**
+- From the builder, "Save to Field Locker" survives sign-in and shows the banner. Save writes the metafield, the entry survives a reload, and Remove deletes it.
+- Documents shows 3 PDFs, 6 care notes and 5 pending guides.
+- The order block on #1002 renders, and its "Open your Field Locker" link opens the page.
+- There is no overflow at 390px, and no page errors were logged.
 
-**Tradeoff / reconsideration:** the missing activation step is unknown. Shopify's docs say that `customer-account.page.render` pages allow direct links by default and are added through the account menu, which was done. The next steps are to re-check after propagation, then to look in the editor's Apps panel and the app's Dev Dashboard version for a per-page activation.
+**Tradeoff / reconsideration:**
+- The metafield definition now exists outside a release. If a later deploy starts managing declarative definitions, check that it adopts this one rather than failing.
+- A new store needs the same editor step and the same definition. Neither is automated.

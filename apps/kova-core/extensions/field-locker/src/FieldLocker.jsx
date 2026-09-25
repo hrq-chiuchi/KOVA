@@ -48,10 +48,13 @@ function FieldLocker() {
       .map((pick) => pick.handle)
       .filter((handle) => !state.catalogue.products.has(handle));
     if (!missing.length) return;
-    loadCatalogue(shopify.query, [], missing).then(({products}) => setState((current) => ({
-      ...current,
-      catalogue: {...current.catalogue, products: new Map([...current.catalogue.products, ...products])},
-    })), () => {});
+    // Merge records rather than replace them: the handle lookup carries fewer fields than the owned
+    // products' records (no guide or material).
+    loadCatalogue(shopify.query, [], missing).then(({products}) => setState((current) => {
+      const merged = new Map(current.catalogue.products);
+      for (const [key, record] of products) merged.set(key, {...merged.get(key), ...record});
+      return {...current, catalogue: {...current.catalogue, products: merged}};
+    }), () => {});
   }, [state.status, url]);
 
   if (state.status === 'loading') {
