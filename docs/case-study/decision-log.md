@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24); D-018 to D-021 in Phase 7; D-022 and D-023 in Phase 8 (2026-09-24).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24); D-018 to D-021 in Phase 7; D-022 and D-023 in Phase 8 (2026-09-24). D-039 to D-043 were accepted in Phase 14 (commerce and merchandising, 2026-09-25).
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -594,3 +594,96 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:**
 - Archived products stay purchasable while they have stock. Archive is a label, not an inventory state.
+
+## D-039 — Recommend in the bag from the Works with field
+
+**Context:** Phase 14 adds cart guidance ("Complete the system"). The catalogue already has two relationship sources: the curated `custom.compatible_products` list behind the product page's Works with section (set on 20 of 21 products), and Search & Discovery complementary products (D-014).
+
+**Options considered:** Shopify's `related` recommendations endpoint; the S&D complementary list; `custom.compatible_products`; a new cart-only relationship field.
+
+**Decision:**
+- `snippets/cart-upsell.liquid` reads `custom.compatible_products` for every bag line, server-side, in the drawer render. There are no extra requests.
+- A merged loadout or a native bundle is read through its components, because the line's own product is the hidden parent.
+- It excludes objects already in the bag (components included), sold-out and Archive objects (through `product-status`), and the `kova-loadout` parent. It shows at most two.
+- Only when nothing survives does it fall back to the first object's S&D complementary list, under the same filters. There is no algorithmic source and no new field.
+- Each row states its reason ("Works with Relay Sling 8") and uses the shared `snippets/quick-add.liquid`:
+  - a single-variant product gets Add;
+  - a product with one option (for example a finish or light colour) gets a select of the available values, then Add;
+  - anything else links to its product page ("Options") instead of pretending it can be configured in the bag.
+- The product card renders the same quick-add snippet, without the select.
+
+**Reasoning:** The curated field is the one the product page already presents as compatibility, so the bag and the product page cannot disagree. Most compatible objects are multi-variant, but many have a single option, so the select keeps the add in the bag without guessing a variant.
+
+**Tradeoff / reconsideration:**
+- Order follows the bag lines and each product's list order. There is no ranking.
+- `related` stays out until the store has order history (D-014).
+- Archive objects are never recommended, even with stock. D-038 keeps them purchasable on their own pages.
+
+## D-040 — One resolver owns an object's lifecycle state
+
+**Context:** Archive and Sold out were decided inline in three places (product card, index row, product page). Phase 14 adds Low supply, and more surfaces (predictive search, cart recommendations) need the same answer.
+
+**Decision:**
+- `snippets/product-status.liquid` resolves Archive > Sold out > Low supply > Active. It renders a badge, a card overlay, plain text, a screen-reader sentence, or just the key, which a caller can `capture`.
+- **Low supply is real inventory only:** a variant tracked by Shopify, with the `deny` policy, holding at most `settings.low_supply_threshold` units (default 5, 0 turns it off). At product level, every available variant must be tracked that way and their combined stock must be within the threshold. It never shows a count.
+- The product page resolves per variant. The variant JSON carries each variant's key, so the badge follows the selection.
+- Release tags (Drop 001, Drop 002, Limited) are not lifecycle states. They stay as plain text on index rows.
+- **Coming is Deferred:** `custom.status` has no such choice, and adding one is a store definition change.
+
+**Reasoning:** One resolver means the index, cards, search, the product page and the bag cannot drift. Scarcity is only claimed where Shopify would actually stop selling.
+
+**Tradeoff / reconsideration:**
+- An index row now shows one lifecycle badge (Archive wins over Sold out), matching the card.
+- Product-level Low supply is rare in this catalogue (the lowest total is 7 units), so it mostly appears per variant on product pages. Revisit the threshold with real sales data.
+- Predictive search shows the state as text only.
+
+## D-041 — Mirror the free-shipping rate in a theme setting
+
+**Context:** The store's US Domestic zone has Standard at $8, and at $0 once the order total reaches $70. CA and International use the Collective carrier and have no free rate. Liquid cannot read shipping rates.
+
+**Options considered:** a hardcoded amount; a shop metafield; a KOVA Core app setting that reads delivery profiles; a theme setting.
+
+**Decision:**
+- The Commerce settings hold `free_shipping_threshold` (70, store currency), `free_shipping_countries` (US) and an on/off switch. The setting's help text says it must match the rate condition.
+- `snippets/field-supply.liquid` compares `cart.total_price`, which already includes discounts and the loadout transform, with the threshold. The theme never sums lines.
+- It renders nothing for an empty bag, a country outside the list, or a cart in another currency.
+- The sentence carries the information ("Add $22.00 to unlock complimentary standard shipping"); the bar is decorative. The drawer announces the crossing once, not every update.
+- It appears in the drawer footer and on the cart page.
+
+**Reasoning:** A theme setting is merchant-editable today with no app surface. Reading delivery profiles through KOVA Core would remove the duplication, but it needs an app proxy or a synced shop metafield. That is **Planned**, not built.
+
+**Tradeoff / reconsideration:**
+- The setting can drift from the admin rate. Changing the rate means changing the setting.
+- **Markets:** the store has one US market and one currency. A Markets-aware threshold is **Deferred**.
+- The rate condition is on Shopify's order total. The transform price is already in `cart.total_price`, so a discounted loadout should be measured the same way. This has not been checked at checkout.
+
+## D-042 — Mirror the purchase form in a dock instead of duplicating it
+
+**Context:** Product pages continue into long storytelling sections, so the form leaves the viewport. A second form would be a second source of variant truth.
+
+**Decision:**
+- The dock (`#PurchaseDock-<section>`) holds the title, the selected variant, price and compare-at price, and an Add to bag button with `form="ProductForm-<section>"`. The button submits the one real form through the normal submit handler.
+- `ProductPurchase.render()` is the single writer. It updates every price, compare-at, variant label, button and variant status in the form column and the dock. This also fixed three bugs: the compare-at price never updated, a finished add re-enabled a sold-out button, and an unavailable combination kept stale state.
+- The dock appears only once the whole form is above the viewport, and hides over the footer. Two IntersectionObserver targets, no scroll handler.
+- It never moves focus. Status still goes to the form's own live region.
+- When a Loadout Builder renders on the page, the dock shows a "Build a loadout" link to it. The button stays Add to bag; there is no separate loadout action.
+- Motion is transform and opacity only, and none under reduced motion. Without JavaScript the dock stays hidden and the form is the only path.
+- The dock sits outside the sticky purchase column. `position: sticky` creates a stacking context, and inside it the later sections painted over the dock.
+
+**Tradeoff / reconsideration:**
+- On mobile the dock covers the bottom of the viewport while visible. It publishes its height as `--ad-dock-offset` for other fixed UI.
+- The dock has no quantity control. It adds the quantity set in the form.
+
+## D-043 — Keep recently viewed as handles in the browser
+
+**Context:** Visitors move between many product pages. Returning to an object should not need an account.
+
+**Decision:**
+- `assets/recent-signals.js` is loaded only by `sections/recent-signals.liquid`, which sits after the recommendations on the product template.
+- The browser stores at most 8 product handles in `localStorage` (`kova:recent-signals`), most recent first. Nothing else is stored.
+- A product is recorded after 3 seconds on a visible page, not on a passing visit. The current product is never shown.
+- Each card is rendered by Shopify through `/products/<handle>?section_id=recent-signal-card`, using the normal product card, so price, status and quick add match everywhere. Up to four requests run in parallel.
+- A removed product answers 200 with an empty product, so the card section marks it explicitly and the handle is pruned. Malformed entries are dropped on the next write.
+- Without JavaScript, storage or history, the section stays hidden.
+
+**Tradeoff / reconsideration:** one request per card. A single search query was rejected because product search cannot filter by handle reliably. The history is per browser and is not synced to customer accounts (**Deferred**).
