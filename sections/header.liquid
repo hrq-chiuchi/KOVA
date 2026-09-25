@@ -16,9 +16,67 @@
         <span aria-hidden="true">☰</span> Menu
       </button>
       {% if section.settings.menu != blank %}
-        <nav class="site-header__nav" aria-label="Primary navigation">
+        {%- comment -%}
+          Top-level items stay real links. An item with children also gets a disclosure toggle, shown
+          only when JavaScript runs, that opens a full-width panel; without JavaScript the parent link
+          goes to its collection. Only the first three top-level items fit the bar.
+        {%- endcomment -%}
+        <nav class="site-header__nav" aria-label="Primary navigation" data-mega-nav>
           {% for link in section.settings.menu.links limit: 3 %}
-            <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+            {% assign panel_position = forloop.index | append: '' %}
+            <div class="site-header__nav-item" data-mega-item>
+              <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+              {% if link.links != blank %}
+                <button
+                  class="site-header__nav-toggle"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="MegaPanel-{{ section.id }}-{{ forloop.index }}"
+                  data-mega-toggle
+                  hidden
+                >
+                  <span class="visually-hidden">{{ link.title | escape }} menu</span>
+                  <span aria-hidden="true">+</span>
+                </button>
+                <div id="MegaPanel-{{ section.id }}-{{ forloop.index }}" class="mega-panel" data-mega-panel hidden>
+                  <div class="mega-panel__inner">
+                    <ul class="mega-panel__columns" role="list">
+                      {% for child in link.links %}
+                        <li class="mega-panel__column">
+                          {% if child.links != blank %}
+                            <a class="mega-panel__heading" href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
+                            <ul class="mega-panel__list" role="list">
+                              {% for grandchild in child.links %}
+                                <li><a href="{{ grandchild.url }}"{% if grandchild.current %} aria-current="page"{% endif %}>{{ grandchild.title | escape }}</a></li>
+                              {% endfor %}
+                            </ul>
+                          {% else %}
+                            <a class="mega-panel__link" href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>
+                              <span>{{ child.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+                            </a>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                    {% for block in section.blocks %}
+                      {% if block.type == 'featured' and block.settings.panel == panel_position %}
+                        <a class="mega-panel__featured" href="{{ block.settings.link | default: link.url }}" {{ block.shopify_attributes }}>
+                          <span class="mega-panel__featured-media">
+                            {% if block.settings.image != blank %}
+                              {{ block.settings.image | image_url: width: 900 | image_tag: widths: '360, 540, 720, 900', sizes: '(min-width: 62rem) 24rem, 100vw', loading: 'lazy', alt: block.settings.image.alt | default: '' }}
+                            {% endif %}
+                          </span>
+                          {% if block.settings.eyebrow != blank %}
+                            <span class="eyebrow">{{ block.settings.eyebrow | escape }}</span>
+                          {% endif %}
+                          <span class="mega-panel__featured-title">{{ block.settings.title | escape }}</span>
+                        </a>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
           {% endfor %}
         </nav>
       {% endif %}
@@ -64,13 +122,44 @@
         <button class="site-menu__close" type="button" data-menu-close>Close</button>
       </div>
       <nav class="site-menu__nav" aria-label="Menu navigation">
+        {%- comment -%}
+          Items with children are native disclosures, so they work with the keyboard and without
+          JavaScript. The parent link stays reachable as the first entry of its group.
+        {%- endcomment -%}
         {% for link in section.settings.menu.links %}
-          <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-            <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
-          </a>
+          {% if link.links != blank %}
+            <details class="site-menu__group"{% if link.child_active %} open{% endif %}>
+              <summary class="site-menu__link">
+                <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+              </summary>
+              <ul class="site-menu__sublist" role="list">
+                <li>
+                  <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                    View all<span class="visually-hidden"> {{ link.title | escape }}</span>
+                  </a>
+                </li>
+                {% for child in link.links %}
+                  <li>
+                    <a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
+                    {% if child.links != blank %}
+                      <ul class="site-menu__sublist site-menu__sublist--nested" role="list">
+                        {% for grandchild in child.links %}
+                          <li><a href="{{ grandchild.url }}"{% if grandchild.current %} aria-current="page"{% endif %}>{{ grandchild.title | escape }}</a></li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <a class="site-menu__link" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+              <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
+            </a>
+          {% endif %}
         {% else %}
-          <a href="{{ routes.all_products_collection_url }}"><span>Equipment Index</span><span aria-hidden="true">01</span></a>
-          <a href="{{ routes.search_url }}"><span>Search</span><span aria-hidden="true">02</span></a>
+          <a class="site-menu__link" href="{{ routes.all_products_collection_url }}"><span>Equipment Index</span><span aria-hidden="true">01</span></a>
+          <a class="site-menu__link" href="{{ routes.search_url }}"><span>Search</span><span aria-hidden="true">02</span></a>
         {% endfor %}
       </nav>
       <div class="site-menu__utility">
@@ -204,8 +293,16 @@
   .site-menu__top { display: flex; min-height: var(--ad-header-height); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
   .site-menu__close { min-width: var(--ad-control-minimum); color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .site-menu__nav { display: flex; margin-block: auto; flex-direction: column; }
-  .site-menu__nav a { display: flex; padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(2.75rem, 7vw, 6.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.88; text-transform: uppercase; }
-  .site-menu__nav a > span:last-child { font-family: var(--font-primary--family); font-size: var(--ad-text-label); letter-spacing: 0.12em; }
+  .site-menu__link { display: flex; padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(2.75rem, 7vw, 6.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.88; text-transform: uppercase; }
+  .site-menu__link > span:last-child { font-family: var(--font-primary--family); font-size: var(--ad-text-label); letter-spacing: 0.12em; }
+  .site-menu__group summary { cursor: pointer; list-style: none; }
+  .site-menu__group summary::-webkit-details-marker { display: none; }
+  .site-menu__group[open] > summary > span:last-child { color: var(--color-accent); }
+  .site-menu__sublist { display: grid; margin: 0; padding: var(--ad-space-300) 0 var(--ad-space-400); gap: var(--ad-space-100); list-style: none; }
+  .site-menu__sublist a { display: inline-flex; min-height: var(--ad-control-minimum); align-items: center; font-size: var(--ad-text-lead); }
+  .site-menu__sublist--nested { padding: 0 0 var(--ad-space-100) var(--ad-space-400); }
+  .site-menu__sublist--nested a { color: var(--ad-color-text-muted); font-size: var(--ad-text-body); }
+  .site-menu__nav { overflow-y: auto; overscroll-behavior: contain; }
   .site-menu__utility { display: flex; padding-block-start: var(--ad-space-400); justify-content: space-between; gap: var(--ad-space-300); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: 0.8rem; }
 
   .site-header__search { display: inline-flex; align-items: center; gap: var(--ad-space-100); }
@@ -227,8 +324,37 @@
   .search-command__hint { margin: 0; padding: var(--ad-space-200) var(--ad-space-400); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .search-command__panel[aria-busy='true'] .search-command__form { box-shadow: inset 0 -2px 0 var(--ad-color-text-muted); }
 
+  .site-header__nav-item { display: flex; align-items: center; gap: var(--ad-space-50); }
+  .site-header__nav-toggle { display: inline-grid; min-width: 1.5rem; min-height: var(--ad-control-minimum); padding: 0; place-items: center; border: 0; background: transparent; color: inherit; font: inherit; }
+  .site-header__nav-toggle[hidden] { display: none; }
+  .site-header__nav-toggle > span[aria-hidden] { transition: transform var(--ad-duration-fast) var(--ad-ease-standard); }
+  .site-header__nav-toggle[aria-expanded='true'] { color: var(--color-accent); }
+  .site-header__nav-toggle[aria-expanded='true'] > span[aria-hidden] { transform: rotate(45deg); }
+  .site-header[data-panel-open],
+  .site-header[data-overlay='true'][data-panel-open] { border-color: var(--ad-color-border-subtle); background: var(--ad-color-background-primary); }
+
+  /* The header's backdrop-filter makes it the containing block, so the panel is absolute, not fixed. */
+  .mega-panel { position: absolute; inset-inline: 0; top: 100%; max-height: calc(100dvh - var(--ad-header-height)); overflow-y: auto; border-block: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: var(--ad-color-background-primary); text-transform: none; letter-spacing: normal; font-weight: 400; }
+  .mega-panel[hidden] { display: none; }
+  .mega-panel__inner { display: grid; width: min(100% - (2 * var(--ad-page-padding)), var(--ad-container-width)); margin-inline: auto; padding-block: var(--ad-space-500) var(--ad-space-600); grid-template-columns: minmax(0, 1fr) auto; gap: var(--ad-content-gap); }
+  .mega-panel__columns { display: grid; margin: 0; padding: 0; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); align-content: start; column-gap: var(--ad-space-400); list-style: none; }
+  .mega-panel__link { display: flex; padding-block: var(--ad-space-200); align-items: baseline; justify-content: space-between; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(1.5rem, 2.4vw, 2.25rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+  .mega-panel__link > span:last-child,
+  .mega-panel__heading { font-family: var(--font-primary--family); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .mega-panel__link > span:last-child { color: var(--ad-color-text-muted); }
+  .mega-panel__heading { display: block; padding-block: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); }
+  .mega-panel__list { display: grid; margin: 0; padding: var(--ad-space-200) 0 var(--ad-space-400); gap: var(--ad-space-100); list-style: none; }
+  .mega-panel__list a { font-size: var(--ad-text-lead); }
+  .mega-panel a:hover,
+  .mega-panel a[aria-current='page'] { color: var(--color-accent); }
+  .mega-panel__featured { display: grid; width: 24rem; align-content: start; gap: var(--ad-space-200); }
+  .mega-panel__featured-media { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--ad-color-background-elevated); }
+  .mega-panel__featured-media img { width: 100%; height: 100%; object-fit: cover; }
+  .mega-panel__featured-title { font-family: var(--font-display-family); font-size: clamp(1.5rem, 2.2vw, 2rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+
   @media (prefers-reduced-motion: no-preference) {
     .search-command[open] { animation: search-command-in var(--ad-duration-base) var(--ad-ease-standard); }
+    .mega-panel:not([hidden]) { animation: search-command-in var(--ad-duration-base) var(--ad-ease-standard); }
     .search-command[open]::backdrop { animation: search-command-fade var(--ad-duration-fast) linear; }
   }
 
@@ -272,6 +398,31 @@
     { "type": "text", "id": "menu_note", "label": "Menu note", "default": "Independent apparel and objects for after dark." },
     { "type": "checkbox", "id": "show_search", "label": "Show search", "default": true },
     { "type": "link_list", "id": "customer_account_menu", "label": "Customer account menu", "default": "customer-account-main-menu" }
+  ],
+  "blocks": [
+    {
+      "type": "featured",
+      "name": "Menu feature",
+      "limit": 3,
+      "settings": [
+        { "type": "paragraph", "content": "Shown beside the links of one desktop menu panel. The panel item must have child links." },
+        {
+          "type": "select",
+          "id": "panel",
+          "label": "Panel",
+          "options": [
+            { "value": "1", "label": "First menu item" },
+            { "value": "2", "label": "Second menu item" },
+            { "value": "3", "label": "Third menu item" }
+          ],
+          "default": "1"
+        },
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Drop 001 / Active" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Current release" },
+        { "type": "url", "id": "link", "label": "Link", "info": "Defaults to the panel's own link." }
+      ]
+    }
   ]
 }
 {% endschema %}
