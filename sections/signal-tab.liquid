@@ -22,7 +22,7 @@
     data-signal-toggle
   >
     <span class="signal-tab__text">{{ section.settings.eyebrow | escape }}</span>
-    <span class="signal-tab__short" aria-hidden="true">{{ section.settings.eyebrow | slice: 0, 3 | escape }}</span>
+    <span class="signal-tab__short" aria-hidden="true">{{ section.settings.short_label | default: 'Msg' | escape }}</span>
     <span class="signal-tab__dot" aria-hidden="true"></span>
   </button>
   <div id="SignalTabPanel-{{ section.id }}" class="signal-tab__panel" data-signal-panel hidden>
@@ -146,6 +146,7 @@
   "settings": [
     { "type": "paragraph", "content": "A collapsed newsletter tab on the left edge. On the first page of a visit it slides in and its indicator pings three times. It never opens on its own. Visitors who dismiss it do not see it for 30 days; subscribers never see it again. The footer form stays available." },
     { "type": "text", "id": "eyebrow", "label": "Tab label", "default": "Signal" },
+    { "type": "text", "id": "short_label", "label": "Phone tab label", "info": "Shown on the slim tab on phones; keep it to about three letters. Screen readers hear the Tab label.", "default": "Msg" },
     { "type": "text", "id": "heading", "label": "Heading", "default": "Drop notices and field reports" },
     { "type": "text", "id": "button_label", "label": "Button label", "default": "Join" },
     { "type": "text", "id": "consent", "label": "Consent line", "default": "Email only. Unsubscribe any time." }
