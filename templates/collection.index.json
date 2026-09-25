@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "equipment-index",
+      "settings": { "layout": "rows", "show_masthead": true, "eyebrow": "KOVA", "heading": "Equipment\nIndex" }
+    }
+  },
+  "order": ["main"]
+}
