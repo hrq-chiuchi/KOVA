@@ -876,7 +876,7 @@ The phase ships as two pull requests. **PR A (this log)** covers the status reso
 - **Lifecycle state (D-040):** `snippets/product-status.liquid` on product cards, index rows, predictive search, the product page (per variant) and bag recommendations. The Commerce settings gain `low_supply_threshold`.
 - **Field Supply (D-041):** `snippets/field-supply.liquid` in the drawer footer and on the cart page, driven by the Commerce settings.
 - **Bag:**
-  - `snippets/cart-line.liquid` replaces the duplicated drawer and cart-page line markup. Merged loadout lines show "Loadout pricing −N%" from the components' prices against the transform's price.
+  - `snippets/cart-line.liquid` replaces the duplicated drawer and cart-page line markup. Merged loadout lines show "Loadout pricing −N%", comparing the components' prices with the line's price before discount allocations, so a discount code is never labelled as loadout pricing. **Not verified:** see below.
   - The drawer swaps only its `data-cart-region` parts, so its live region and heading persist.
   - Focus returns to the same line control after Update, moves to the neighbouring line after Remove, moves to the new line after a recommendation is added, and goes back to the control that opened the bag when it closes.
   - The bag trigger has `aria-haspopup` and `aria-expanded`.
@@ -898,22 +898,32 @@ The phase ships as two pull requests. **PR A (this log)** covers the status reso
   - Remove moved focus to the remaining line. Escape closed the bag, `aria-expanded` returned to false, and focus went back to the product page's Add to bag button.
 - **Single-option select:** from Blacksite Shell Jacket, Signal Carabiner System was offered with a Finish select (Black Oxide, Gunmetal). From Signal Carabiner System, Static-5 Panel Cap's select offered only Black, because Ash Gray is sold out.
 - **Field Supply:** Signal Carabiner System alone ($48) read "Add $22.00 to unlock complimentary standard shipping", with the bar at 68%. Adding Nullfold Card Wallet from the recommendations read "unlocked" and announced "Added Nullfold Card Wallet to bag. Complimentary standard shipping unlocked." once. The cart page shows the same state.
+- **Bundles and fallback:** Night Transit Set 03 alone was read through its components (flask, carabiner, wallet). All three were excluded, and the bag offered the backpack and Relay Modular Vest, "Works with Sector 05 Field Flask", as Options links. Afterimage Long Sleeve, which has no Works with list, fell back to "Pairs with Afterimage Long Sleeve" from Search & Discovery.
+- **Emptying the bag:** removing the last line showed the empty state with focus on the bag heading.
 - **Recent signals:** hidden on a first visit. Recorded after the dwell time, and shown on the next product without the current one. Most recent first, no duplicates. A deleted handle and a malformed entry were pruned from storage, and no empty card rendered.
 - **Without JavaScript:** the dock and Recent signals stay hidden. Add to bag posts natively to `/cart`, which lists the line and shows Field Supply.
+- **Theme Editor lifecycle (simulated as in Phase 13):**
+  - Three unload/replace/load cycles of the product section left exactly one IntersectionObserver on the form, one dock, and a correct `--ad-dock-offset`.
+  - Two reloads of Recent signals fetched only its two cards each time.
+  - A header reload kept the bag trigger's `aria-haspopup`, which the header now owns. Variant changes still worked afterwards, with no page errors.
 - **Checks:**
-  - Lighthouse 12 accessibility is 100 on a product page, `/cart`, `/collections/all` and `/`.
+  - Lighthouse 12 accessibility is 100 on a product page, `/cart`, `/collections/all` and `/`. These runs had an empty bag, a closed drawer and the dock off-screen.
+  - axe-core (WCAG 2.2 AA and best practice) found no violations in the open drawer (one line, Field Supply below the threshold, a select row) or in the visible dock. On the full product page it reports only `region` on the header logo and bag link, which predates this phase.
   - Theme Check found no offenses in 90 files, and `node --check` passes on `theme.js` and `recent-signals.js`.
 
 **Not verified:**
 
+- **The loadout pricing line.** On 2026-09-25 the KOVA Core cart transform did not merge loadout groups. Both a builder add (2 modules, estimate $417.60) and a direct `/cart/add.js` group stayed as separate lines at full price, with `kova-core-1.1.1` active. This is independent of this branch; the CLI's store auth cannot read cart transforms to diagnose it. The line renders nothing when there is no merged line, so no price is claimed.
+- **A line going sold out while in the bag** (the per-line error rendering is unchanged from Phase 9).
 - **The non-US Field Supply gate:** the store has one US market, so the dev storefront cannot switch country.
 - Whether the $70 rate condition measures a discounted loadout cart the way `cart.total_price` does. No loadout fixture sits near the threshold, and checkout was not run.
-- **Archive under the new resolver:** the branch is unchanged from D-038 but was not re-checked with a temporary assignment.
+- **Archive under the new resolver:** the logic was rewritten into `product-status` (the index row's muted state now depends on its captured key) and was not re-checked live with a temporary assignment.
 - The actual Theme Editor UI, for Recent signals and the dock.
 - Safari (**Unavailable**).
 
 ### Phase 14 backlog
 
+- **Loadout merges (owner: user, then Claude):** find out why `loadout-merge` stopped merging (function activation after the 1.1.x releases is the first suspect), then verify the loadout pricing line.
 - **PR B (Planned):** commerce mega menu over a nested Shopify menu, announcement bar, SIGNAL signup tab, and the loadout incentive boundary.
 - **KOVA Core (Planned):** read the free-shipping threshold from delivery profiles instead of a theme setting.
 - **Deferred:** the Coming state, Markets-aware thresholds, and recently viewed synced to customer accounts.

@@ -37,7 +37,12 @@
       this.dialog?.addEventListener('click', (event) => {
         if (event.target === this.dialog) this.closeMenu();
       }, { signal });
-      this.querySelector('[data-cart-open]')?.addEventListener('click', (event) => {
+      // The bag link opens the cart drawer dialog; without JavaScript it goes to /cart. The drawer
+      // keeps aria-expanded in sync while it is open.
+      const cartTrigger = this.querySelector('[data-cart-open]');
+      cartTrigger?.setAttribute('aria-haspopup', 'dialog');
+      cartTrigger?.setAttribute('aria-expanded', String(Boolean(document.querySelector('[data-cart-dialog][open]'))));
+      cartTrigger?.addEventListener('click', (event) => {
         event.preventDefault();
         document.dispatchEvent(new CustomEvent('afterdark:cart-open'));
       }, { signal });
@@ -164,10 +169,6 @@
       document.addEventListener('afterdark:cart-open', (event) => this.open(event.detail?.opener), { signal });
       document.addEventListener('afterdark:cart-updated', (event) => this.refresh(Boolean(event.detail?.open), event.detail), { signal });
       document.addEventListener('afterdark:cart-error', (event) => this.showError(event.detail?.message, event.detail?.opener), { signal });
-      document.querySelectorAll('[data-cart-open]').forEach((trigger) => {
-        trigger.setAttribute('aria-haspopup', 'dialog');
-        trigger.setAttribute('aria-expanded', 'false');
-      });
     }
 
     disconnectedCallback() {

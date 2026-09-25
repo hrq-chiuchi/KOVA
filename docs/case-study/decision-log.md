@@ -686,4 +686,4 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - A removed product answers 200 with an empty product, so the card section marks it explicitly and the handle is pruned. Malformed entries are dropped on the next write.
 - Without JavaScript, storage or history, the section stays hidden.
 
-**Tradeoff / reconsideration:** one request per card. A single search query was rejected because product search cannot filter by handle reliably. The history is per browser and is not synced to customer accounts (**Deferred**).
+**Tradeoff / reconsideration:** one request per card. A single search query could replace them, but it was not confirmed that storefront search can match an exact list of handles, so it was not used. The history is per browser and is not synced to customer accounts (**Deferred**).

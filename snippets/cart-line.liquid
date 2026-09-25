@@ -35,9 +35,10 @@
       assign line_image = platform.image
     endif
   endif
+  # Measured before discount allocations, so a discount code is never labelled as loadout pricing.
   assign loadout_percent = 0
-  if is_loadout and components_total > item.final_line_price
-    assign saved = components_total | minus: item.final_line_price | times: 100.0
+  if is_loadout and components_total > item.original_line_price
+    assign saved = components_total | minus: item.original_line_price | times: 100.0
     assign loadout_percent = saved | divided_by: components_total | round
   endif
 -%}
