@@ -511,3 +511,86 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Tradeoff / reconsideration:**
 - The metafield definition now exists outside a release. If a later deploy starts managing declarative definitions, check that it adopts this one rather than failing.
 - A new store needs the same editor step and the same definition. Neither is automated.
+
+## D-035 — Index facets as choice-validated metafields
+
+**Context:** Phase 13 turns the `all` collection into an Equipment Index faceted by TYPE, SYSTEM, ENVIRONMENT, COLOUR and STATUS. The store's product types are all one-offs, SYSTEM existed only partly as tags, ENVIRONMENT did not exist, and STATUS lived in drop tags.
+
+**Decision:**
+- Four product metafield definitions: `custom.index_type` (single text), and `custom.systems`, `custom.environments` and `custom.status` (text lists).
+  - Each has a `choices` validation, so merchants pick from a fixed list in the admin.
+  - Each is `PUBLIC_READ`, so Liquid and Search & Discovery can read it.
+- COLOUR reuses the existing `Color` option, which is already linked to `shopify.color-pattern`, so it gets swatches with no new data.
+- The user approved the value for each of the 21 products on 2026-09-25. `apps/kova-core/scripts/seed-index-facets.mjs` writes them and is safe to re-run.
+- Tags are unchanged, because the smart collections depend on them.
+- The filters are configured by hand in Search & Discovery. Shopify has no API for filter configuration.
+
+**Reasoning:**
+- Metafields are native, editable in the admin, typed, and filterable through Search & Discovery without an app.
+- Tags would mix navigation data with facet data and give no validation.
+
+**Tradeoff / reconsideration:**
+- The filter order and labels live in the Search & Discovery app, outside the repository.
+- A new facet value needs the definition's choice list updated first.
+- The seed script lives in `apps/kova-core/scripts` only to share its store helper. It is theme data, not app-owned data.
+
+## D-036 — Filtering by progressive section swaps
+
+**Context:** The collection page reloaded on every filter change, had no active-filter chips or live result count, and its filters sat inline above the grid on mobile.
+
+**Decision:**
+- `snippets/index-filters.liquid` renders sort, the native filters (swatches when a filter's `presentation` is `swatch`), active chips built from `url_to_remove`, and a result count with `role="status"`.
+  - It is shared by the collection, Equipment Index and search pages.
+- Without JavaScript the form submits by GET, as before.
+- With JavaScript, the `index-filters` element does the following:
+  - On change (debounced 250ms), it fetches the same URL with `section_id` and swaps every `[data-filters-swap]` region.
+  - It pushes the URL, and a `popstate` handler fetches again, so reload, Back and Forward all land on the same state.
+  - It aborts stale requests.
+  - It puts focus back on the control that changed. Control ids are built from the parameter name and value, so they survive the swap.
+  - It re-initialises motion and WebGL only in the results region.
+- Below 48rem, a "Filter / N" button moves the same panel into a native `<dialog>`. Only the panel's contents are swapped, so an open dialog stays open.
+- The rows/grid switch on the Equipment Index uses two alternate templates (`collection.index`, `collection.index-grid`). Liquid cannot read the query string, so the switch links are rebuilt from the active filter objects, and a hidden `view` input keeps the view through filtering.
+
+**Tradeoff / reconsideration:**
+- Every change is a server round trip, which is the same cost as the previous page reload but without the reload.
+- Pagination links still reload the page.
+- The mastheads are now separate motion scopes, so a swap does not replay their reveal.
+
+## D-037 — Search command on native predictive search
+
+**Context:** Search was Skeleton's unstyled page, reached through a plain header link that was hidden below 34rem. The theme had no predictive search.
+
+**Decision:**
+- **Opening:** the header link opens a native `<dialog>`, and so does the `/` key when focus is not in a field.
+  - The link gets `role="button"` and `aria-haspopup="dialog"` from JavaScript.
+  - Without JavaScript it stays a link to `/search`.
+  - It is now visible at every width.
+- **Keyboard and focus:** the input is a combobox (`aria-controls`, `aria-expanded`, `aria-activedescendant`) over a grouped listbox.
+  - The arrow keys, Home and End move through the options, Enter opens one, and Escape closes the dialog in one press and returns focus.
+  - Each option is a link with `role="option"`, so a pointer click navigates natively.
+- **Loading:** `assets/search-command.js` is imported the first time the dialog opens, so no search code runs on page load.
+- **Results:** `sections/predictive-search.liquid` is fetched through the Section Rendering API.
+  - Suggestions are grouped as Equipment, Field Notes, Collections and Pages, and the list ends with "Search all results".
+  - Matching also reads article bodies and tags (`resources[options][fields]` with `tag` and `body` added), so Field Notes match on their text.
+- **Announcements:** a polite status announces the number of suggestions.
+- **Motion:** the dialog opens with an opacity and clip reveal, and with no animation under reduced motion.
+- **Scope:** reference-guide PDFs are files and not searchable natively. The spec's "field manuals" are served by Field Notes articles, and each product result links to its product page, where its guide lives.
+
+**Tradeoff / reconsideration:**
+- Matching on body text brings in products whose descriptions mention a term. Only four results show per type.
+- `role="option"` on links drops their link semantics inside the combobox, the usual tradeoff for this pattern.
+
+## D-038 — Archive as a status value and badge
+
+**Context:** The user wanted retired objects to stay findable in the index. No product is retired yet.
+
+**Decision:**
+- `Archive` is a choice of `custom.status`.
+- Wherever the value is present, a shared `.status-badge--archive` label appears on the index row, the product card (taking the badge position ahead of "Sold out") and the product page identity column.
+- On an index row, the name and price are muted.
+- No product has the value. The user assigns it from the admin.
+
+**Verification:** on 2026-09-25 the value was set temporarily on Nullfold Card Wallet. The row, the grid card and the product page each showed the badge, then the value was removed.
+
+**Tradeoff / reconsideration:**
+- Archived products stay purchasable while they have stock. Archive is a label, not an inventory state.
