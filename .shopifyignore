@@ -14,3 +14,7 @@
 
 # The KOVA Core app lives beside the theme and is never uploaded with it.
 apps/**
+
+# Theme assets cannot live in subfolders; keep local image work in assets/images/ out of uploads.
+# The regex form is required: a glob line here does not stop theme dev from uploading them.
+/assets\/images\/.*/

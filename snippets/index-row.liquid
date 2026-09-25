@@ -12,12 +12,12 @@
 {%- liquid
   assign kova = product.metafields.custom
   assign statuses = kova.status.value
-  assign archived = false
-  if statuses contains 'Archive'
-    assign archived = true
-  endif
+  capture status_key
+    render 'product-status', product: product, format: 'key'
+  endcapture
+  assign status_key = status_key | strip
 -%}
-<li class="index-row{% if archived %} index-row--archive{% endif %}">
+<li class="index-row{% if status_key == 'archive' %} index-row--archive{% endif %}">
   <span class="index-row__number" aria-hidden="true">{{ index | prepend: '0' | slice: -2, 2 }}</span>
   <span class="index-row__media{% if product.featured_image == blank %} index-row__media--pending{% endif %}" aria-hidden="true">
     {% if product.featured_image %}
@@ -42,13 +42,9 @@
   <span class="index-row__status">
     <span class="visually-hidden">Status: </span>
     {% for status in statuses %}
-      {% if status == 'Archive' %}
-        <span class="status-badge status-badge--archive">Archive</span>
-      {% else %}
-        <span class="index-row__status-value">{{ status | escape }}</span>
-      {% endif %}
+      {% unless status == 'Archive' %}<span class="index-row__status-value">{{ status | escape }}</span>{% endunless %}
     {% endfor %}
-    {% unless product.available %}<span class="status-badge">Sold out</span>{% endunless %}
+    {% render 'product-status', product: product %}
   </span>
   <span class="index-row__price">
     <span class="visually-hidden">Price: </span>

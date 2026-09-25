@@ -1,0 +1,49 @@
+{% doc %}
+  The one quick-add contract for product cards and cart recommendations (D-039). A native product form
+  that the global `[data-product-form]` handler in theme.js submits with fetch; without JavaScript it
+  posts to /cart/add.
+
+  - Sold out: renders nothing.
+  - One variant: an Add button.
+  - One option (for example colour only), with `choose_option`: a select of the available values, then Add.
+    Unavailable values are left out.
+  - Anything more complex: an Options link to the product page, which never pretends it can configure it.
+
+  @param {product} product - Product to add.
+  @param {boolean} [choose_option] - Allow the single-option select instead of the Options link.
+  @param {string} [id_suffix] - Keeps the select id unique when the product renders in several places.
+
+  @example
+  {% render 'quick-add', product: product, choose_option: true, id_suffix: 'cart' %}
+{% enddoc %}
+{%- if product.available -%}
+  {%- if product.has_only_default_variant -%}
+    {% form 'product', product, class: 'quick-add', data-product-form: '' %}
+      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <button class="quick-add__button" type="submit" aria-label="Add {{ product.title | escape }} to bag">Add +</button>
+    {% endform %}
+  {%- elsif choose_option and product.options.size == 1 -%}
+    {%- assign select_id = 'QuickAdd-' | append: product.id | append: '-' | append: id_suffix -%}
+    {% form 'product', product, class: 'quick-add quick-add--select', data-product-form: '' %}
+      <label class="visually-hidden" for="{{ select_id }}">{{ product.options.first | escape }} for {{ product.title | escape }}</label>
+      <select class="quick-add__select" id="{{ select_id }}" name="id">
+        {%- for variant in product.variants -%}
+          {%- if variant.available -%}<option value="{{ variant.id }}">{{ variant.title | escape }}</option>{%- endif -%}
+        {%- endfor -%}
+      </select>
+      <input type="hidden" name="quantity" value="1">
+      <button class="quick-add__button" type="submit" aria-label="Add {{ product.title | escape }} to bag">Add +</button>
+    {% endform %}
+  {%- else -%}
+    <a class="quick-add__button quick-add__choose" href="{{ product.url }}" aria-label="Choose options for {{ product.title | escape }}">Options</a>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .quick-add { display: flex; align-items: stretch; gap: var(--ad-space-100); }
+  .quick-add__button { display: inline-grid; min-width: var(--ad-control-minimum); min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-200); place-items: center; border: var(--ad-border-hairline) solid currentcolor; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-decoration: none; text-transform: uppercase; }
+  .quick-add__button:hover { background: currentcolor; color: var(--ad-color-text-inverse); }
+  .quick-add__select { min-width: 0; min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-200); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; color: inherit; font-size: var(--ad-text-label); text-transform: uppercase; }
+  .quick-add__select option { background: var(--ad-color-background-elevated); color: var(--ad-color-text-primary); }
+{% endstylesheet %}

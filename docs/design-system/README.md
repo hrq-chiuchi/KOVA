@@ -88,7 +88,7 @@ These contracts describe the current Round 2 source. They were first exercised t
 ### Editorial product card — Commerce component
 
 - **Surface:** `snippets/product-card.liquid`.
-- **Anatomy:** linked responsive primary media, optional second product image, editorial index, availability badge, title, price/compare-at price, and either single-variant quick add or an options link.
+- **Anatomy:** linked responsive primary media, optional second product image, editorial index, lifecycle badge from `snippets/product-status.liquid` (Phase 14), title, price/compare-at price, and the shared `snippets/quick-add.liquid` action (single-variant add or an options link).
 - **Fallback:** normal product links and DOM images remain canonical. Cards with a second image crossfade to it on hover when WebGL is unavailable; reduced motion keeps this state change effectively immediate.
 
 ### Header, navigation, and cart drawer — Sections + primitive behavior
@@ -97,7 +97,7 @@ These contracts describe the current Round 2 source. They were first exercised t
 - **Header:** centered merchant logo/wordmark, menu on the left, search/account/bag on the right, transparent homepage state, and blurred scrolled/non-home state.
 - **Navigation:** native modal dialog; opening moves focus to Close, Escape/backdrop/Close dismiss it, `aria-expanded` is synchronized, and focus returns to the trigger.
 - **Search:** the Search link opens the search command (Phase 13, see below) and stays a `/search` link without JavaScript.
-- **Cart:** the normal `/cart` link remains the fallback. JavaScript progressively opens a modal drawer, refreshes it through the Section Rendering API, updates quantities through `/cart/change.js`, and updates the header count.
+- **Cart:** the normal `/cart` link remains the fallback. JavaScript progressively opens a modal drawer, refreshes it through the Section Rendering API, updates quantities through `/cart/change.js`, and updates the header count. Since Phase 14 the drawer swaps only its `data-cart-region` parts (see Bag below).
 
 ### Kinetic hero — Authored section + motion behavior
 
@@ -201,6 +201,50 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
   - An empty state and a no-query state both link to the Equipment Index.
   - Product filters narrow results to products, which is native behavior.
 
+### Product status — Primitive (Phase 14)
+
+- **Surface:** `snippets/product-status.liquid`, `.status-badge` modifiers in `assets/theme.css`, `.product-card__badge--*` in the card.
+- **Contract:**
+  - The only place that resolves Archive > Sold out > Low supply > Active (D-040). Formats: `badge`, `card`, `text`, `sr`, `key`.
+  - Low supply requires Shopify-tracked inventory with the `deny` policy, at or below `settings.low_supply_threshold`. It never shows a number.
+  - Release tags (Drop 001, Drop 002, Limited) stay out of it. Coming is reserved (**Deferred**).
+- **Consumers:** product card, index row, predictive search (text), product page (per variant through the variant JSON), bag recommendations (to exclude Archive and Sold out).
+
+### Quick add — Primitive (Phase 14)
+
+- **Surface:** `snippets/quick-add.liquid`, submitted by the global `[data-product-form]` handler in `assets/theme.js`.
+- **Contract:** sold out renders nothing; one variant renders Add; one option with `choose_option` renders a select of available values and Add; anything else links to the product page. Refusals appear in the bag; only a failed request falls back to the native post.
+
+### Bag — Commerce component (Phase 14)
+
+- **Surfaces:** `sections/cart-drawer.liquid`, `snippets/cart-line.liquid` (shared with the cart page), `CartDrawer` in `assets/theme.js`.
+- **Contract:**
+  - The heading, Close and the live region (`[data-cart-live]`) persist; only `[data-cart-region]` parts are replaced on refresh.
+  - Focus is restored to the same line control, the neighbouring line after a removal, the new line after a recommendation is added, and the opener when the bag closes.
+  - Announcements are selective: bag updated, item added from inside the bag, the free-shipping threshold crossed, and refusals. Only refusals are visible.
+  - Merged loadout lines report "Loadout pricing −N%" from the cart's own prices; the theme never estimates a discount.
+
+### Field Supply — Commerce component (Phase 14)
+
+- **Surface:** `snippets/field-supply.liquid`; settings in the Commerce group of `config/settings_schema.json`.
+- **Contract:** reads `cart.total_price` against `free_shipping_threshold`, which mirrors the store's shipping rate (D-041). Hidden for an empty bag, an ineligible country or a foreign currency. The sentence carries the state; the bar is `aria-hidden`.
+
+### Complete the system — Commerce component (Phase 14)
+
+- **Surfaces:** `snippets/cart-upsell.liquid`, `snippets/cart-upsell-row.liquid`.
+- **Contract:** at most two objects from `custom.compatible_products` of the bag lines (components for loadouts and bundles), excluding anything in the bag, sold out, Archive or the loadout parent; S&D complementary products only as a fallback (D-039). Each row states its reason.
+
+### Purchase dock — Commerce component (Phase 14)
+
+- **Surface:** `#PurchaseDock-<section>` in `sections/product.liquid`, written by `ProductPurchase`.
+- **Contract:** a mirror, not a form: its button submits the product form through `form=`. It appears when the form is above the viewport and hides over the footer; it never takes focus; transform/opacity only, none under reduced motion (D-042).
+- **Bottom-edge rule:** while visible, the dock publishes `--ad-dock-offset` on the root. Any other fixed bottom UI must sit above that offset, and hide while a modal dialog is open.
+
+### Recent signals — Section (Phase 14)
+
+- **Surfaces:** `sections/recent-signals.liquid`, `sections/recent-signal-card.liquid` (rendered only through the Section Rendering API), `assets/recent-signals.js`.
+- **Contract:** handles only, capped at 8, recorded after a 3-second visible dwell, current product excluded, removed and malformed handles pruned, cards rendered by the canonical product card. Hidden without JavaScript or history (D-043).
+
 ### Composition model — Theme blocks + section (Phase 8)
 
 **Implemented; verified in the development preview and in the actual Theme Editor UI (2026-09-24).** Safari is **Unavailable** (no macOS or iOS device).
@@ -279,7 +323,7 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Token custom properties | Token | `assets/tokens.css` | **Implemented** |
 | Global visual/accessibility foundation | Foundation | `assets/theme.css` | **Locally verified:** desktop, 390×844 mobile, and reduced-motion paths |
 | Header and modal navigation | Section | `sections/header.liquid`, `assets/theme.js` | **Locally verified:** scroll state, focus entry/return, Escape cleanup, mobile/desktop layouts |
-| Progressive cart drawer | Section / commerce component | `sections/cart-drawer.liquid`, `assets/theme.js` | **Locally verified:** empty state, Section Rendering refresh, open/close; available-item mutation pending |
+| Progressive cart drawer | Section / commerce component | `sections/cart-drawer.liquid`, `assets/theme.js` | **Locally verified:** empty state, Section Rendering refresh, open/close; quantity, removal and stock-limit mutations verified in Phase 14 |
 | Kinetic image-stack hero | Section / motion behavior | `sections/kinetic-hero.liquid`, `assets/kinetic-hero.js` | **Locally verified:** deterministic first and repeated pointer entry, spaced trail from the first hover after load (2026-09-24, D-029), directional layer promotion, right-side rest, touch advance, fallback layers, reduced-motion static state |
 | Editorial category grid | Section | `sections/editorial-product-grid.liquid` | **Locally verified (2026-09-24):** three homepage instances in product mode using the staggered, feature, and strip layouts at 1440px and 390px; editorial-block mode remains available but unused |
 | Hero collection mode | Section setting | `sections/kinetic-hero.liquid` | **Locally verified (2026-09-24):** Drop 001 images, CTA to the collection, authored heading kept; custom mode rendered in the preview. Toggling inside the actual Theme Editor UI has not been exercised |
@@ -295,7 +339,15 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Index filters | Primitive + behavior | `snippets/index-filters.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** in-place swaps with focus kept, chips, live count, Back/Forward, mobile dialog at 390px, GET fallback without JavaScript, flat request count after simulated section reloads. The Colour filter is live with swatches (labelled "Cor" for now); selecting a swatch has not been exercised |
 | Equipment Index | Section / templates | `sections/equipment-index.liquid`, `snippets/index-row.liquid`, `templates/collection.index*.json` | **Locally verified (2026-09-25):** 21 rows with thumbnails (16 photographed, 5 pending frames) at 390/768/1440/1920px with no overflow, grid view keeps filters, Lighthouse accessibility 100. The TYPE/SYSTEM/ENVIRONMENT/STATUS filters are configured in Search & Discovery but **not yet rendered on the storefront** (still processing on 2026-09-25); verification is in the Phase 13 backlog |
 | Index facet data | Foundation (Shopify custom data) | 4 product metafield definitions; `apps/kova-core/scripts/seed-index-facets.mjs` | **Implemented (2026-09-25):** choice-validated, `PUBLIC_READ`, approved values on 21 products (D-035) |
-| Status badge (Archive, Sold out) | Primitive | `.status-badge` in `assets/theme.css` | **Locally verified (2026-09-25):** Archive shown on the row, the card and the product page during a temporary check; no product is archived (D-038) |
+| Status badge (Archive, Sold out, Low supply) | Primitive | `.status-badge` in `assets/theme.css` | **Locally verified (2026-09-25):** Archive shown on the row, the card and the product page during a temporary check; no product is archived (D-038). Low supply added in Phase 14 |
+| Product status resolver | Primitive | `snippets/product-status.liquid` | **Locally verified (2026-09-25):** Low supply on a 2-unit variant, Sold out on Ash Gray, no badge on stocked variants; one resolver on cards, rows, predictive search, the product page and bag recommendations (D-040). The rewritten Archive path was **not re-checked live** |
+| Quick add | Primitive | `snippets/quick-add.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** single-variant add, single-option select offering only available values, Options link for multi-option products (D-039) |
+| Bag regions, focus and announcements | Commerce component | `sections/cart-drawer.liquid`, `snippets/cart-line.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** focus kept after Update, moved after Remove and after a recommendation add, returned to the opener on Escape; selective announcements; stock-limit refusal shown after re-reading the bag; axe-core clean with the drawer open. Loadout pricing line **not verified** (the cart transform did not merge on 2026-09-25) |
+| Field Supply | Commerce component | `snippets/field-supply.liquid`, Commerce settings | **Locally verified (2026-09-25):** below ($22 remaining, 68%), crossing announced once, unlocked, cart page, no-JS cart page. Non-US gate **not verified** (single US market) (D-041) |
+| Complete the system | Commerce component | `snippets/cart-upsell.liquid`, `snippets/cart-upsell-row.liquid` | **Locally verified (2026-09-25):** curated Works with picks with reasons, re-filtered after adds, in-bag objects, bundle components and sold-out values excluded, S&D fallback on Afterimage Long Sleeve (D-039) |
+| Purchase dock | Commerce component | `sections/product.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** show/hide by observer, footer hide, state mirrored across variants, add from the dock, 375px single row, reduced motion, hidden without JavaScript, axe-core clean, one observer after simulated section reloads (D-042). Theme Editor UI **not verified** |
+| Recent signals | Section | `sections/recent-signals.liquid`, `sections/recent-signal-card.liquid`, `assets/recent-signals.js` | **Locally verified (2026-09-25):** first visit hidden, dwell recording, current product excluded, most recent first, removed and malformed handles pruned (D-043). Theme Editor UI **not verified** |
+| Commerce mega menu, announcement bar, SIGNAL signup | Sections | — | **Planned** (Phase 14 PR B) |
 | Search command | Header behavior | `sections/header.liquid`, `assets/search-command.js`, `sections/predictive-search.liquid` | **Locally verified (2026-09-25):** the `/` key, lazy module, grouped suggestions, keyboard-only open of a product, Escape with focus return, announcements, 390px layout, reduced motion |
 | Search results | Section | `sections/search.liquid` | **Locally verified (2026-09-25):** grouped results, product filters, empty and no-query states, Lighthouse accessibility 100 |
 | Product purchase surface | Section | `sections/product.liquid`, `assets/theme.js` | **Locally verified:** real media/options, linked colour swatches, variant and quantity state, genuine sold-out state on the unproduced colourway, and a successful add-to-cart on single-variant, multi-variant, and bundle products after the single-variant matcher fix. Custom-data presentation (descriptor, positioning, drop code, specifications, fit, material, compatibility, edition, package, reference guide) renders on five representative PDPs; the Features list renders five entries on all 16 products after the catalogue data fix |
@@ -326,7 +378,7 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Checkout and accounts branding | Foundation (Shopify branding) | `apps/kova-core/scripts/brand-accounts.mjs` | **Applied (2026-09-25):** token colours, Work Sans, uppercase tracked headings, square hairline components on accounts, sign-in and checkout; Field Locker, order page and sign-in screenshots at 1280/390px. Checkout rendering **not verified** (password-protected storefront) |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |
 
-Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/search-command.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.
+Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/search-command.js`, `assets/recent-signals.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.
 
 ## Figma synchronization plan — Unavailable now
 

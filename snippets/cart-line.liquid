@@ -1,0 +1,109 @@
+{% doc %}
+  Renders one cart line for the cart drawer or the cart page, so both share the loadout mapping and the
+  loadout pricing line.
+
+  A merged KOVA loadout line belongs to the hidden `kova-loadout` parent product, so it links to and shows
+  its platform. Its pricing line compares the components' current prices with the price the cart transform
+  set (D-024); nothing is estimated in the theme.
+
+  @param {object} item - Cart line item.
+  @param {string} layout - `drawer` (line with its own change form) or `page` (inside the cart page form).
+  @param {number} [index] - One-based line position, for the cart page eyebrow.
+
+  @example
+  {% render 'cart-line', item: item, layout: 'drawer' %}
+{% enddoc %}
+{%- liquid
+  assign line_title = item.product.title
+  assign line_url = item.url
+  assign line_image = item.image
+  assign is_loadout = false
+  assign components_total = 0
+  if item.properties._kova_loadout_platform != blank
+    assign is_loadout = true
+    assign line_title = item.title
+    assign platform = item.item_components.first
+    for component in item.item_components
+      if component.product.title == item.properties._kova_loadout_platform
+        assign platform = component
+      endif
+      assign component_total = component.variant.price | times: component.quantity
+      assign components_total = components_total | plus: component_total
+    endfor
+    assign line_url = platform.url
+    if line_image == blank
+      assign line_image = platform.image
+    endif
+  endif
+  # Measured before discount allocations, so a discount code is never labelled as loadout pricing.
+  assign loadout_percent = 0
+  if is_loadout and components_total > item.original_line_price
+    assign saved = components_total | minus: item.original_line_price | times: 100.0
+    assign loadout_percent = saved | divided_by: components_total | round
+  endif
+-%}
+{%- capture loadout_pricing -%}
+  {%- if loadout_percent > 0 -%}
+    <p class="cart-line__loadout" data-loadout-percent="{{ loadout_percent }}">
+      Loadout pricing −{{ loadout_percent }}% <s><span class="visually-hidden">Separately </span>{{ components_total | money }}</s>
+    </p>
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- if layout == 'drawer' -%}
+  <li class="cart-drawer__item" data-line-key="{{ item.key }}">
+    <a class="cart-drawer__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
+      {% if line_image %}
+        {{ line_image | image_url: width: 320 | image_tag: widths: '160, 240, 320', sizes: '7rem', loading: 'lazy', alt: '' }}
+      {% else %}
+        {% render 'media-pending', title: line_title, compact: true %}
+      {% endif %}
+    </a>
+    <div class="cart-drawer__item-copy">
+      <a href="{{ line_url }}" data-line-title>{{ line_title | escape }}</a>
+      {% unless is_loadout or item.product.has_only_default_variant %}<small>{{ item.variant.title | escape }}</small>{% endunless %}
+      {% render 'cart-line-components', item: item %}
+      {% if item.error_message != blank %}<small class="cart-drawer__error" role="alert">{{ item.error_message | escape }}</small>{% endif %}
+      {{ loadout_pricing }}
+      <span>{{ item.final_line_price | money }}</span>
+      <form action="{{ routes.cart_change_url }}" method="post" data-cart-change>
+        <input type="hidden" name="id" value="{{ item.key }}">
+        <label>
+          <span class="visually-hidden">Quantity for {{ line_title | escape }}</span>
+          <input type="number" name="quantity" value="{{ item.quantity }}" min="0" inputmode="numeric" data-line-control="quantity">
+        </label>
+        <button type="submit" data-line-control="update">Update<span class="visually-hidden"> {{ line_title | escape }}</span></button>
+        <button type="submit" name="quantity" value="0" data-line-control="remove">Remove<span class="visually-hidden"> {{ line_title | escape }}</span></button>
+      </form>
+    </div>
+  </li>
+{%- else -%}
+  <li class="cart-line">
+    <a class="cart-line__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
+      {% if line_image %}
+        {{ line_image | image_url: width: 600 | image_tag: widths: '240, 360, 480, 600', sizes: '(max-width: 767px) 7rem, 12rem', loading: 'lazy', alt: '' }}
+      {% else %}
+        {% render 'media-pending', title: line_title, compact: true %}
+      {% endif %}
+    </a>
+    <div class="cart-line__identity">
+      <p class="eyebrow">{% if is_loadout %}Loadout{% else %}Object{% endif %} {{ index | prepend: '0' }}</p>
+      <h2><a href="{{ line_url }}">{{ line_title | escape }}</a></h2>
+      {% unless is_loadout or item.product.has_only_default_variant %}<p>{{ item.variant.title | escape }}</p>{% endunless %}
+      {% render 'cart-line-components', item: item, class: 'cart-line__components' %}
+      {% if item.error_message != blank %}<p class="cart-line__error" role="alert">{{ item.error_message | escape }}</p>{% endif %}
+      {{ loadout_pricing }}
+      <a href="{{ item.url_to_remove }}">{{ 'cart.remove' | t }}<span class="visually-hidden"> {{ line_title | escape }}</span></a>
+    </div>
+    <div class="cart-line__quantity form-field">
+      <label for="Quantity-{{ item.index }}">Quantity<span class="visually-hidden"> for {{ line_title | escape }}</span></label>
+      <input id="Quantity-{{ item.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric">
+    </div>
+    <p class="cart-line__price">{{ item.final_line_price | money }}</p>
+  </li>
+{%- endif -%}
+
+{% stylesheet %}
+  .cart-line__loadout { margin: 0; color: var(--color-accent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .cart-line__loadout s { margin-inline-start: var(--ad-space-100); color: var(--ad-color-text-muted); font-weight: 500; }
+{% endstylesheet %}

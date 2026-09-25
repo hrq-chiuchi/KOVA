@@ -199,7 +199,7 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
   font-size: 0.85rem;
 }
 
-/* Object status label: Sold out, Archive (D-038). */
+/* Object lifecycle label from snippets/product-status: Archive, Sold out, Low supply (D-038, D-040). */
 .status-badge {
   display: inline-flex;
   padding: 0.125rem var(--ad-space-100);
@@ -216,6 +216,11 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
   border-color: var(--ad-color-text-muted);
   background: var(--ad-color-background-inverse);
   color: var(--ad-color-text-inverse);
+}
+
+.status-badge--low-supply {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 [data-reveal-line-wrap] {

@@ -1,0 +1,45 @@
+{% comment %}
+  Recent signals (D-043): the objects this visitor inspected before, most recent first. The browser keeps
+  only product handles; each card is rendered by Shopify through the `recent-signal-card` section, so
+  status and price come from the same product card as everywhere else. Without JavaScript, or with no
+  history, the section stays hidden.
+{% endcomment %}
+<recent-signals
+  class="recent-signals full-width"
+  data-handle="{{ product.handle }}"
+  data-root="{{ routes.root_url }}"
+  data-limit="{{ section.settings.product_limit }}"
+  hidden
+>
+  <div class="section-shell recent-signals__inner" data-motion-scope>
+    <header class="recent-signals__header">
+      <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {% render 'display-heading', text: section.settings.heading, class: 'section-heading' %}
+    </header>
+    <div class="recent-signals__grid" data-recent-results></div>
+  </div>
+</recent-signals>
+<script src="{{ 'recent-signals.js' | asset_url }}" type="module"></script>
+
+{% stylesheet %}
+  .recent-signals { display: block; background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .recent-signals[hidden] { display: none; }
+  .recent-signals__inner { padding-block: var(--ad-section-space); }
+  .recent-signals__header { margin-block-end: var(--ad-space-600); }
+  .recent-signals__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .recent-signals__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ad-space-300); }
+  @media (max-width: 47.99rem) { .recent-signals__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Recent signals",
+  "enabled_on": { "templates": ["product"] },
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Resume inspection" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Recent signals" },
+    { "type": "range", "id": "product_limit", "label": "Product limit", "min": 2, "max": 4, "step": 1, "default": 4 }
+  ],
+  "presets": [{ "name": "Recent signals" }]
+}
+{% endschema %}

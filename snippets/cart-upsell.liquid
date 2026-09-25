@@ -1,0 +1,82 @@
+{% doc %}
+  Complete the system: up to two objects that work with what is already in the bag (D-039).
+
+  Source: each line's `custom.compatible_products`, the same curated field as the product page's Works with
+  section. A merged loadout or a native bundle is read through its components, because the line's own
+  product is the hidden parent. Only when that yields nothing does it fall back to the first object's
+  Search & Discovery complementary products. There is no algorithmic source.
+
+  Excluded: anything already in the bag (including components), sold out, Archive, and the loadout parent.
+  Renders nothing when no candidate survives.
+
+  @example
+  {% render 'cart-upsell' %}
+{% enddoc %}
+{%- liquid
+  assign limit = 2
+  assign in_cart = '|'
+  for item in cart.items
+    assign in_cart = in_cart | append: item.product.handle | append: '|'
+    for component in item.item_components
+      assign in_cart = in_cart | append: component.product.handle | append: '|'
+    endfor
+  endfor
+
+  assign picked = '|'
+  assign count = 0
+  assign first_source = blank
+-%}
+{%- capture rows -%}
+  {%- for item in cart.items -%}
+    {%- liquid
+      if item.item_components.size > 0
+        assign sources = item.item_components | map: 'product'
+      else
+        assign sources = cart.items | where: 'key', item.key | map: 'product'
+      endif
+    -%}
+    {%- for source in sources -%}
+      {%- if first_source == blank -%}{%- assign first_source = source -%}{%- endif -%}
+      {%- for candidate in source.metafields.custom.compatible_products.value -%}
+        {%- if count >= limit -%}{%- break -%}{%- endif -%}
+        {%- assign token = '|' | append: candidate.handle | append: '|' -%}
+        {%- if in_cart contains token or picked contains token or candidate.handle == 'kova-loadout' -%}{%- continue -%}{%- endif -%}
+        {%- capture key -%}{%- render 'product-status', product: candidate, format: 'key' -%}{%- endcapture -%}
+        {%- assign key = key | strip -%}
+        {%- if key == 'archive' or key == 'sold-out' -%}{%- continue -%}{%- endif -%}
+        {%- assign picked = picked | append: candidate.handle | append: '|' -%}
+        {%- assign count = count | plus: 1 -%}
+        {%- assign reason = 'Works with ' | append: source.title -%}
+        {%- render 'cart-upsell-row', product: candidate, reason: reason -%}
+      {%- endfor -%}
+    {%- endfor -%}
+  {%- endfor -%}
+
+  {%- if count == 0 and first_source != blank -%}
+    {%- for candidate in first_source.metafields['shopify--discovery--product_recommendation'].complementary_products.value -%}
+      {%- if count >= limit -%}{%- break -%}{%- endif -%}
+      {%- assign token = '|' | append: candidate.handle | append: '|' -%}
+      {%- if in_cart contains token or picked contains token or candidate.handle == 'kova-loadout' -%}{%- continue -%}{%- endif -%}
+      {%- capture key -%}{%- render 'product-status', product: candidate, format: 'key' -%}{%- endcapture -%}
+      {%- assign key = key | strip -%}
+      {%- if key == 'archive' or key == 'sold-out' -%}{%- continue -%}{%- endif -%}
+      {%- assign picked = picked | append: candidate.handle | append: '|' -%}
+      {%- assign count = count | plus: 1 -%}
+      {%- assign reason = 'Pairs with ' | append: first_source.title -%}
+      {%- render 'cart-upsell-row', product: candidate, reason: reason -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- if count > 0 -%}
+  <section class="cart-upsell" aria-labelledby="CartUpsellHeading">
+    <h3 class="cart-upsell__heading" id="CartUpsellHeading">Complete the system</h3>
+    <ul class="cart-upsell__list" role="list">{{ rows }}</ul>
+  </section>
+{%- endif -%}
+
+{% stylesheet %}
+  .cart-upsell { padding-block: var(--ad-space-400); }
+  .cart-upsell__heading { margin: 0 0 var(--ad-space-200); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .cart-upsell__list { display: grid; margin: 0; padding: 0; gap: var(--ad-space-300); list-style: none; }
+{% endstylesheet %}

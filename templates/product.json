@@ -34,6 +34,14 @@
         "tone": "dark"
       }
     },
+    "recent_signals": {
+      "type": "recent-signals",
+      "settings": {
+        "eyebrow": "Resume inspection",
+        "heading": "Recent signals",
+        "product_limit": 4
+      }
+    },
     "field_manual": {
       "type": "product-field-manual",
       "settings": {
@@ -125,6 +133,7 @@
     "compatibility",
     "faq",
     "reviews",
-    "recommendations"
+    "recommendations",
+    "recent_signals"
   ]
 }
