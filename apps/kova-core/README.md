@@ -1,156 +1,48 @@
-# Shopify App Template - Extension Only
+# KOVA Core
 
-This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using [Preact](https://preactjs.com/) and [Vite](https://vite.dev/). It uses Shopify's [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access) and [App Bridge](https://shopify.dev/docs/api/app-bridge) to make authenticated calls to the Shopify Admin API directly from the browser — no server required.
+The Shopify app behind KOVA loadouts and the Field Locker. It is extension-only: there is no app server and no backend, and no storefront code holds a token. Decisions are recorded in `docs/case-study/decision-log.md` (D-024 to D-032).
 
-Rather than cloning this repo, follow the [Quick Start steps](#quick-start) below.
+## Surfaces
 
-## Quick start
+| Extension | Target | Purpose |
+| --- | --- | --- |
+| `loadout-merge` | `cart.transform.run` | Merges a valid loadout group (`_kova_loadout`, `_kova_slot`) into one "Loadout — {platform}" line at the tier price |
+| `loadout-guard` | `cart.validations.generate.run` | Refuses invalid groups and a directly added loadout parent |
+| `field-locker` | `customer-account.page.render` | The Field Locker page: orders, saved and purchased loadouts, equipment, documents |
+| `field-locker-order` | `customer-account.order-status.block.render` | A block on the order page showing that order's loadouts and documents |
 
-### Prerequisites
+Shared code lives in `shared/`:
+- `loadout-rules.ts`: `judgeGroup`, used by both functions.
+- `field-locker.ts`: the loadout link format, saved-loadout rules, and equipment and loadout grouping from orders.
+- `account-data.js`: the Customer Account API and Storefront API queries.
 
-Before you begin, you'll need to [download and install the Shopify CLI](https://shopify.dev/docs/apps/tools/cli/getting-started) if you haven't already.
+The theme mirrors `judgeGroup` and the link format in `assets/theme.js`.
 
-### Setup
+## Data
 
-```shell
-shopify app init --template=https://github.com/Shopify/shopify-app-template-extension-only
-```
+- **Loadout rules:** the `loadout` and `loadout_slot` metaobjects, compiled onto both functions by `scripts/sync-rules.mjs`. Run it after any rule edit in the admin.
+- **Saved loadouts:** `$app:saved_loadouts`, a JSON customer metafield declared in `shopify.app.toml`. Only the Field Locker page writes it, at most 12 entries.
+- **Scopes:**
+  - `read_products`, `write_cart_transforms`, `write_validations`
+  - `write_customers`, needed to declare the metafield
+  - `customer_read_customers`, `customer_read_orders`, `customer_write_customers`
+  - Protected customer data is declared in the Dev Dashboard. The extensions read no name, email, address or phone field.
 
-### Local Development
+## Scripts
 
-```shell
-shopify app dev
-```
+The scripts run Admin GraphQL through the Shopify CLI (`scripts/lib/store.mjs`) and never read a token.
 
-Press P to open the URL to your app. Once you click install, you can start development.
+- `node scripts/seed-drop-002.mjs`: the Drop 002 catalogue and the loadout metaobjects.
+- `node scripts/sync-rules.mjs [--dry-run]`: compiles the rules onto the functions.
+- `FIELD_LOCKER_EMAIL=… node scripts/seed-field-locker.mjs`: a test customer with three paid orders, one of them a loadout.
+- `node scripts/brand-accounts.mjs [--dry-run]`: copies the theme's token values into the store's checkout and accounts branding, after saving a git-ignored backup (D-033). It needs the store CLI's `write_checkout_and_accounts_configurations` scope.
 
-Local development is powered by [Shopify CLI](https://shopify.dev/docs/apps/build/cli-for-apps/test-apps-locally). It logs into your account, connects to an app, provides environment variables, updates remote config, creates a tunnel and provides commands to generate extensions.
-
-## How it works
-
-### Authentication
-
-This template uses [Shopify managed installation](https://shopify.dev/docs/apps/build/authentication-authorization/app-installation). Shopify handles the OAuth flow and app installation automatically. Once installed, the app is fully embedded in the Shopify Admin.
-
-### Querying data
-
-This template uses [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access) — the Shopify Admin API is called directly from the browser using App Bridge. No server-side code is needed.
-
-This template comes pre-configured with examples of querying data using GraphQL with direct API access, and using [metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects) to store and retrieve structured app data — see [/shared/models/faq.ts](./shared/models/faq.ts).
-
-### App Bridge
-
-[App Bridge](https://shopify.dev/docs/api/app-bridge) is loaded automatically in embedded apps.
-
-### Polaris Web Components
-
-This template uses [Polaris Web Components](https://shopify.dev/docs/api/app-home/web-components) — the native custom element version of Polaris that works in any framework (including Preact). No additional package installation is required as they are provided automatically in the Shopify Admin iframe.
-
-## GraphQL Codegen
-
-This template is pre-configured with [GraphQL Codegen](https://the-guild.dev/graphql/codegen) to generate TypeScript types from your GraphQL queries.
-
-To regenerate types after updating queries:
+## Development
 
 ```shell
-npm run codegen
+npm install
+shopify app dev          # previews all four extensions on the dev store
+shopify app deploy       # creates a new app version (ask before releasing)
+cd extensions/field-locker && npx vitest run      # link format, saved list, order grouping
+cd extensions/loadout-merge && npx vitest run     # transform fixtures (same for loadout-guard)
 ```
-
-To watch for changes:
-
-```shell
-npm run codegen:watch
-```
-
-## Build
-
-Build the app by running:
-
-Using npm:
-
-```shell
-npm run build
-```
-
-Using yarn:
-
-```shell
-yarn build
-```
-
-Using pnpm:
-
-```shell
-pnpm run build
-```
-
-## Shopify Dev MCP
-
-This template is configured with the Shopify Dev MCP. This instructs [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot), [Claude Code](https://claude.com/product/claude-code), and [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) to use the Shopify Dev MCP.
-
-For more information on the Shopify Dev MCP please read [the documentation](https://shopify.dev/docs/apps/build/devmcp).
-
-## Metafields and Metaobjects
-
-This template uses [metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects) and [metafields](https://shopify.dev/docs/apps/custom-data/metafields) to store structured app data without a custom database.
-
-### Metaobject: FAQ
-
-The template defines a `faq` metaobject type for storing FAQ entries. Each FAQ has a question, answer, a flag to control visibility on the FAQ page, and optional product associations.
-
-Defined in `shopify.app.toml`:
-
-```toml
-[metaobjects.app.faq]
-name = "FAQ"
-
-[metaobjects.app.faq.fields.question]
-name = "Question"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.faq.fields.answer]
-name = "Answer"
-type = "multi_line_text_field"
-required = true
-
-[metaobjects.app.faq.fields.show_on_faq_page]
-name = "Show on FAQ page"
-type = "boolean"
-
-[metaobjects.app.faq.fields.products]
-name = "Products"
-type = "list.product_reference"
-```
-
-### Metafield: Product FAQ
-
-A metafield definition links individual products to a FAQ metaobject entry, allowing merchants to associate a FAQ with specific products.
-
-```toml
-[product.metafields.app.faq]
-name = "FAQ"
-description = "FAQ for this product"
-type = "metaobject_reference<$app:faq>"
-access.admin = "merchant_read_write"
-```
-
-These definitions are automatically synced to Shopify when you run `shopify app dev` or `shopify app deploy`. See [/shared/models/faq.ts](./shared/models/faq.ts) for the client-side model that reads and writes these metaobjects via the Admin GraphQL API.
-
-## Resources
-
-Preact & Vite:
-
-- [Preact docs](https://preactjs.com/guide/v10/getting-started)
-- [Vite docs](https://vite.dev/)
-
-Shopify:
-
-- [Intro to Shopify apps](https://shopify.dev/docs/apps/getting-started)
-- [Direct API access](https://shopify.dev/docs/api/app-home#direct-api-access)
-- [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
-- [App Bridge](https://shopify.dev/docs/api/app-bridge)
-- [Polaris Web Components](https://shopify.dev/docs/api/app-home/web-components)
-- [Metaobjects](https://shopify.dev/docs/apps/custom-data/metaobjects)
-- [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
-- [Shopify Functions](https://shopify.dev/docs/api/functions)

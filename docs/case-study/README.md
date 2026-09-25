@@ -645,3 +645,132 @@ Phase 10 adds the storefront surface for Phase 9's loadouts: a builder on its ow
 - **Mirror drift.** The builder's checks in `assets/theme.js` copy `judgeGroup`; add a fixture or shared test if the rules change.
 - **One loadout per platform.** The product page uses the first loadout that lists the product; revisit if a platform joins a second loadout.
 - Items carried from Phase 9: Drop 002 photography, rules syncing, and the parent product page.
+
+## Phase 11 Field Locker log
+
+Phase 11 adds the customer side of KOVA Core: a Field Locker page in customer accounts and a block on Shopify's order page (D-030 to D-032). The results below come from `shopify app dev` and `shopify theme dev` on 2026-09-25, unless marked as production. `kova-core-1.1.0` and `1.1.1` were released the same day (D-034), and the page, the save flow and the order block were then verified in production.
+
+### Architecture
+
+```mermaid
+flowchart LR
+  subgraph Theme["Theme (Liquid, assets/theme.js)"]
+    Builder["Loadout builder<br/>sections/loadout-builder.liquid"]
+    Cart["Cart page and drawer"]
+  end
+  subgraph Core["KOVA Core app (extension-only, no backend)"]
+    Merge["loadout-merge<br/>cart transform"]
+    Guard["loadout-guard<br/>validation"]
+    Locker["field-locker<br/>customer-account.page.render"]
+    OrderBlock["field-locker-order<br/>order-status block"]
+    Shared["shared/loadout-rules.ts<br/>shared/field-locker.ts"]
+  end
+  subgraph Shopify["Shopify data"]
+    Rules[("loadout / loadout_slot<br/>metaobjects")]
+    Products[("Products, custom.reference_guide,<br/>material_system.care")]
+    Orders[("Orders: component lines with<br/>_kova_loadout / _kova_slot")]
+    Saved[("Customer $app:saved_loadouts<br/>JSON metafield")]
+  end
+  Builder -- "/cart/add.js, one group" --> Cart
+  Cart --> Merge --> Orders
+  Cart --> Guard
+  Rules -- "sync-rules.mjs" --> Merge & Guard
+  Builder -- "Save to Field Locker link<br/>?loadout&platform&modules" --> Locker
+  Locker -- "Rebuild link, same format" --> Builder
+  Locker -- "Customer Account API" --> Orders & Saved
+  Locker & OrderBlock -- "Storefront API" --> Products & Rules
+  OrderBlock -- "Customer Account API" --> Orders
+  Shared -.-> Merge & Guard & Locker & OrderBlock
+```
+
+The theme owns the storefront, including the builder. KOVA Core owns the rules, the price, enforcement and the customer's account. No storefront script holds a token: the save hand-off is a plain link, and the customer confirms it on a page Shopify has authenticated.
+
+### Spike (2026-09-25)
+
+A throwaway full-page extension answered three questions before any design depended on them:
+
+1. **Does a query string reach the page?** Yes. `navigation.currentEntry.url` was `extension:/?loadout=test` for the development page `shopify.com/84211761411/account/pages/dev-ab0544b9-…`. It also survives signing in (see Results).
+2. **How is a loadout recorded on an order?** As its component lines. Each line keeps `_kova_loadout` and `_kova_slot`, and the Admin API also groups them in a `lineItemGroup` titled "Loadout — Relay Sling 8". The Customer Account API's `LineItem` exposes `customAttributes`, `productId`, `variantId`, `productType`, `image` and `group`.
+3. **Scopes:** `customer_read_customers`, `customer_read_orders` and `customer_write_customers`. Declaring the customer metafield also needs `write_customers`; `app dev` refused to start without it. The user filed the protected customer data declaration.
+
+**Found while seeding:** draft orders run the cart transform. The first seed applied a 15% line discount and completion failed, because the transform had already merged the lines at $261.80. The seed now leaves pricing to the transform.
+
+### Seed data
+
+`apps/kova-core/scripts/seed-field-locker.mjs` creates one test customer and three paid draft orders. It can be re-run safely. The customer's email is passed in `FIELD_LOCKER_EMAIL`; a plus-address never delivered its sign-in code, so the customer uses the owner's plain address.
+
+| Order | Contents | Total |
+| --- | --- | --- |
+| #1001 | Dead Channel Utility Hoodie (guide), Afterimage Long Sleeve (no guide) | Full price |
+| #1002 | Relay Sling 8 loadout: Gridlink Cell 01, Sector Sleeve, Lumen Tag Beacon (Red) | $261.80, merged by the transform |
+| #1003 | After Dark Utility Backpack, Gridlink Pouch Array (both with guides) | Full price |
+
+### Results
+
+**Field Locker page:** checked in the user's browser, then in headless Chromium signed in as the seeded customer with the emailed code. The headless browser was enrolled in the `app dev` preview through the extension's development entry URL; until then a development page shows Shopify's "There's a problem loading this page".
+- Orders lists #1003, #1002 and #1001 with "All orders" below them.
+- Loadouts shows #1002 regrouped as "Relay Grid loadout", and its Rebuild link.
+- Equipment lists 8 objects, each "Registered Sep 24, 2026 · #100x".
+- Documents lists the 8 objects:
+  - After Dark Utility Backpack, Gridlink Pouch Array and Dead Channel Utility Hoodie have a "Reference guide (PDF)" link. A HEAD request to one returned 200 `application/pdf`.
+  - The other five show "Reference guide pending".
+  - Seven show a care disclosure under their material's name; Lumen Tag Beacon and Sector Sleeve have no material profile.
+- **Signed-out save:** a signed-out headless browser opened the builder on the theme preview, chose the Sling, Cell and Sleeve, and followed "Save to Field Locker". Shopify sent it to sign-in. After the emailed code, it returned to the page with the query intact, `:` and `,` percent-encoded. The confirm banner showed the three objects.
+- Save wrote the metafield, cleared the query and listed the entry. Remove deleted it.
+- A link carrying the Signal Carabiner System, which the customer doesn't own, showed that product's title and image.
+- At 390px there is no horizontal overflow, and no page errors were logged.
+- Dates follow the browser's locale. A pt-BR browser showed "24 de set. de 2026" beside English strings.
+
+**Order #1002:** the order-status block shows "Relay Grid loadout: Relay Sling 8 · Gridlink Cell 01 · Sector Sleeve · Lumen Tag Beacon", four pending guide lines and "Open your Field Locker". Shopify's own line shows "Loadout — Relay Sling 8", 4 items, $261.80.
+
+**Builder** (headless Chromium, 390 and 1440px):
+- A Field Locker link preselected all five objects, including the Beacon's Red variant, and estimated $387.60.
+- The save link carried every variant id, and the shared decoder read it back unchanged.
+- There was no overflow and no page error.
+- With only a platform chosen, the save link is hidden. A malformed link preselects only its valid parts.
+- On Relay Sling 8's product page, the platform stays locked and the modules are preselected.
+
+**Two rendering faults were found and fixed:**
+1. The first build showed no save banner. A debug line showed that the query was present from the first render, but the tested URL had a second URL pasted onto its end. The strict decoder rejected it, as designed.
+2. "All orders" rendered between the first and second order rows even on a fresh mount. Wrapping the rows in their own stack fixed it. The cause inside the host renderer is unknown.
+
+**Tests and checks:**
+- `field-locker` vitest: 14/14 (link format and rejection, saved-list dedupe, cap and parsing, equipment and purchased loadouts from the seeded order shapes).
+- `tsc` passes on both extensions.
+- Theme Check: 76 files, no offenses. `node --check assets/theme.js` passes.
+- The Shopify AI Toolkit validator could not run: its `typescript` dependency is missing from the plugin cache. Type checks used the extensions' own `@shopify/ui-extensions` types instead.
+
+**Not verified:**
+- Checkout itself (**Unavailable**, as before).
+- Safari (**Unavailable**).
+- Adding the page to the account menu and placing the order block in the checkout and accounts editor (owner: user).
+
+### Branding (D-033, 2026-09-25)
+
+`scripts/brand-accounts.mjs` applied KOVA branding to the published checkout and accounts configuration. The first run was rejected whole, because the radius tokens refuse `0`, so nothing changed. The second run applied it.
+
+Headless screenshots at 1280 and 390px show:
+- a dark Field Locker with uppercase tracked Work Sans headings, acid links, and square hairline sections and thumbnails;
+- order #1002 in the same style, with "Buy again" as a square outlined button;
+- a dark sign-in page with an acid focus ring.
+
+There was no horizontal overflow. Checkout was not seen (**Unavailable**: password-protected storefront).
+
+### Release (D-034, 2026-09-25)
+
+- `kova-core-1.1.0` was released, then `kova-core-1.1.1`. 1.1.1 keeps only exact handle matches from Storefront product lookups. A fuzzy `handle:` search had been replacing the owned products' records, so every guide showed "pending" whenever a save link was open.
+- **Activation:** the Field Locker page renders only after it is added from the editor's Apps panel. Before that, the host's activated-extension list left it out and every visit showed Shopify's error page. The order block was placed through `?page=order-status`.
+- **Definition:** neither release created the `saved_loadouts` definition, so the first production save failed with "Access to this namespace and key on Metafields for this resource type is not allowed". It was created through `shopify app execute` as KOVA Core.
+- **Production results** (no `app dev`; a new browser signed in with an emailed code):
+  - builder save link → sign-in → banner → Save;
+  - the entry survives a reload, and Remove deletes it;
+  - Documents shows 3 PDFs, 6 care notes and 5 pending guides;
+  - the order block's link opens the page;
+  - no overflow at 390px, and no page errors.
+
+### Phase 11 backlog
+
+- **Store setup is manual:** adding the Field Locker page in the editor's Apps panel, placing the order block, and creating the `saved_loadouts` definition. Script the definition, or confirm that a later CLI deploy creates it.
+- **Mirror drift:** the theme's link preselect copies `decodeLoadoutParams`.
+- **Deferred:** equipment registration for gear bought elsewhere, a saved-items wishlist, and translated extension strings.
+- **Unavailable:** warranty documents, until real terms exist.

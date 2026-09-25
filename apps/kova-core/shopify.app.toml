@@ -17,7 +17,15 @@ embedded_app_direct_api_access = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_cart_transforms,write_validations"
+scopes = "read_products,write_cart_transforms,write_validations,write_customers,customer_read_customers,customer_read_orders,customer_write_customers"
 
 [auth]
 redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+
+# Field Locker: loadouts a customer saved from the storefront builder, written by the account extension.
+[customer.metafields.app.saved_loadouts]
+type = "json"
+name = "Saved loadouts"
+description = "Loadouts saved to the Field Locker: [{ id, loadout, platform, modules: [{ handle, variant }], savedAt }], at most 12."
+access.customer_account = "read_write"
+access.admin = "merchant_read"

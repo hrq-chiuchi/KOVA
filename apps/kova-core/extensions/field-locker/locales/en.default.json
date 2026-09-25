@@ -1,0 +1,49 @@
+{
+  "heading": "Field Locker",
+  "subheading": "Your KOVA orders, loadouts, equipment and documents.",
+  "loading": "Loading your Field Locker",
+  "error": {
+    "heading": "The Field Locker could not load",
+    "save": "Your loadouts were not saved: {{message}}"
+  },
+  "incoming": {
+    "heading": "Save this loadout to your Field Locker?",
+    "save": "Save loadout",
+    "dismiss": "Not now"
+  },
+  "saved": {
+    "added": "Loadout saved.",
+    "removed": "Loadout removed."
+  },
+  "orders": {
+    "heading": "Orders",
+    "empty": "No orders yet.",
+    "all": "All orders"
+  },
+  "loadouts": {
+    "heading": "Loadouts",
+    "empty": "No loadouts yet. Build one and save it here.",
+    "fallbackName": "Loadout",
+    "count": {
+      "one": "Platform + {{count}} module",
+      "other": "Platform + {{count}} modules"
+    },
+    "saved": "Saved {{date}}",
+    "purchased": "Ordered {{date}} · {{order}}",
+    "rebuild": "Rebuild in the loadout builder",
+    "remove": "Remove",
+    "build": "Build a loadout"
+  },
+  "equipment": {
+    "heading": "Equipment",
+    "empty": "Objects you order appear here.",
+    "registered": "Registered {{date}} · {{order}}"
+  },
+  "documents": {
+    "heading": "Documents",
+    "empty": "Reference guides and care notes for your equipment appear here.",
+    "guide": "Reference guide (PDF)",
+    "guidePending": "Reference guide pending",
+    "care": "Care: {{material}}"
+  }
+}

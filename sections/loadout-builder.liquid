@@ -6,6 +6,10 @@
   platform to it; for any other product it renders nothing. On a page it uses the chosen loadout and
   starts with a platform step. The client-side checks mirror `judgeGroup` in
   apps/kova-core/shared/loadout-rules.ts, but the functions stay authoritative.
+
+  With a Field Locker URL set, "Save to Field Locker" links a valid build to the KOVA Core account
+  page, which saves it to the customer (D-031). The link format mirrors
+  apps/kova-core/shared/field-locker.ts.
 {% endcomment %}
 {% liquid
   assign loadout = blank
@@ -72,6 +76,7 @@
         data-cart-add-url="{{ routes.cart_add_url }}"
         data-currency="{{ cart.currency.iso_code }}"
         data-locale="{{ request.locale.iso_code }}"
+        data-loadout-handle="{{ loadout.system.handle }}"
         {% if locked_platform != blank %}data-locked{% endif %}
       >
         <script type="application/json" data-loadout-rules>
@@ -195,6 +200,16 @@
             >
               {{ section.settings.cta_label | escape }}
             </button>
+            {%- if section.settings.field_locker_url != blank and shop.customer_accounts_enabled -%}
+              <a
+                class="button loadout-builder__save"
+                href="{{ section.settings.field_locker_url }}"
+                data-save-link
+                hidden
+              >
+                {{- section.settings.save_label | escape -}}
+              </a>
+            {%- endif %}
             <p class="status-message" id="{{ status_id }}" role="status" aria-live="polite" data-status></p>
           </aside>
         </form>
@@ -261,7 +276,9 @@
   .loadout-builder__hint { margin: 0; color: color-mix(in srgb, currentcolor 62%, transparent); font-size: 0.85rem; }
   .loadout-builder__hint:empty { display: none; }
   .loadout-builder .status-message { margin: 0; color: inherit; }
-  .loadout-builder__add { width: 100%; min-height: var(--ad-control-minimum); }
+  .loadout-builder__add,
+  .loadout-builder__save { width: 100%; min-height: var(--ad-control-minimum); }
+  .loadout-builder__save[hidden] { display: none; }
   .loadout-builder__fallback { display: none; }
   .loadout-builder__fallback ul { display: grid; margin: var(--ad-space-300) 0 0; padding: 0; gap: var(--ad-space-200); list-style: none; }
   .loadout-builder__fallback li span { margin-inline-start: var(--ad-space-200); color: color-mix(in srgb, currentcolor 62%, transparent); font-size: var(--ad-text-label); text-transform: uppercase; }
@@ -291,6 +308,8 @@
     { "type": "textarea", "id": "heading", "label": "Heading", "default": "BUILD THE\nLOADOUT" },
     { "type": "richtext", "id": "intro", "label": "Introduction" },
     { "type": "text", "id": "cta_label", "label": "Button label", "default": "Add loadout to bag" },
+    { "type": "url", "id": "field_locker_url", "label": "Field Locker page URL", "info": "The KOVA Core Field Locker page in customer accounts. When set, a valid build shows a link that saves it there." },
+    { "type": "text", "id": "save_label", "label": "Save link label", "default": "Save to Field Locker" },
     { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
   ],
   "presets": [{ "name": "Loadout builder" }]
