@@ -199,6 +199,25 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
   font-size: 0.85rem;
 }
 
+/* Object status label: Sold out, Archive (D-038). */
+.status-badge {
+  display: inline-flex;
+  padding: 0.125rem var(--ad-space-100);
+  align-items: center;
+  border: var(--ad-border-hairline) solid currentcolor;
+  font-size: var(--ad-text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.status-badge--archive {
+  border-color: var(--ad-color-text-muted);
+  background: var(--ad-color-background-inverse);
+  color: var(--ad-color-text-inverse);
+}
+
 [data-reveal-line-wrap] {
   display: block;
   overflow: clip;

@@ -40,6 +40,57 @@
       document.addEventListener('afterdark:cart-count', () => this.updateCartCount(), { signal });
       window.addEventListener('scroll', () => this.updateScrollState(), { signal, passive: true });
       this.updateScrollState();
+
+      // The search link opens the search command dialog; without JavaScript it goes to /search.
+      this.searchTrigger = this.querySelector('[data-search-open]');
+      this.searchDialog = this.querySelector('[data-search-dialog]');
+      if (this.searchTrigger && this.searchDialog) {
+        this.searchTrigger.setAttribute('role', 'button');
+        this.searchTrigger.setAttribute('aria-haspopup', 'dialog');
+        this.searchTrigger.setAttribute('aria-expanded', 'false');
+        this.searchTrigger.addEventListener('click', (event) => {
+          event.preventDefault();
+          this.openSearch();
+        }, { signal });
+        this.searchTrigger.addEventListener('keydown', (event) => {
+          if (event.key === ' ') {
+            event.preventDefault();
+            this.openSearch();
+          }
+        }, { signal });
+        this.searchDialog.addEventListener('click', (event) => {
+          if (event.target === this.searchDialog) this.searchDialog.close();
+        }, { signal });
+        this.searchDialog.addEventListener('close', () => {
+          this.searchTrigger.setAttribute('aria-expanded', 'false');
+          this.searchReturnFocus?.focus();
+        }, { signal });
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+          const target = event.target;
+          if (target.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+          if (document.querySelector('dialog[open]')) return;
+          event.preventDefault();
+          this.openSearch();
+        }, { signal });
+      }
+    }
+
+    async openSearch() {
+      const dialog = this.searchDialog;
+      if (!dialog || dialog.open) return;
+      this.searchReturnFocus = document.activeElement;
+      dialog.showModal();
+      this.searchTrigger.setAttribute('aria-expanded', 'true');
+      const input = dialog.querySelector('[data-search-input]');
+      input?.focus();
+      input?.select();
+      if (customElements.get('kova-search')) return;
+      try {
+        await import(dialog.dataset.moduleUrl);
+      } catch (_) {
+        window.location.assign(this.searchTrigger.href);
+      }
     }
 
     disconnectedCallback() {
@@ -464,6 +515,123 @@
     }
   }
 
+  // Applies Equipment Index filters in place (D-036). The form still submits by GET without
+  // JavaScript; here each change fetches the same URL with `section_id`, swaps every
+  // `[data-filters-swap]` region from the response and pushes the URL, so reload, Back and
+  // Forward all land on the same filtered state. Below 48rem the form moves into a dialog.
+  class IndexFilters extends HTMLElement {
+    connectedCallback() {
+      this.controller?.abort();
+      this.controller = new AbortController();
+      const { signal } = this.controller;
+      this.dialog = this.querySelector('[data-filters-dialog]');
+      this.home = this.querySelector('[data-filters-home]');
+      this.panel = this.querySelector('[data-filters-panel]');
+
+      this.addEventListener('change', (event) => {
+        if (!event.target.closest('[data-filters-form]')) return;
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.apply(), 250);
+      }, { signal });
+      this.addEventListener('submit', (event) => {
+        if (!event.target.matches('[data-filters-form]')) return;
+        event.preventDefault();
+        this.apply();
+      }, { signal });
+      this.addEventListener('click', (event) => {
+        const link = event.target.closest('[data-filters-link]');
+        if (link) {
+          event.preventDefault();
+          this.load(link.href, { focus: '[data-filters-count]' });
+          return;
+        }
+        if (event.target.closest('[data-filters-open]')) this.openDialog();
+        if (event.target.closest('[data-filters-close]')) this.dialog?.close();
+      }, { signal });
+      this.dialog?.addEventListener('click', (event) => {
+        if (event.target === this.dialog) this.dialog.close();
+      }, { signal });
+      this.dialog?.addEventListener('close', () => this.onDialogClose(), { signal });
+      window.addEventListener('popstate', (event) => {
+        if (event.state?.indexFilters) this.load(window.location.href, { push: false });
+      }, { signal });
+      window.history.replaceState({ ...window.history.state, indexFilters: true }, '');
+    }
+
+    disconnectedCallback() {
+      this.controller?.abort();
+      this.request?.abort();
+      clearTimeout(this.timer);
+    }
+
+    openDialog() {
+      if (!this.dialog || this.dialog.open) return;
+      this.opener = document.activeElement;
+      this.dialog.append(this.panel);
+      this.dialog.showModal();
+      this.querySelector('[data-filters-close]')?.focus();
+    }
+
+    onDialogClose() {
+      this.home?.append(this.panel);
+      this.opener?.focus();
+    }
+
+    apply() {
+      const form = this.querySelector('[data-filters-form]');
+      if (!form) return;
+      const params = new URLSearchParams();
+      for (const [name, value] of new FormData(form)) {
+        if (value !== '') params.append(name, value);
+      }
+      const url = new URL(form.action, window.location.origin);
+      url.search = params.toString();
+      this.load(url.toString(), { focus: document.activeElement?.id ? `#${CSS.escape(document.activeElement.id)}` : null });
+    }
+
+    async load(href, { push = true, focus = null } = {}) {
+      this.request?.abort();
+      const request = new AbortController();
+      this.request = request;
+      const url = new URL(href, window.location.origin);
+      const fetchUrl = new URL(url);
+      fetchUrl.searchParams.set('section_id', this.dataset.sectionId);
+      this.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch(fetchUrl, { signal: request.signal });
+        if (!response.ok) throw new Error('Filter request failed.');
+        const next = new DOMParser().parseFromString(await response.text(), 'text/html').querySelector('index-filters');
+        if (!next) throw new Error('Filter markup missing.');
+        const results = this.querySelector('[data-filters-swap="results"]');
+        if (results) {
+          window.AfterdarkMotion?.destroy(results);
+          window.AfterdarkWebGL?.destroy(results);
+        }
+        this.querySelectorAll('[data-filters-swap]').forEach((region) => {
+          const replacement = next.querySelector(`[data-filters-swap="${region.dataset.filtersSwap}"]`);
+          if (replacement) region.innerHTML = replacement.innerHTML;
+        });
+        const count = this.querySelector('[data-filters-count]');
+        const nextCount = next.querySelector('[data-filters-count]')?.textContent;
+        if (count && nextCount) count.textContent = nextCount;
+        if (push) window.history.pushState({ indexFilters: true }, '', url);
+        if (results) {
+          window.AfterdarkMotion?.init(results);
+          window.AfterdarkWebGL?.init(results);
+        }
+        const target = focus && this.querySelector(focus);
+        if (target) {
+          if (!target.matches('input, select, button, a')) target.setAttribute('tabindex', '-1');
+          target.focus({ preventScroll: true });
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') window.location.assign(url);
+      } finally {
+        if (this.request === request) this.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   class ProductRecommendations extends HTMLElement {
     connectedCallback() {
       if (this.dataset.loaded === 'true' || !this.dataset.productId) return;
@@ -497,6 +665,7 @@
   if (!customElements.get('cart-drawer')) customElements.define('cart-drawer', CartDrawer);
   if (!customElements.get('product-purchase')) customElements.define('product-purchase', ProductPurchase);
   if (!customElements.get('loadout-builder')) customElements.define('loadout-builder', LoadoutBuilder);
+  if (!customElements.get('index-filters')) customElements.define('index-filters', IndexFilters);
   if (!customElements.get('product-recommendations')) customElements.define('product-recommendations', ProductRecommendations);
 
   document.addEventListener('submit', async (event) => {

@@ -1,0 +1,117 @@
+{% doc %}
+  Renders one numbered Equipment Index row: number, thumbnail, name, TYPE, SYSTEM tags, STATUS and price,
+  read from the index facet metafields (D-035). The name link covers the whole row. Render rows
+  inside an `ol` with the `index-rows` class; `index-rows__head` gives the visual column labels.
+
+  @param {product} product - Product to render
+  @param {number} index - One-based position in the index
+
+  @example
+  {% render 'index-row', product: product, index: forloop.index %}
+{% enddoc %}
+{%- liquid
+  assign kova = product.metafields.custom
+  assign statuses = kova.status.value
+  assign archived = false
+  if statuses contains 'Archive'
+    assign archived = true
+  endif
+-%}
+<li class="index-row{% if archived %} index-row--archive{% endif %}">
+  <span class="index-row__number" aria-hidden="true">{{ index | prepend: '0' | slice: -2, 2 }}</span>
+  <span class="index-row__media{% if product.featured_image == blank %} index-row__media--pending{% endif %}" aria-hidden="true">
+    {% if product.featured_image %}
+      {{ product.featured_image
+        | image_url: width: 240
+        | image_tag: widths: '80, 120, 160, 240', sizes: '(max-width: 991px) 56px, 72px', loading: 'lazy', alt: '', class: 'index-row__image'
+      }}
+    {% else %}
+      <span class="index-row__pending">Pending</span>
+    {% endif %}
+  </span>
+  <h2 class="index-row__name"><a href="{{ product.url }}">{{ product.title | escape }}</a></h2>
+  <span class="index-row__type"><span class="visually-hidden">Type: </span>{{ kova.index_type.value | default: '—' | escape }}</span>
+  <span class="index-row__systems">
+    {% if kova.systems.value != blank %}
+      <span class="visually-hidden">System: </span>
+      {% for system in kova.systems.value %}<span class="index-row__tag">{{ system | escape }}</span>{% endfor %}
+    {% else %}
+      <span aria-hidden="true">—</span>
+    {% endif %}
+  </span>
+  <span class="index-row__status">
+    <span class="visually-hidden">Status: </span>
+    {% for status in statuses %}
+      {% if status == 'Archive' %}
+        <span class="status-badge status-badge--archive">Archive</span>
+      {% else %}
+        <span class="index-row__status-value">{{ status | escape }}</span>
+      {% endif %}
+    {% endfor %}
+    {% unless product.available %}<span class="status-badge">Sold out</span>{% endunless %}
+  </span>
+  <span class="index-row__price">
+    <span class="visually-hidden">Price: </span>
+    {% if product.price_varies %}From {% endif %}{{ product.price | money }}
+  </span>
+</li>
+
+{% stylesheet %}
+  .index-rows { margin: 0; padding: 0; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); list-style: none; }
+  .index-rows__head,
+  .index-row { display: grid; grid-template-columns: 3rem 4.5rem minmax(0, 2.4fr) minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 0.7fr); align-items: center; gap: var(--ad-space-300); }
+  .index-rows__head { padding-block: var(--ad-space-200); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .index-rows__head > :last-child,
+  .index-row__price { text-align: end; }
+  .index-row { position: relative; min-height: 4.5rem; padding-block: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-variant-numeric: tabular-nums; transition: background-color var(--ad-duration-fast) var(--ad-ease-standard); }
+  .index-row:hover,
+  .index-row:focus-within { background: var(--ad-color-background-elevated); }
+  .index-row__number { padding-inline-start: var(--ad-space-100); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; }
+  .index-row:hover .index-row__number { color: var(--color-accent); }
+  .index-row__media { position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 5; background: var(--ad-color-background-elevated); }
+  .index-row__image { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform var(--ad-duration-base) var(--ad-ease-standard); }
+  @media (prefers-reduced-motion: no-preference) {
+    .index-row:hover .index-row__image { transform: scale(1.06); }
+  }
+  .index-row__media--pending {
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(currentcolor, currentcolor) top 4px left 4px / 8px var(--ad-border-hairline),
+      linear-gradient(currentcolor, currentcolor) top 4px left 4px / var(--ad-border-hairline) 8px,
+      linear-gradient(currentcolor, currentcolor) bottom 4px right 4px / 8px var(--ad-border-hairline),
+      linear-gradient(currentcolor, currentcolor) bottom 4px right 4px / var(--ad-border-hairline) 8px,
+      var(--ad-color-background-elevated);
+    background-repeat: no-repeat;
+    color: var(--ad-color-text-muted);
+  }
+  .index-row__pending { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; text-align: center; text-transform: uppercase; }
+  .index-row__name { margin: 0; font-size: var(--ad-text-body); font-weight: 600; line-height: 1.2; text-transform: uppercase; }
+  .index-row__name a { text-decoration: none; }
+  .index-row__name a::after { position: absolute; inset: 0; content: ''; }
+  .index-row__name a:focus-visible { outline: none; }
+  .index-row:has(a:focus-visible) { outline: var(--ad-border-strong) solid var(--color-accent); outline-offset: -2px; }
+  .index-row__type,
+  .index-row__status,
+  .index-row__systems { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .index-row__systems,
+  .index-row__status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ad-space-50) var(--ad-space-100); }
+  .index-row__tag { padding: 0.125rem var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .index-row__status-value + .index-row__status-value::before { margin-inline-end: var(--ad-space-100); color: var(--ad-color-text-muted); content: '/'; }
+  .index-row__price { font-size: var(--ad-text-body); }
+  .index-row--archive .index-row__name,
+  .index-row--archive .index-row__price { color: var(--ad-color-text-muted); }
+
+  @media (max-width: 61.99rem) {
+    .index-rows__head { display: none; }
+    .index-row { grid-template-columns: 3.5rem minmax(0, 1fr) auto; grid-template-areas: 'media name price' 'media type type' 'media systems systems' 'media status status'; grid-template-rows: auto auto auto 1fr; gap: var(--ad-space-100) var(--ad-space-300); align-items: start; }
+    .index-row__media { grid-area: media; }
+    .index-row__number { z-index: 1; grid-area: media; align-self: start; justify-self: start; padding: 0.125rem 0.25rem; background: var(--ad-color-background-primary); font-size: 0.5625rem; }
+    .index-row__name { grid-area: name; }
+    .index-row__price { grid-area: price; }
+    .index-row__type { grid-area: type; color: var(--ad-color-text-muted); }
+    .index-row__systems { grid-area: systems; }
+    .index-row__systems:not(:has(.index-row__tag)) { display: none; }
+    .index-row__status { grid-area: status; }
+  }
+{% endstylesheet %}

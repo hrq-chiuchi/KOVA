@@ -20,6 +20,9 @@
         {% if edition.drop_code.value != blank %}{{ edition.drop_code.value | escape }}{% else %}Object {{ product.id | modulo: 100 | prepend: '0' | slice: -2, 2 }}{% endif %}
         {% if edition.edition_quantity.value != blank %}<span>/ {{ edition.edition_quantity.value }} units</span>{% endif %}
       </p>
+      {% if kova.status.value contains 'Archive' %}
+        <p class="product-page__status"><span class="status-badge status-badge--archive">Archive</span> <span>Retired object. Kept in the index for reference.</span></p>
+      {% endif %}
       {% if section.settings.show_manual_link %}
         <a class="product-page__manual-link" href="#field-manual">
           <span>Read the field manual</span><span aria-hidden="true">↓</span>
@@ -204,6 +207,7 @@
   .product-page__index { color: var(--ad-color-text-muted); font-size: var(--ad-text-label); letter-spacing: 0.1em; text-transform: uppercase; }
   .product-page__index { margin-block-start: var(--ad-space-600); }
   .product-page__index span { margin-inline-start: var(--ad-space-100); }
+  .product-page__status { display: flex; margin-block-start: var(--ad-space-300); flex-wrap: wrap; align-items: center; gap: var(--ad-space-100); color: var(--ad-color-text-muted); font-size: 0.85rem; }
   .product-page__manual-link { display: inline-flex; margin-block-start: var(--ad-space-500); padding-block: var(--ad-space-200); gap: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid currentcolor; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
   .product-page__descriptor { margin: 0 0 var(--ad-space-300); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
   .product-page__gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ad-space-200); }

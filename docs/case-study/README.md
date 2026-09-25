@@ -774,3 +774,91 @@ There was no horizontal overflow. Checkout was not seen (**Unavailable**: passwo
 - **Mirror drift:** the theme's link preselect copies `decodeLoadoutParams`.
 - **Deferred:** equipment registration for gear bought elsewhere, a saved-items wishlist, and translated extension strings.
 - **Unavailable:** warranty documents, until real terms exist.
+
+## Phase 13 Equipment Index and search log
+
+Phase 13 turns native collection filtering and search into KOVA's discovery system: an Equipment Index faceted by TYPE, SYSTEM, ENVIRONMENT, COLOUR and STATUS, and a search command over predictive search (D-035 to D-038). Phase 12, the GA4 pixel, was skipped at the user's request.
+
+**Where the theme stops:** the phase is entirely theme-native. The facets are Shopify metafields filtered by Search & Discovery, and the search is Shopify's predictive search. Nothing runs in KOVA Core. An app would add no capability here, so native came first (§8.1).
+
+### Facet data (D-035)
+
+| Facet | Source | Values |
+| --- | --- | --- |
+| TYPE | `custom.index_type` | Carry 8, Apparel 8, Hardware 5 |
+| SYSTEM | `custom.systems` | Modular 7, Waterproof 2, Packable 1, Weather resistant 3; none on 10 products |
+| ENVIRONMENT | `custom.environments` | Transit 11, Field 12, Rain 4, Cold 5 |
+| STATUS | `custom.status` | Drop 001 16, Drop 002 5, Limited 3, Archive 0 |
+| COLOUR | `Color` option, linked to `shopify.color-pattern` | Existing swatches |
+
+`seed-index-facets.mjs` created the four definitions and set 74 values. It cleared 10 empty lists, and a second run went through the update path without errors. An Admin query then matched the approved table on all 21 products, and the KOVA Loadout parent has no values. The `all` smart collection already excludes the parent (`product_type != Loadout`). `/search?q=loadout` and its suggestions return only Night Transit Set 03, which confirms `seo.hidden` keeps the parent out of search.
+
+### Surfaces
+
+- **`snippets/index-filters.liquid` and the `index-filters` element (D-036):** used on `sections/collection.liquid`, the new `sections/equipment-index.liquid` and `sections/search.liquid`.
+- **Equipment Index:**
+  - `templates/collection.index.json` (rows) and `collection.index-grid.json` (grid).
+  - The `all` collection was assigned the `index` template through `collectionUpdate`.
+  - `snippets/index-row.liquid` renders the numbered rows. Each row has a thumbnail, so the rows view stays visual like the grid. Products without photography show a small pending frame. The image is decorative: its text is already in the row, and there is one link per row.
+- **Search:**
+  - The search command is `sections/header.liquid`, `assets/search-command.js` and `sections/predictive-search.liquid` (D-037).
+  - The search page is rebuilt, and the `search.*` locale keys now hold KOVA copy.
+- **Archive badge:** `.status-badge` in `assets/theme.css`, on rows, cards and the product page (D-038).
+
+### Results (2026-09-25, `shopify theme dev` on theme `164481368323`, headless Chromium 151)
+
+- **Filtering on `/collections/all`:**
+  - Checking a filter swaps the results with no reload and keeps focus on the checkbox.
+  - The URL gains the filter, and the chip "Availability: In stock" appears.
+  - Back returns to the unfiltered state with no box checked, and Forward restores it. Removing the chip clears the filter.
+  - A price ceiling of $60 gives "4 objects".
+- **Mobile, 390px:**
+  - "Filter" opens the dialog with focus on Close.
+  - A change updates the dialog's title ("Filter / 4 objects") while the dialog stays open.
+  - Escape returns focus to the Filter button and puts the panel back in the page.
+  - No horizontal overflow.
+- **Without JavaScript:**
+  - The form sits inline with "Apply view", and a GET submit filters the page.
+  - The header search link goes to `/search`.
+- **Equipment Index:**
+  - 21 rows at 390, 768, 1440 and 1920px with no overflow, after fixing a 3px overflow from the display heading at 390.
+  - The Grid link loads `?view=index-grid` with 21 cards. Filtering in grid view keeps `view=index-grid`, and the Index link carries the active filters back.
+- **Search command:**
+  - The `/` key opens it with focus in the input. The module loads only on first open.
+  - "relay" gives four Equipment suggestions plus "Search all results", announced as "4 suggestions…".
+  - ArrowDown then Enter opens Relay Sling 8. Escape closes the command and returns focus to the trigger.
+  - "field" gives Equipment 04, Field Notes 03 and Collections 02.
+  - A query with no matches offers the full search.
+  - Under reduced motion the dialog opens with `animation-name: none`.
+- **Search page:**
+  - "relay" gives 8 results: 6 products as cards, and 2 Field Notes as rows.
+  - A price ceiling of $100 narrows it to 3 products. Once a product filter is active, articles drop out of the results. This is native behaviour.
+  - The empty state and the no-query state both link to the Equipment Index.
+- **Archive check:** covered in D-038. No product is archived at the end of the check.
+- **In-place swaps:** a window marker survived one filter change on the Index rows, the grid view (the URL keeps `view=index-grid`) and `/search`, with focus kept on the changed checkbox each time. Grid view at 390px has no overflow.
+- **Theme Editor lifecycle (simulated):** after three section replacements with `shopify:section:unload`/`load`, one filter change sent exactly one section request, and Back sent one.
+- **Checks:**
+  - Lighthouse 12.8.2 accessibility is 100 on `/collections/all` (Equipment Index) and on `/search?q=relay`.
+  - Theme Check found no offenses in 82 files, and `node --check` passes on `theme.js` and `search-command.js`.
+
+**Not verified:**
+
+- **The TYPE, SYSTEM, ENVIRONMENT and STATUS filters on the storefront.** The user configured them in Search & Discovery on 2026-09-25, but after more than 10 minutes of polling, no collection rendered them. The definitions are `PUBLIC_READ` and eligible for filtering. The likely cause is Search & Discovery still processing, or the filters not having been saved.
+- **Colour filter:** it is live, with swatch presentation and 2 values, but it is labelled "Cor", the admin's Portuguese default. Selecting a swatch value was not exercised.
+- The actual Theme Editor UI. Section reload was simulated with the same events.
+- Safari (**Unavailable**).
+
+### Phase 13 backlog
+
+- **Check the facet filters once Search & Discovery finishes (owner: user, then Claude):**
+  - Confirm that Index type, Systems, Environments and Status render on `/collections/all`. If not, check their status in Search & Discovery.
+  - Then verify:
+    - each value narrows the set to the counts in the facet table;
+    - filters combine as AND across groups and OR within one;
+    - chips, the swatch values and the mobile dialog work with the new groups;
+    - Archive appears under Status during a temporary assignment.
+  - Rename the labels to Type, System, Environment, Colour (currently "Cor") and Status.
+- **Manual store setup:**
+  - The header has no menu assigned, so the site menu's coded fallback is used. Its first link now reads "Equipment Index" and goes to `/collections/all`. If a menu is assigned later, it needs its own "Equipment Index" link. The CLI's store auth has no menu scope.
+- **Deferred:** Markets-aware facet labels, and hardware generations (V1/V2).
+- **Photography:** the Drop 002 products and the Field Notes still show empty thumbnails in search suggestions.

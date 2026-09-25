@@ -96,6 +96,7 @@ These contracts describe the current Round 2 source. They were first exercised t
 - **Surfaces:** `sections/header.liquid`, `sections/cart-drawer.liquid`, and `assets/theme.js`.
 - **Header:** centered merchant logo/wordmark, menu on the left, search/account/bag on the right, transparent homepage state, and blurred scrolled/non-home state.
 - **Navigation:** native modal dialog; opening moves focus to Close, Escape/backdrop/Close dismiss it, `aria-expanded` is synchronized, and focus returns to the trigger.
+- **Search:** the Search link opens the search command (Phase 13, see below) and stays a `/search` link without JavaScript.
 - **Cart:** the normal `/cart` link remains the fallback. JavaScript progressively opens a modal drawer, refreshes it through the Section Rendering API, updates quantities through `/cart/change.js`, and updates the header count.
 
 ### Kinetic hero — Authored section + motion behavior
@@ -158,6 +159,47 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 - **Surfaces:** `apps/kova-core/extensions/field-locker` (`customer-account.page.render`), `apps/kova-core/extensions/field-locker-order` (`customer-account.order-status.block.render`), `apps/kova-core/shared/field-locker.ts`, `apps/kova-core/shared/account-data.js` (D-030 to D-032).
 - **Contract:** the page has four sections: Orders (the latest three, linking to native order pages), Loadouts (saved, then purchased), Equipment and Documents. Every loadout has a "Rebuild in the loadout builder" link. A valid `?loadout&platform&modules` query shows a confirm banner before anything is written. The order block lists the order's loadouts and documents and renders nothing while loading or on failure. Neither extension reads a name, email, address or phone field.
 - **Boundary:** the extensions use Polaris web components styled by the store's checkout and accounts branding. `apps/kova-core/scripts/brand-accounts.mjs` copies the theme's token values into that branding (D-033), so `design-system/tokens` stays the only source. A token change needs the script re-run.
+
+### Index filters — Primitive + motion-free behavior (Phase 13)
+
+- **Surfaces:** `snippets/index-filters.liquid`, `IndexFilters` in `assets/theme.js` (D-036).
+- **Contract:**
+  - Input is a `collection` or `search` object, the form URL and the filtered count.
+  - Renders sort, one `details` + `fieldset` per native filter (colour chips when `filter.presentation == 'swatch'`, a struck-through chip when a value has no swatch), active chips from `url_to_remove` with "Clear all", and a `role="status"` count.
+  - Control ids come from the parameter name and value.
+  - Render it inside an `index-filters` element whose `[data-filters-swap]` regions share names with the response.
+- **Fallback:** without JavaScript the form submits by GET, and "Apply view" is visible. With JavaScript, changes swap in place and push history, and below 48rem the panel moves into a native dialog.
+
+### Equipment Index — Section + templates (Phase 13)
+
+- **Surfaces:** `sections/equipment-index.liquid`, `snippets/index-row.liquid`, `templates/collection.index.json`, `templates/collection.index-grid.json`.
+- **Contract:**
+  - The masthead shows "KOVA / N objects" (the unfiltered count) above a display heading.
+  - Rows show number, a 4:5 thumbnail (a small pending frame when there is no photography), name, TYPE, SYSTEM tags, STATUS (Archive as a badge), and price. The name link covers the row, and the thumbnail is decorative. On narrow screens the number sits on the thumbnail's corner.
+  - The grid uses the editorial product card.
+  - The view is a template choice (`?view=index-grid`), so it switches without JavaScript. The switch links carry the active filters.
+  - Settings: view, masthead, eyebrow, heading.
+- **Data:** the `custom.index_type`, `custom.systems`, `custom.environments` and `custom.status` metafields (D-035). The Search & Discovery filter set is configured in the admin.
+
+### Search command — Header behavior (Phase 13)
+
+- **Surfaces:** the dialog in `sections/header.liquid`, `assets/search-command.js` (`kova-search`), `sections/predictive-search.liquid` (D-037).
+- **Contract:**
+  - The header link and the `/` key open a modal dialog with a combobox input and a grouped listbox: Equipment, Field Notes, Collections and Pages, then "Search all results".
+  - The arrow keys, Home and End move `aria-activedescendant`. Enter opens the active option or, with none active, submits to `/search`. Escape closes the dialog and returns focus.
+  - A polite status gives the suggestion count.
+  - The module loads on first open.
+- **Fallback:** without JavaScript the header link goes to `/search`. If the module fails to load, the link navigates there. Under reduced motion the dialog opens with no animation.
+
+### Search results — Section (Phase 13)
+
+- **Surfaces:** `sections/search.liquid`, the `search.*` keys in `locales/en.default.json`.
+- **Contract:**
+  - The masthead shows the query and the result count, with a GET search form.
+  - Shared index filters are shown when `search.filters` is not empty.
+  - Products render as editorial cards, and articles and pages as Field Note rows.
+  - An empty state and a no-query state both link to the Equipment Index.
+  - Product filters narrow results to products, which is native behavior.
 
 ### Composition model — Theme blocks + section (Phase 8)
 
@@ -249,7 +291,13 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Blog and article pages | Sections | `sections/blog.liquid`, `sections/article.liquid` | **Locally verified (2026-09-24):** blog listing reuses the Field Notes row; article page has an editorial header, a reading-width body, and a back link; comments markup retained but untested (comments are off on the blog) |
 | Single-context WebGL reveal | Motion behavior | `assets/webgl-product-reveal.js` | **Locally verified:** static document-flow cards, localized absolute canvas, queued viewport glitch reveal, three repeatable bidirectional hover cycles, request-driven rendering, DOM-image handoff, reduced-motion and context-loss fallbacks; textures prepared only within half a viewport of a card |
 | Editorial product card | Commerce component | `snippets/product-card.liquid` | **Locally verified:** responsive primary/alternate media, current catalogue prices/availability, WebGL hover enhancement, and CSS fallback; one tab stop per card (media link hidden as a duplicate), sold-out state announced, configurable `h2`/`h3` title |
-| Collection browsing | Section | `sections/collection.liquid` | **Locally verified:** current products, filter/sort controls, desktop/mobile layouts |
+| Collection browsing | Section | `sections/collection.liquid` | **Locally verified:** current products, filter/sort controls, desktop/mobile layouts. Uses the shared index filters since Phase 13 |
+| Index filters | Primitive + behavior | `snippets/index-filters.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** in-place swaps with focus kept, chips, live count, Back/Forward, mobile dialog at 390px, GET fallback without JavaScript, flat request count after simulated section reloads. The Colour filter is live with swatches (labelled "Cor" for now); selecting a swatch has not been exercised |
+| Equipment Index | Section / templates | `sections/equipment-index.liquid`, `snippets/index-row.liquid`, `templates/collection.index*.json` | **Locally verified (2026-09-25):** 21 rows with thumbnails (16 photographed, 5 pending frames) at 390/768/1440/1920px with no overflow, grid view keeps filters, Lighthouse accessibility 100. The TYPE/SYSTEM/ENVIRONMENT/STATUS filters are configured in Search & Discovery but **not yet rendered on the storefront** (still processing on 2026-09-25); verification is in the Phase 13 backlog |
+| Index facet data | Foundation (Shopify custom data) | 4 product metafield definitions; `apps/kova-core/scripts/seed-index-facets.mjs` | **Implemented (2026-09-25):** choice-validated, `PUBLIC_READ`, approved values on 21 products (D-035) |
+| Status badge (Archive, Sold out) | Primitive | `.status-badge` in `assets/theme.css` | **Locally verified (2026-09-25):** Archive shown on the row, the card and the product page during a temporary check; no product is archived (D-038) |
+| Search command | Header behavior | `sections/header.liquid`, `assets/search-command.js`, `sections/predictive-search.liquid` | **Locally verified (2026-09-25):** the `/` key, lazy module, grouped suggestions, keyboard-only open of a product, Escape with focus return, announcements, 390px layout, reduced motion |
+| Search results | Section | `sections/search.liquid` | **Locally verified (2026-09-25):** grouped results, product filters, empty and no-query states, Lighthouse accessibility 100 |
 | Product purchase surface | Section | `sections/product.liquid`, `assets/theme.js` | **Locally verified:** real media/options, linked colour swatches, variant and quantity state, genuine sold-out state on the unproduced colourway, and a successful add-to-cart on single-variant, multi-variant, and bundle products after the single-variant matcher fix. Custom-data presentation (descriptor, positioning, drop code, specifications, fit, material, compatibility, edition, package, reference guide) renders on five representative PDPs; the Features list renders five entries on all 16 products after the catalogue data fix |
 | Product recommendations | Section | `sections/product-recommendations.liquid` | **Locally verified (2026-09-24):** the section requests the curated `complementary` intent by default (merchant-selectable); a corrected bug had hardcoded `intent=related`, which served Shopify's generic `collection_fallback` picks on every product; tone setting added (dark on the product template) |
 | Product field manual | Section / art-direction exception | `sections/product-field-manual.liquid` | **Locally verified:** positioning as a display statement, full description only when it adds to the positioning, numbered build notes, second product image as a figure or an enlarged detail crop for single-image products |
@@ -278,7 +326,7 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Checkout and accounts branding | Foundation (Shopify branding) | `apps/kova-core/scripts/brand-accounts.mjs` | **Applied (2026-09-25):** token colours, Work Sans, uppercase tracked headings, square hairline components on accounts, sign-in and checkout; Field Locker, order page and sign-in screenshots at 1280/390px. Checkout rendering **not verified** (password-protected storefront) |
 | Figma variables, components, and code mappings | Design tooling | Figma library | **Unavailable** |
 
-Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.
+Shopify CLI Theme Check inspects the current theme without offenses. `node --check` passes for `assets/theme.js`, `assets/search-command.js`, `assets/motion-core.js`, `assets/kinetic-hero.js`, and `assets/webgl-product-reveal.js`. The Skeleton `text` and `group` theme blocks and `custom-section` were removed in Phase 8 (D-023); the KOVA blocks replace them.
 
 ## Figma synchronization plan — Unavailable now
 
@@ -291,7 +339,7 @@ When official tooling becomes available:
 3. Recreate typography roles and motion annotations, including reduced-motion equivalents.
 4. Build only meaningful primitives and commerce components with intentional properties and variants.
 5. Add authored section examples separately from reusable components so art-direction exceptions remain visible.
-6. Map important pairs such as Editorial Product Card ↔ `snippets/product-card.liquid` and Kinetic Hero ↔ `sections/kinetic-hero.liquid`; document legitimate abstraction mismatches.
+6. Map important pairs such as Editorial Product Card ↔ `snippets/product-card.liquid`, Kinetic Hero ↔ `sections/kinetic-hero.liquid`, Index Row ↔ `snippets/index-row.liquid`, and Search Command ↔ the header dialog plus `sections/predictive-search.liquid` (states: empty, results, active option, no match); document legitimate abstraction mismatches.
 7. Compare token names, component anatomy, states, responsive behavior, merchant controls, accessibility notes, and implementation status.
 8. Mark each inventory item as Figma-only, code-only, synchronized, or intentionally divergent, with the date and tool used.
 9. Capture evidence of the synchronization; do not backfill or imply artifacts that were not generated.

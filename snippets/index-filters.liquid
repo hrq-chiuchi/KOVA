@@ -1,0 +1,268 @@
+{% doc %}
+  Renders the shared Equipment Index filter form for a collection or search results: sort,
+  native Search & Discovery filters (swatch values as colour chips), active-filter chips and the
+  result count. Submits by GET without JavaScript; the `index-filters` element in theme.js swaps
+  results in place when it loads (D-036). Render it inside an `index-filters` element.
+
+  @param {object} results - The `collection` or `search` object
+  @param {string} url - Form action and base URL for "Clear all"
+  @param {number} count - Result count after filtering
+  @param {string} [noun] - Counted noun, singular (default "object")
+  @param {string} [terms] - Search terms, kept as a hidden `q` input
+  @param {string} [view] - Alternate template suffix, kept as a hidden `view` input
+  @param {string} id_prefix - Unique prefix for control ids, such as the section id
+
+  @example
+  {% render 'index-filters', results: collection, url: collection.url, count: collection.products_count, id_prefix: section.id %}
+{% enddoc %}
+{%- liquid
+  assign noun = noun | default: 'object'
+  assign sort_by = results.sort_by | default: results.default_sort_by
+  assign encoded_terms = terms | url_encode
+  assign active_count = 0
+  for filter in results.filters
+    if filter.type == 'price_range'
+      if filter.min_value.value != null or filter.max_value.value != null
+        assign active_count = active_count | plus: 1
+      endif
+    else
+      assign active_count = active_count | plus: filter.active_values.size
+    endif
+  endfor
+  capture clear_url
+    echo url | append: '?sort_by=' | append: sort_by
+    if terms != blank
+      echo '&q=' | append: encoded_terms
+    endif
+    if view != blank
+      echo '&view=' | append: view
+    endif
+  endcapture
+  capture count_label
+    echo count | append: ' ' | append: noun
+    if count != 1
+      echo 's'
+    endif
+  endcapture
+-%}
+
+<div class="index-filters__bar">
+  <button
+    class="index-filters__open"
+    type="button"
+    data-filters-open
+    aria-haspopup="dialog"
+    aria-controls="IndexFiltersDialog-{{ id_prefix }}"
+  >
+    Filter<span data-filters-swap="open-count">{% if active_count > 0 %} / {{ active_count }}{% endif %}</span>
+  </button>
+  <p class="index-filters__count" role="status" data-filters-count>{{ count_label | strip }}</p>
+</div>
+
+<div class="index-filters__active" data-filters-swap="active">
+  {% if active_count > 0 %}
+    <ul class="index-filters__chips" aria-label="Active filters">
+      {% for filter in results.filters %}
+        {% if filter.type == 'price_range' %}
+          {% if filter.min_value.value != null or filter.max_value.value != null %}
+            <li>
+              <a class="index-filters__chip" href="{{ filter.url_to_remove }}" data-filters-link>
+                {{ filter.label | escape }}: {{ filter.min_value.value | default: 0 | money }}–{{ filter.max_value.value | default: filter.range_max | money }}
+                <span aria-hidden="true">×</span><span class="visually-hidden">, remove</span>
+              </a>
+            </li>
+          {% endif %}
+        {% else %}
+          {% for value in filter.active_values %}
+            <li>
+              <a class="index-filters__chip" href="{{ value.url_to_remove }}" data-filters-link>
+                {{ filter.label | escape }}: {{ value.label | escape }}
+                <span aria-hidden="true">×</span><span class="visually-hidden">, remove</span>
+              </a>
+            </li>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </ul>
+    <a class="index-filters__clear" href="{{ clear_url | strip }}" data-filters-link>Clear all</a>
+  {% endif %}
+</div>
+
+<div class="index-filters__home" data-filters-home>
+  <div class="index-filters__panel" data-filters-panel>
+    <div class="index-filters__dialog-top">
+      <p class="eyebrow" id="IndexFiltersTitle-{{ id_prefix }}" data-filters-swap="title" aria-live="polite">Filter / {{ count_label | strip }}</p>
+      <button class="index-filters__close" type="button" data-filters-close>Close</button>
+    </div>
+
+    <form action="{{ url }}" method="get" class="index-filters__form" data-filters-form data-filters-swap="form">
+      {% if terms != blank %}
+        <input type="hidden" name="q" value="{{ terms | escape }}">
+        <input type="hidden" name="options[prefix]" value="last">
+      {% endif %}
+      {% if view != blank %}<input type="hidden" name="view" value="{{ view | escape }}">{% endif %}
+
+      {% if results.sort_options.size > 0 %}
+        <div class="form-field index-filters__sort">
+          <label for="IndexSort-{{ id_prefix }}">Sort</label>
+          <select id="IndexSort-{{ id_prefix }}" name="sort_by">
+            {% for option in results.sort_options %}
+              <option value="{{ option.value | escape }}"{% if option.value == sort_by %} selected{% endif %}>{{ option.name | escape }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+
+      {% for filter in results.filters %}
+        {%- liquid
+          assign group_active = filter.active_values.size
+          if filter.type == 'price_range'
+            assign group_active = 0
+            if filter.min_value.value != null or filter.max_value.value != null
+              assign group_active = 1
+            endif
+          endif
+        -%}
+        <details class="index-filter" open>
+          <summary>
+            <span>{{ filter.label | escape }}</span>
+            {% if group_active > 0 %}<span class="index-filter__active">{{ group_active }} active</span>{% endif %}
+          </summary>
+          <fieldset class="index-filter__values{% if filter.presentation == 'swatch' %} index-filter__values--swatch{% endif %}">
+            <legend class="visually-hidden">{{ filter.label | escape }}</legend>
+            {% case filter.type %}
+              {% when 'boolean', 'list' %}
+                {% for value in filter.values %}
+                  {%- liquid
+                    assign control_id = id_prefix | append: '-' | append: value.param_name | append: '-' | append: value.value | handleize
+                    assign swatch_style = blank
+                    if filter.presentation == 'swatch'
+                      if value.swatch.image
+                        assign swatch_style = value.swatch.image | image_url: width: 64 | prepend: 'background-image: url(' | append: ');'
+                      elsif value.swatch.color
+                        assign swatch_style = value.swatch.color | prepend: 'background-color: ' | append: ';'
+                      endif
+                    endif
+                  -%}
+                  <label class="index-filter__value{% if filter.presentation == 'swatch' %} index-filter__value--swatch{% endif %}" for="{{ control_id }}">
+                    <input
+                      id="{{ control_id }}"
+                      type="checkbox"
+                      name="{{ value.param_name }}"
+                      value="{{ value.value }}"
+                      {% if value.active %}checked{% endif %}
+                      {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                    >
+                    {% if filter.presentation == 'swatch' %}
+                      <span class="index-filter__swatch{% if swatch_style == blank %} index-filter__swatch--none{% endif %}"{% if swatch_style != blank %} style="{{ swatch_style }}"{% endif %} aria-hidden="true"></span>
+                    {% endif %}
+                    <span class="index-filter__label">{{ value.label | escape }}</span>
+                    <small class="index-filter__tally">{{ value.count }}</small>
+                  </label>
+                {% endfor %}
+              {% when 'price_range' %}
+                <div class="index-filter__price">
+                  <div class="form-field">
+                    <label for="{{ id_prefix }}-{{ filter.min_value.param_name | handleize }}">From</label>
+                    <input
+                      id="{{ id_prefix }}-{{ filter.min_value.param_name | handleize }}"
+                      name="{{ filter.min_value.param_name }}"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      placeholder="0"
+                      {% if filter.min_value.value %}value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
+                    >
+                  </div>
+                  <div class="form-field">
+                    <label for="{{ id_prefix }}-{{ filter.max_value.param_name | handleize }}">To</label>
+                    <input
+                      id="{{ id_prefix }}-{{ filter.max_value.param_name | handleize }}"
+                      name="{{ filter.max_value.param_name }}"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                      {% if filter.max_value.value %}value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"{% endif %}
+                    >
+                  </div>
+                </div>
+            {% endcase %}
+          </fieldset>
+        </details>
+      {% endfor %}
+
+      <button class="button index-filters__apply" type="submit">Apply view</button>
+    </form>
+
+    <div class="index-filters__dialog-bottom">
+      <button class="button button--accent" type="button" data-filters-close data-filters-swap="show">Show {{ count_label | strip }}</button>
+    </div>
+  </div>
+</div>
+
+<dialog
+  id="IndexFiltersDialog-{{ id_prefix }}"
+  class="index-filters__dialog"
+  data-filters-dialog
+  aria-labelledby="IndexFiltersTitle-{{ id_prefix }}"
+></dialog>
+
+{% stylesheet %}
+  .index-filters__bar { display: flex; min-height: var(--ad-control-minimum); align-items: center; justify-content: space-between; gap: var(--ad-space-300); }
+  .index-filters__count { margin: 0; font-size: var(--ad-text-label); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .index-filters__open { display: none; }
+  .index-filters__open,
+  .index-filters__close { min-height: var(--ad-control-minimum); padding: 0; border: 0; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.12em; text-transform: uppercase; }
+  .index-filters__active:not(:empty) { display: flex; padding-block: var(--ad-space-200); flex-wrap: wrap; align-items: center; gap: var(--ad-space-100); }
+  .index-filters__chips { display: contents; margin: 0; padding: 0; list-style: none; }
+  .index-filters__chip,
+  .index-filters__clear { display: inline-flex; min-height: 2rem; padding-inline: var(--ad-space-200); align-items: center; gap: var(--ad-space-100); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-decoration: none; text-transform: uppercase; }
+  .index-filters__chip { border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-radius: var(--ad-radius-pill); }
+  .index-filters__chip:hover { border-color: currentcolor; }
+  .index-filters__clear { text-decoration: underline; text-underline-offset: 0.25em; }
+
+  .index-filters__form { display: grid; gap: var(--ad-space-300); }
+  .index-filters__form select { width: 100%; }
+  .index-filter { border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .index-filter summary { display: flex; min-height: var(--ad-control-minimum); padding-block: var(--ad-space-200); align-items: center; justify-content: space-between; cursor: pointer; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; list-style: none; text-transform: uppercase; }
+  .index-filter summary::-webkit-details-marker { display: none; }
+  .index-filter__active { color: var(--color-accent); font-variant-numeric: tabular-nums; }
+  .index-filter__values { display: grid; margin: 0; padding: 0 0 var(--ad-space-300); gap: var(--ad-space-50); border: 0; }
+  .index-filter__value { display: grid; min-height: 2.25rem; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--ad-space-100); cursor: pointer; }
+  .index-filter__value:has(input:disabled) { color: var(--ad-color-text-muted); cursor: not-allowed; opacity: 0.55; }
+  .index-filter__tally { color: var(--ad-color-text-muted); font-variant-numeric: tabular-nums; }
+  .index-filter__value--swatch { grid-template-columns: auto auto 1fr auto; }
+  .index-filter__value--swatch input { position: absolute; opacity: 0; pointer-events: none; }
+  .index-filter__swatch { display: block; inline-size: 1.5rem; block-size: 1.5rem; border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-radius: 50%; background-position: center; background-size: cover; }
+  .index-filter__swatch--none { background: repeating-linear-gradient(135deg, transparent 0 4px, var(--ad-color-border-subtle) 4px 5px); }
+  .index-filter__value--swatch input:checked + .index-filter__swatch { outline: var(--ad-border-strong) solid var(--color-accent); outline-offset: 2px; }
+  .index-filter__value--swatch input:focus-visible + .index-filter__swatch { outline: var(--ad-border-strong) solid currentcolor; outline-offset: 4px; }
+  .index-filter__price { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ad-space-100); }
+  .index-filter__price input { width: 100%; }
+  .index-filters__dialog-top,
+  .index-filters__dialog-bottom { display: none; }
+  .js .index-filters__apply { display: none; }
+
+  .index-filters__dialog { width: min(28rem, 100%); max-width: none; height: 100%; max-height: none; margin: 0 0 0 auto; padding: 0; border: 0; background: var(--ad-color-background-elevated); color: var(--ad-color-text-primary); }
+  .index-filters__dialog::backdrop { background: rgb(0 0 0 / 62%); }
+  .index-filters__dialog .index-filters__panel { display: flex; height: 100%; flex-direction: column; }
+  .index-filters__dialog .index-filters__dialog-top { display: flex; min-height: var(--ad-header-height); padding-inline: var(--ad-page-padding); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .index-filters__dialog .index-filters__dialog-top .eyebrow { margin: 0; }
+  .index-filters__dialog .index-filters__form { padding: var(--ad-space-300) var(--ad-page-padding); flex: 1; overflow-y: auto; align-content: start; }
+  .index-filters__dialog .index-filters__dialog-bottom { display: grid; padding: var(--ad-space-300) var(--ad-page-padding); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+
+  /* With JavaScript, narrow screens move the form into the dialog; without it the form stays inline. */
+  @media (max-width: 47.99rem) {
+    .js .index-filters__open { display: inline-flex; }
+    .js .index-filters__home { display: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .index-filters__dialog[open] { animation: index-filters-in var(--ad-duration-base) var(--ad-ease-standard); }
+  }
+
+  @keyframes index-filters-in {
+    from { transform: translateX(8%); opacity: 0; }
+  }
+{% endstylesheet %}
