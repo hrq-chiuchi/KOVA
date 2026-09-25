@@ -392,3 +392,17 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Tradeoff / reconsideration:**
 - Rule edits still need `scripts/sync-rules.mjs`. A code change to either function now needs a new deploy to reach the store.
 - `app dev` still overrides the released functions while it runs, so a later dev session can test changes without a release.
+
+## D-029 — Drop hero layers along the pointer path instead of carrying the stack
+
+**Context:** The kinetic hero moved the whole stack after the pointer with per-layer `gsap.quickTo()` followers, and promoted a layer every `threshold` pixels. On the first hover after load, the stack travelled with the pointer as one tight block. After the pointer left and came back, the cards instead fanned out along its path with visible gaps. The user identified the fanned trail as the intended behaviour.
+
+**Cause (measured in headless Chromium, 1440px):** `settle()` tweens x and y with `overwrite: 'auto'`, which permanently kills the followers' x and y. From the second hover on, only `advance()` placed layers, so each promoted card stayed where it was dropped. On the first hover the live followers pulled every card back onto the pointer. Before the fix, the layers spread about 150px on the first hover and 300 to 490px on later ones.
+
+**Options considered:** revive the followers after every leave, which makes the tight block consistent; remove the followers and let `advance()` alone place layers.
+
+**Decision:** Remove the followers. Moving the pointer promotes the next layer every `threshold` pixels and drops it at the pointer, from the first hover on. `settle()` still restores the resting composition on leave. The touch and reduced-motion paths are unchanged.
+
+**Reasoning:** The trail is the behaviour the user asked for, and it already existed after the first leave; the followers only suppressed it. Removing them also drops the 14 follower tweens (x and y for each of seven layers).
+
+**Tradeoff / reconsideration:** Between promotions the top card no longer tracks the pointer, so small movements under the threshold do nothing. Lower the section's pointer threshold if the hero feels unresponsive.
