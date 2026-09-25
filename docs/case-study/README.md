@@ -932,7 +932,7 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 
 - **Menu:**
   - The first real screenshot showed index numbers overflowing into the next panel column. The column minimum was raised to 17rem and the number no longer shrinks. All five links now fit.
-  - Equipment's menu URL is `#`, which gave a dead top link and a dead "View all" on mobile. A `#` parent now renders as a label. At the user's request it has a pointer cursor like the links, and clicking it opens the panel. A click before the hover delay, a second click, and hover-then-click all left it open. The user also set Discover to `#`, but it still rendered `/collections` when checked.
+  - Equipment's menu URL is `#`, which gave a dead top link and a dead "View all" on mobile. A `#` parent now renders as a label. At the user's request it has a pointer cursor like the links, and clicking it opens the panel. A click before the hover delay, a second click, and hover-then-click all left it open. The user also set Discover to `#`. After the merge it rendered as a label: pointer cursor, a click opens its panel, and the panel stays open on a second click.
   - Hover opens after 150 ms and not at 80 ms; leaving closes it. Keyboard: Tab to the toggle, Enter opens, Tab reaches the first panel link, Escape closes with focus back on the toggle. Clicking outside, tabbing out of the nav, and the `/` search shortcut all close it. A touch tap opens it only through the toggle.
   - Without JavaScript no toggle or panel is visible and the top-level links remain.
   - Mobile at 390px: two `<details>` groups (Equipment without "View all", Discover with it) and no horizontal overflow.
