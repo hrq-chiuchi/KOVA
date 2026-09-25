@@ -1,0 +1,110 @@
+{%- comment -%}
+  SIGNAL tab (D-046): a collapsed bottom-left disclosure with the newsletter form. It never opens by
+  itself, is not a dialog, and hides while any dialog (menu, search, bag) is open. It posts the same
+  `customer` form as the footer, which stays the no-JavaScript path, so without JavaScript the tab is
+  not shown at all. Dismissing hides it for 30 days; subscribing hides it for good.
+{%- endcomment -%}
+<signal-tab
+  class="signal-tab"
+  data-section-id="{{ section.id }}"
+  data-dismiss-days="30"
+  hidden
+>
+  <div id="SignalTabPanel-{{ section.id }}" class="signal-tab__panel" data-signal-panel hidden>
+    <div class="signal-tab__top">
+      <p class="eyebrow" id="SignalTabTitle-{{ section.id }}">{{ section.settings.eyebrow | escape }}</p>
+      <button class="signal-tab__close" type="button" data-signal-close>
+        Close<span class="visually-hidden"> {{ section.settings.eyebrow | escape }}</span>
+      </button>
+    </div>
+    <p class="signal-tab__heading">{{ section.settings.heading | escape }}</p>
+    {%- form 'customer', id: 'SignalTabForm', class: 'signal-tab__form' -%}
+      <input type="hidden" name="contact[tags]" value="newsletter,signal-tab">
+      <label class="signal-tab__label" for="SignalTabEmail-{{ section.id }}">Email address</label>
+      <div class="signal-tab__row">
+        <input
+          id="SignalTabEmail-{{ section.id }}"
+          class="signal-tab__input"
+          type="email"
+          name="contact[email]"
+          autocomplete="email"
+          spellcheck="false"
+          required
+          aria-describedby="SignalTabConsent-{{ section.id }}"
+          data-signal-input
+        >
+        <button class="signal-tab__submit" type="submit" data-signal-submit>{{ section.settings.button_label | escape }}</button>
+      </div>
+      <p class="signal-tab__consent" id="SignalTabConsent-{{ section.id }}">{{ section.settings.consent | escape }}</p>
+      <p class="signal-tab__status" role="status" data-signal-status></p>
+    {%- endform -%}
+    <button class="signal-tab__dismiss" type="button" data-signal-dismiss>Don't show this for 30 days</button>
+  </div>
+
+  <button
+    class="signal-tab__toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="SignalTabPanel-{{ section.id }}"
+    data-signal-toggle
+  >
+    <span class="signal-tab__dot" aria-hidden="true"></span>
+    {{ section.settings.eyebrow | escape }}
+  </button>
+</signal-tab>
+<script src="{{ 'signal-tab.js' | asset_url }}" type="module"></script>
+
+{% stylesheet %}
+  .signal-tab { position: fixed; z-index: 55; inset-inline-start: var(--ad-page-padding); inset-block-end: var(--ad-space-300); display: flex; max-width: calc(100vw - (2 * var(--ad-page-padding))); flex-direction: column; align-items: flex-start; gap: var(--ad-space-100); color: var(--ad-color-text-primary); transform: translateY(calc(-1 * var(--ad-dock-offset, 0px))); transition: transform var(--ad-duration-base) var(--ad-ease-standard); }
+  .signal-tab[hidden],
+  body:has(dialog[open]) .signal-tab { display: none; }
+  .signal-tab__toggle { display: inline-flex; min-height: var(--ad-control-minimum); padding: 0 var(--ad-space-300); align-items: center; gap: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-radius: var(--ad-radius-pill); background: var(--ad-color-background-elevated); color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-tab__toggle[aria-expanded='true'] { border-color: var(--ad-color-border-strong); }
+  .signal-tab__dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-accent); }
+  .signal-tab__panel { display: grid; width: min(24rem, calc(100vw - (2 * var(--ad-page-padding)))); padding: var(--ad-space-400); gap: var(--ad-space-300); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: var(--ad-color-background-elevated); }
+  .signal-tab__panel[hidden] { display: none; }
+  .signal-tab__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ad-space-300); }
+  .signal-tab__top .eyebrow { margin: 0; color: var(--color-accent); }
+  .signal-tab__close,
+  .signal-tab__dismiss { min-height: var(--ad-control-minimum); padding: 0; border: 0; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-tab__dismiss { justify-self: start; color: var(--ad-color-text-muted); text-decoration: underline; text-underline-offset: 0.25em; }
+  .signal-tab__heading { margin: 0; font-family: var(--font-display-family); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; line-height: 0.95; text-transform: uppercase; }
+  .signal-tab__form { display: grid; gap: var(--ad-space-100); }
+  .signal-tab__label { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-tab__row { display: flex; gap: var(--ad-space-100); }
+  .signal-tab__input { min-width: 0; min-height: var(--ad-control-minimum); flex: 1; padding: 0 var(--ad-space-200); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-radius: var(--ad-radius-none); background: var(--ad-color-background-primary); color: inherit; font: inherit; }
+  .signal-tab__submit { min-height: var(--ad-control-minimum); padding: 0 var(--ad-space-300); border: 0; background: var(--ad-color-action-primary); color: var(--ad-color-text-inverse); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .signal-tab__submit[disabled] { opacity: 0.6; }
+  .signal-tab__consent,
+  .signal-tab__status { margin: 0; color: var(--ad-color-text-muted); font-size: 0.8125rem; }
+  .signal-tab__status:empty { display: none; }
+  .signal-tab[data-state='error'] .signal-tab__status { color: var(--ad-color-action-critical); }
+  .signal-tab[data-state='success'] .signal-tab__status { color: var(--ad-color-text-primary); }
+  .signal-tab[data-state='success'] .signal-tab__form > :not(.signal-tab__status),
+  .signal-tab[data-state='success'] .signal-tab__dismiss { display: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .signal-tab__panel:not([hidden]) { animation: signal-tab-in var(--ad-duration-base) var(--ad-ease-standard); }
+  }
+
+  @keyframes signal-tab-in {
+    from { opacity: 0; transform: translateY(0.75rem); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "SIGNAL tab",
+  "tag": "div",
+  "class": "section-signal-tab",
+  "enabled_on": { "groups": ["footer"] },
+  "settings": [
+    { "type": "paragraph", "content": "A collapsed newsletter tab in the bottom-left corner. It never opens on its own. Visitors who dismiss it do not see it for 30 days; subscribers never see it again. The footer form stays available." },
+    { "type": "text", "id": "eyebrow", "label": "Tab label", "default": "Signal" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Drop notices and field reports" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Join" },
+    { "type": "text", "id": "consent", "label": "Consent line", "default": "Email only. Unsubscribe any time." }
+  ],
+  "presets": [{ "name": "SIGNAL tab" }]
+}
+{% endschema %}

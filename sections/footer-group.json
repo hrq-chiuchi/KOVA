@@ -21,9 +21,19 @@
         "show_newsletter": true,
         "show_payment_icons": true
       }
+    },
+    "signal-tab": {
+      "type": "signal-tab",
+      "settings": {
+        "eyebrow": "Signal",
+        "heading": "Drop notices and field reports",
+        "button_label": "Join",
+        "consent": "Email only. Unsubscribe any time."
+      }
     }
   },
   "order": [
-    "footer"
+    "footer",
+    "signal-tab"
   ]
 }
