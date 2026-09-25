@@ -14,17 +14,9 @@
 {% enddoc %}
 {%- liquid
   assign threshold = settings.free_shipping_threshold | default: 0 | times: 100
-  assign country = localization.country.iso_code | default: '' | upcase
-  assign eligible = false
-  assign countries = settings.free_shipping_countries | upcase | remove: ' ' | split: ','
-  if countries contains country
-    assign eligible = true
-  endif
-  if cart.currency.iso_code != shop.currency
-    assign eligible = false
-  endif
 -%}
-{%- if settings.free_shipping_enabled and threshold > 0 and eligible and cart.item_count > 0 -%}
+{%- capture eligible -%}{%- render 'free-shipping-eligible' -%}{%- endcapture -%}
+{%- if eligible == 'true' and cart.item_count > 0 -%}
   {%- liquid
     assign remaining = threshold | minus: cart.total_price
     if remaining < 0

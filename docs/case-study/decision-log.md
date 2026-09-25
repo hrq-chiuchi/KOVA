@@ -1,6 +1,6 @@
 # Decision log
 
-D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24); D-018 to D-021 in Phase 7; D-022 and D-023 in Phase 8 (2026-09-24). D-039 to D-043 were accepted in Phase 14 (commerce and merchandising, 2026-09-25).
+D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realizes D-001 through D-006 and passed the recorded Shopify Theme Check, JavaScript syntax checks, static desktop/mobile browser fixtures, and synthetic section lifecycle events. D-007 remains an originality constraint. D-008 remains **Unavailable** because Figma/Codex tooling is not mounted. D-009 and D-010 were accepted in Phase 2 (2026-09-21). D-011 through D-014 were accepted and realized in the Phase 3 catalogue build (2026-09-21) and are verified against the live store; D-010 is superseded (2026-09-23): all three homepage category grids now read real Drop 001 collections. D-015 was accepted in Phase 4 and D-016 in Phase 5 (2026-09-23); D-017 in Phase 6 (2026-09-24); D-018 to D-021 in Phase 7; D-022 and D-023 in Phase 8 (2026-09-24). D-039 to D-047 were accepted in Phase 14 (commerce and merchandising, 2026-09-25): D-039 to D-043 in PR A, D-044 to D-047 in PR B.
 
 ## D-001 — Use Skeleton as infrastructure, not visual inheritance
 
@@ -687,3 +687,61 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - Without JavaScript, storage or history, the section stays hidden.
 
 **Tradeoff / reconsideration:** one request per card. A single search query could replace them, but it was not confirmed that storefront search can match an exact list of handles, so it was not used. The history is per browser and is not synced to customer accounts (**Deferred**).
+
+## D-044 — Build the menu on Shopify's nested menu with disclosures
+
+**Context:** The header nav was flat (three top-level links) and no menu was assigned. The catalogue needs a way into five categories, the drop, the index, loadouts and Field Notes.
+
+**Options considered:** hardcoded panels in the section; a menu built from section blocks; the store's nested menu with an ARIA `menu` widget; the nested menu with plain disclosures.
+
+**Decision:**
+- The nested Shopify menu (`main-menu`, up to three levels) is the only source of links. The section adds only an optional Menu feature block per panel, placed by position.
+- Top-level items stay real links; items with children get a separate disclosure button and a full-width panel. The mobile dialog uses native `<details>`.
+- Links, lists and buttons only; no `role="menu"`, because these are site links, not application commands.
+- A `#` top-level URL is treated as a label.
+- No links to index facet URLs until the Phase 13 facet check is done, and no Archive link while no product is archived.
+
+**Reasoning:** Merchants edit navigation where Shopify expects it. The panels are optional enhancement, so the header still works without JavaScript and with any menu shape.
+
+**Tradeoff / reconsideration:** The header can't read menus through the API with the current store auth, so the menu is a manual store step. Only three top-level items fit the desktop bar. Hover opens are mouse-only and delayed, which is slower for mouse users than an instant open.
+
+## D-045 — Show one announcement, never a ticker
+
+**Context:** Drop news and the shipping incentive need a surface above the header. Rotating bars and marquees move without being asked and fail WCAG 2.2.2 unless they can be paused.
+
+**Decision:**
+- `sections/announcement-bar.liquid` shows the first enabled message only. Merchants reorder blocks to change it.
+- The Shipping type writes its own sentence from the Field Supply threshold and uses the same eligibility snippet as the bag (`snippets/free-shipping-eligible.liquid`), so the bar and the bag cannot disagree.
+- The bar stays in the page flow. The fixed header is translated down by the visible part of the bar, a transform driven by the existing scroll state and a ResizeObserver.
+
+**Reasoning:** One message at a time has no motion to pause and says one thing clearly. Deriving the amount avoids a second copy of the threshold.
+
+**Tradeoff / reconsideration:** Only one message is visible, so merchants choose. In the Theme Editor, a message that isn't first can't be previewed without reordering.
+
+## D-046 — Newsletter signup as a quiet tab, confirmed only by Shopify
+
+**Context:** Newsletter capture lived only in the footer. Popups that open on a timer interrupt the storefront and trap focus.
+
+**Decision:**
+- A vertical tab on the viewport's left edge opens a non-modal panel. It never opens by itself, hides while any dialog is open, and sits above the purchase dock.
+- **Revised with the user (2026-09-25):** the first version was a small pill in the bottom-left corner, which was easy to miss. The user asked for a tab rotated against the left edge that gives the impression a new message just arrived, noticeable without being distracting. It is now an acid, square, vertical tab. On the first page of a visit it slides in and its indicator pings three times, then stays lit until opened. The motion never loops and is removed under reduced motion.
+- **Phones (also with the user):** the 44px tab covered too much content at 390px. Below 48rem it is a 24px notch (the WCAG 2.2 target minimum), and the form opens as a full-width bottom sheet above the dock, which gives the email field room while the keyboard is up. Moving the signup into the mobile menu was rejected because it loses the arrival. A bottom bar was rejected because the dock owns that edge.
+- It posts the same `customer` form as the footer (tags `newsletter,signal-tab`) with fetch. Success is only Shopify's `customer_posted=true` redirect. An error list returned for this form is shown. A bot challenge, a non-OK answer or anything unreadable falls back to a native post, so a person can pass the challenge.
+- Dismissal hides it for 30 days and a signup hides it for good, in `localStorage`. Failing storage shows it.
+- The footer form stays the no-JavaScript path. The tab is hidden without JavaScript.
+- The script is a module loaded by the section, like Recent signals, rather than imported on first open. It holds the disclosure logic as well as the submit, so it has to run on load.
+
+**Tradeoff / reconsideration:** Shopify challenged headless Chromium on 2026-09-25 (HTTP 403 "Verifying your connection"), so the fetch path's success was not observed. How Shopify answers a duplicate email is still unknown. Real visitors who get challenged see Shopify's challenge page after the fallback.
+
+## D-047 — Loadout incentives stay with the cart transform
+
+**Context:** Loadout discounts (10% for two modules, 15% for three or more) are enforced by the KOVA Core `loadout-merge` cart transform, with tiers from the `loadout` metaobject (D-024). Prompts like "add one more for 15%" would need the theme to know the tiers.
+
+**Decision:**
+- The theme shows only what the cart reports: the merged line's "Loadout pricing −N%" (`data-loadout-percent`), computed from the line's price before discount allocations and its components' prices.
+- The theme doesn't calculate or promise loadout prices. There are no "add one more" prompts and no client-side tier table.
+- New tiers (three, four or full-system) need a metaobject field change, `sync-rules.mjs` and a function rebuild. "Add one more component" prompts are **Deferred** until then.
+
+**Reasoning:** One price owner. A theme-side tier table would drift from the function and could show prices the checkout won't honour.
+
+**Tradeoff / reconsideration:** The incentive is only visible after a loadout is in the bag. **Not verified:** the transform didn't merge loadout groups on 2026-09-25, so the line hasn't rendered live.

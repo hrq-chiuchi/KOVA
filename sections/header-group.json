@@ -11,12 +11,43 @@
   "type": "header",
   "name": "t:general.header",
   "sections": {
+    "announcement-bar": {
+      "type": "announcement-bar",
+      "blocks": {
+        "drop-001": {
+          "type": "message",
+          "settings": {
+            "enabled": true,
+            "kind": "drop",
+            "label": "Drop 001 / Active",
+            "text": "The first release is live.",
+            "link": "shopify://collections/drop-001",
+            "link_label": "Enter drop"
+          }
+        },
+        "shipping": {
+          "type": "message",
+          "settings": {
+            "enabled": true,
+            "kind": "shipping"
+          }
+        }
+      },
+      "block_order": [
+        "drop-001",
+        "shipping"
+      ],
+      "settings": {}
+    },
     "header": {
       "type": "header",
-      "settings": {}
+      "settings": {
+        "menu": "main-menu"
+      }
     }
   },
   "order": [
+    "announcement-bar",
     "header"
   ],
 }

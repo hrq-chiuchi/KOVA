@@ -867,7 +867,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 
 KOVA had strong editorial, discovery and technical systems, but lacked the merchandising behaviour expected from a mature storefront: no shipping incentive, no guidance in the bag, no purchase access on long product pages, and no way to resume exploring. Instead of layering conventional conversion widgets onto the brand, familiar ecommerce mechanisms were translated into KOVA's existing product-system language: the status badge, the product card, the Works with field and the bag's own voice (D-039 to D-043).
 
-The phase ships as two pull requests. **PR A (this log)** covers the status resolver, Field Supply, the bag, the purchase dock and Recent signals. **PR B** (mega menu, announcement bar, SIGNAL signup, loadout incentive boundary) is **Planned**.
+The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers the status resolver, Field Supply, the bag, the purchase dock and Recent signals. **PR B** covers the mega menu, announcement bar, SIGNAL signup and the loadout incentive boundary (D-044 to D-047); its results follow PR A's below.
 
 **Where the theme stops:** everything is theme-native and reads existing data. There are no new metafields. Loadout pricing is already enforced by the KOVA Core cart transform (D-024), so the bag only reports what the cart says.
 
@@ -921,9 +921,48 @@ The phase ships as two pull requests. **PR A (this log)** covers the status reso
 - The actual Theme Editor UI, for Recent signals and the dock.
 - Safari (**Unavailable**).
 
+### PR B: navigation, messaging, incentives
+
+- **Commerce mega menu (D-044):** `sections/header.liquid` reads the nested `main-menu` (created by the user in admin on 2026-09-25: Shop → Drop 001; Equipment → five categories; Discover → Equipment Index, Limited Editions, Loadouts, Field Notes).
+- **Announcement bar (D-045):** `sections/announcement-bar.liquid`, first in the header group, with a Drop 001 message and a Shipping message.
+- **SIGNAL tab (D-046):** `sections/signal-tab.liquid` and `assets/signal-tab.js`, last in the footer group.
+- **Loadout incentive boundary (D-047):** documentation only; no code change.
+
+**Results (2026-09-25, `shopify theme dev` on theme `164481368323`, headless Chromium):**
+
+- **Menu:**
+  - The first real screenshot showed index numbers overflowing into the next panel column. The column minimum was raised to 17rem and the number no longer shrinks. All five links now fit.
+  - Equipment's menu URL is `#`, which gave a dead top link and a dead "View all" on mobile. A `#` parent now renders as a label. At the user's request it has a pointer cursor like the links, and clicking it opens the panel. A click before the hover delay, a second click, and hover-then-click all left it open. The user also set Discover to `#`, but it still rendered `/collections` when checked.
+  - Hover opens after 150 ms and not at 80 ms; leaving closes it. Keyboard: Tab to the toggle, Enter opens, Tab reaches the first panel link, Escape closes with focus back on the toggle. Clicking outside, tabbing out of the nav, and the `/` search shortcut all close it. A touch tap opens it only through the toggle.
+  - Without JavaScript no toggle or panel is visible and the top-level links remain.
+  - Mobile at 390px: two `<details>` groups (Equipment without "View all", Discover with it) and no horizontal overflow.
+- **Announcement bar:** the Drop 001 message shows. At 1440px the bar ends at 41px and the header starts at 41px. After scrolling 400px the header is at 0. At 390px the bar wraps to 59px and the header follows. Without JavaScript the header sits below the bar.
+- **SIGNAL tab:**
+  - Opening focuses the email field. Escape closes it and returns focus to the tab. It is hidden while the bag is open. A bad email is stopped by native validation.
+  - "Don't show this for 30 days" hid it, moved focus to the main content, and it stayed hidden after a reload.
+  - Restyled at the user's request as a 44 × 121px vertical tab at `left: 0`. The arrival and pings ran on the first page, not on the next page. The indicator turned to an outline after opening. Under reduced motion neither animation ran. axe-core was clean with the tab open and closed. At 390px the open panel ends 16px inside the viewport, with no overflow.
+  - Phones (390px): the notch measures 24 × 72px at `left: 0`. The sheet opens at the full 390px width, flush with the viewport bottom, or ending exactly at the dock's top (775px) on a product page. Focus goes to the field, and Escape returns focus to the notch. axe-core was clean open and closed, with no overflow. At 768px the full 44 × 121px tab remains. The first measurement found a 44px notch: the global button `min-block-size` acts as width in vertical writing mode, and is now reset on phones.
+  - On a product page with the dock visible, the tab sits above the dock. This was measured on the first design (tab bottom 815px, dock top 831px); the same offset rule applies to the new one.
+  - **The signup itself:** the fetch returned HTTP 403, Shopify's "Verifying your connection" challenge for headless browsers, and the tab fell back to a native post as designed. Success and the duplicate-email answer were therefore not observed.
+- **Checks:**
+  - axe-core (WCAG 2.2 AA and best practice) found no violations in the header with a panel open, the announcement bar, the open SIGNAL panel, or the mobile menu dialog with a group open.
+  - Three simulated reloads of the header and the tab left single listeners: one click opens each, and the header shift stayed at 41px, with no page errors.
+  - Under emulated reduced motion, the menu panel and the SIGNAL panel have no animation. Without reduced motion they use `search-command-in` and `signal-tab-in`.
+  - Theme Check found no offenses in 93 files, and `node --check` passes on `theme.js` and `signal-tab.js`.
+
+**Not verified (PR B):**
+
+- A successful SIGNAL signup and Shopify's duplicate-email answer (needs a real browser).
+- The phone bottom sheet with a real on-screen keyboard (iOS Safari and Android Chrome); headless emulation has no keyboard.
+- The Menu feature block (none is configured) and the Theme Editor UI for all three surfaces.
+- The Shipping announcement (it is second, behind the Drop message), zero blocks, and the non-US skip.
+- Lighthouse after PR B.
+- Safari (**Unavailable**).
+
 ### Phase 14 backlog
 
 - **Loadout merges (owner: user, then Claude):** find out why `loadout-merge` stopped merging (function activation after the 1.1.x releases is the first suspect), then verify the loadout pricing line.
-- **PR B (Planned):** commerce mega menu over a nested Shopify menu, announcement bar, SIGNAL signup tab, and the loadout incentive boundary.
+- **PR B follow-up:** a real-browser SIGNAL signup (new and duplicate email), and a Theme Editor pass for the menu feature block, the announcement bar and the tab.
+- **Deferred (D-047):** loadout tiers beyond 2 and 3+, and "add one more component" prompts.
 - **KOVA Core (Planned):** read the free-shipping threshold from delivery profiles instead of a theme setting.
 - **Deferred:** the Coming state, Markets-aware thresholds, and recently viewed synced to customer accounts.

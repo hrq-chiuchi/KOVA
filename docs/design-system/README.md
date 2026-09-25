@@ -96,6 +96,7 @@ These contracts describe the current Round 2 source. They were first exercised t
 - **Surfaces:** `sections/header.liquid`, `sections/cart-drawer.liquid`, and `assets/theme.js`.
 - **Header:** centered merchant logo/wordmark, menu on the left, search/account/bag on the right, transparent homepage state, and blurred scrolled/non-home state.
 - **Navigation:** native modal dialog; opening moves focus to Close, Escape/backdrop/Close dismiss it, `aria-expanded` is synchronized, and focus returns to the trigger.
+- **Commerce mega menu (Phase 14):** see its own contract below.
 - **Search:** the Search link opens the search command (Phase 13, see below) and stays a `/search` link without JavaScript.
 - **Cart:** the normal `/cart` link remains the fallback. JavaScript progressively opens a modal drawer, refreshes it through the Section Rendering API, updates quantities through `/cart/change.js`, and updates the header count. Since Phase 14 the drawer swaps only its `data-cart-region` parts (see Bag below).
 
@@ -245,6 +246,35 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 - **Surfaces:** `sections/recent-signals.liquid`, `sections/recent-signal-card.liquid` (rendered only through the Section Rendering API), `assets/recent-signals.js`.
 - **Contract:** handles only, capped at 8, recorded after a 3-second visible dwell, current product excluded, removed and malformed handles pruned, cards rendered by the canonical product card. Hidden without JavaScript or history (D-043).
 
+### Commerce mega menu — Section contract (Phase 14)
+
+- **Surfaces:** `sections/header.liquid` (desktop nav, mobile dialog, `featured` block) and `AfterdarkHeader` in `assets/theme.js`.
+- **Source:** the nested Shopify menu assigned in the header (`main-menu`), up to three levels. The first three top-level items fit the desktop bar; the mobile dialog lists all of them.
+- **Desktop:** top-level items stay links. An item with children also gets a disclosure button (`aria-expanded`, `aria-controls`) that JavaScript reveals, opening a full-width panel below the header. One panel at a time. Mouse hover opens after 150 ms; touch and pen use the button only. Escape (focus back to the button), a click outside, focus leaving the nav, and opening the menu, search or bag all close it. No ARIA menu roles.
+- **Levels:** a second-level link with children becomes a heading with a list; without children it is a large numbered link.
+- **Placeholder URLs:** a top-level item whose URL is `#` renders as a label, not a link, and the mobile group omits its "View all" entry. With JavaScript the label has a pointer cursor like the links, and clicking it opens its panel (it never closes it, because hover may already have opened it); the toggle stays the keyboard control.
+- **Mobile:** native `<details>` groups inside the menu dialog, opening the active group; the parent link is the group's first entry ("View all").
+- **Menu feature block:** image, eyebrow, title and link, placed in a panel chosen by position (1–3), never by matching a title. Selecting it in the Theme Editor opens its panel.
+- **Without JavaScript:** toggles and panels stay hidden; the top-level links remain.
+- **Motion:** the panel reveal runs only without reduced motion.
+
+### Announcement bar — Section (Phase 14)
+
+- **Surface:** `sections/announcement-bar.liquid`, first in the header group; `snippets/free-shipping-eligible.liquid`.
+- **Contract:** shows the first enabled `message` block only; no rotation (D-045). Types Drop, Shipping, Editorial, Product and System set the default label. Shipping writes its own sentence from `free_shipping_threshold` and is skipped where Field Supply's eligibility fails. No qualifying block means no markup.
+- **Header offset:** the bar is in the page flow. The fixed header is translated down by the part of the bar still on screen (`--ad-header-shift`, measured with a ResizeObserver), so it never covers it. Without JavaScript the header sits below the bar and scrolls with the page.
+
+### SIGNAL tab — Commerce component (Phase 14)
+
+- **Surfaces:** `sections/signal-tab.liquid` (footer group) and `assets/signal-tab.js`, a module loaded by the section.
+- **Contract:** a vertical tab flush with the viewport's left edge (acid background, square, reading bottom to top) that opens a non-modal panel beside it; it never opens by itself (D-046).
+- **Phones (below 48rem):** the tab shrinks to a 24 × 72px notch showing a short label ("Msg", its own setting) and the dot (the full label stays as its accessible name). The panel opens as a full-width bottom sheet directly above `--ad-dock-offset`, and the notch hides while it is open. The global button `min-block-size` is reset there, because in vertical writing mode it sets the width.
+- **Art-direction exception, "incoming signal":** on the first page of a visit (`sessionStorage`), the tab slides in from the edge after 1.2 s and its indicator pings three times. The indicator stays solid until the tab is opened, then becomes an outline for the rest of the visit. The motion is finite (no loop, so no pause control is needed under WCAG 2.2.2) and removed under reduced motion. Opening focuses the email field; Escape and Close return focus to the button. Hidden while any dialog is open (`body:has(dialog[open])`).
+- **Form:** the same `customer` form as the footer, tagged `newsletter,signal-tab`, with a visible label and consent line. Success only on Shopify's `customer_posted=true` redirect; an error list in the returned form is shown and announced; a challenge, non-OK answer or unreadable response falls back to a native post.
+- **Storage:** `kova:signal-tab` holds `dismissed` (30 days) or `subscribed` (permanent). Unreadable storage shows the tab. The Theme Editor always shows it.
+- **Without JavaScript:** the tab is hidden; the footer form is the path.
+- **Layering:** sits above `--ad-dock-offset` through a transform (see the bottom-edge rule).
+
 ### Composition model — Theme blocks + section (Phase 8)
 
 **Implemented; verified in the development preview and in the actual Theme Editor UI (2026-09-24).** Safari is **Unavailable** (no macOS or iOS device).
@@ -347,7 +377,9 @@ Statuses below use Shopify CLI Theme Check and the live local Shopify CLI develo
 | Complete the system | Commerce component | `snippets/cart-upsell.liquid`, `snippets/cart-upsell-row.liquid` | **Locally verified (2026-09-25):** curated Works with picks with reasons, re-filtered after adds, in-bag objects, bundle components and sold-out values excluded, S&D fallback on Afterimage Long Sleeve (D-039) |
 | Purchase dock | Commerce component | `sections/product.liquid`, `assets/theme.js` | **Locally verified (2026-09-25):** show/hide by observer, footer hide, state mirrored across variants, add from the dock, 375px single row, reduced motion, hidden without JavaScript, axe-core clean, one observer after simulated section reloads (D-042). Theme Editor UI **not verified** |
 | Recent signals | Section | `sections/recent-signals.liquid`, `sections/recent-signal-card.liquid`, `assets/recent-signals.js` | **Locally verified (2026-09-25):** first visit hidden, dwell recording, current product excluded, most recent first, removed and malformed handles pruned (D-043). Theme Editor UI **not verified** |
-| Commerce mega menu, announcement bar, SIGNAL signup | Sections | — | **Planned** (Phase 14 PR B) |
+| Commerce mega menu | Section contract + header behavior | `sections/header.liquid`, `assets/theme.js` | **Locally verified (2026-09-25)** against the store's nested `main-menu`: hover intent (closed at 80 ms, open after 150 ms), keyboard open/Tab into panel/Escape with focus return, outside click, Tab out, `/` search closes it, touch opens only through the toggle, `#` parent renders as a label, mobile `<details>` groups at 390px, no JS keeps plain links, axe-core clean with a panel open, one set of listeners after three simulated header reloads (D-044). The Menu feature block and the Theme Editor UI **not verified**. Panel and tab reveals are removed under emulated reduced motion |
+| Announcement bar | Section | `sections/announcement-bar.liquid`, `snippets/free-shipping-eligible.liquid` | **Locally verified (2026-09-25):** first enabled message shown, header offset at 1440px and 390px (two-line bar), header back at the top after scrolling, no-JS header below the bar, axe-core clean (D-045). The Shipping message, zero blocks and the non-US skip **not verified** |
+| SIGNAL tab | Commerce component | `sections/signal-tab.liquid`, `assets/signal-tab.js` | **Locally verified (2026-09-25):** left-edge vertical tab with a once-per-visit arrival and three pings (none under reduced motion, not replayed on the next page, indicator marked read after opening), 24px phone notch and bottom sheet at 390px, full tab kept at 768px, open with focus in the field, Escape with focus return, hidden while the bag is open, native validation on a bad email, 30-day dismissal persisted across reload, above the purchase dock, axe-core clean, one set of listeners after simulated reloads (D-046). **A successful signup is not verified:** headless Chromium receives Shopify's bot challenge (HTTP 403), which correctly triggers the native fallback |
 | Search command | Header behavior | `sections/header.liquid`, `assets/search-command.js`, `sections/predictive-search.liquid` | **Locally verified (2026-09-25):** the `/` key, lazy module, grouped suggestions, keyboard-only open of a product, Escape with focus return, announcements, 390px layout, reduced motion |
 | Search results | Section | `sections/search.liquid` | **Locally verified (2026-09-25):** grouped results, product filters, empty and no-query states, Lighthouse accessibility 100 |
 | Product purchase surface | Section | `sections/product.liquid`, `assets/theme.js` | **Locally verified:** real media/options, linked colour swatches, variant and quantity state, genuine sold-out state on the unproduced colourway, and a successful add-to-cart on single-variant, multi-variant, and bundle products after the single-variant matcher fix. Custom-data presentation (descriptor, positioning, drop code, specifications, fit, material, compatibility, edition, package, reference guide) renders on five representative PDPs; the Features list renders five entries on all 16 products after the catalogue data fix |

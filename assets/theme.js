@@ -46,10 +46,16 @@
         event.preventDefault();
         document.dispatchEvent(new CustomEvent('afterdark:cart-open'));
       }, { signal });
+      document.addEventListener('afterdark:cart-open', () => this.closePanel(), { signal });
       document.addEventListener('afterdark:cart-updated', () => this.updateCartCount(), { signal });
       document.addEventListener('afterdark:cart-count', () => this.updateCartCount(), { signal });
       window.addEventListener('scroll', () => this.updateScrollState(), { signal, passive: true });
-      this.updateScrollState();
+      // The announcement bar sits in the page flow above the fixed header. The header is shifted down
+      // by the part of the bar still on screen, so it never covers it and closes the gap on scroll.
+      this.announcementObserver = new ResizeObserver(() => this.measureAnnouncement());
+      this.observeAnnouncement();
+      document.addEventListener('shopify:section:load', () => this.observeAnnouncement(), { signal });
+      document.addEventListener('shopify:section:unload', () => requestAnimationFrame(() => this.observeAnnouncement()), { signal });
 
       // The search link opens the search command dialog; without JavaScript it goes to /search.
       this.searchTrigger = this.querySelector('[data-search-open]');
@@ -84,11 +90,98 @@
           this.openSearch();
         }, { signal });
       }
+
+      this.setupMegaNav(signal);
+    }
+
+    // Desktop disclosure panels. One panel is open at a time. Mouse hover opens after a short delay;
+    // touch and pen rely on the toggle, so a tap never opens a panel by accident.
+    setupMegaNav(signal) {
+      this.megaNav = this.querySelector('[data-mega-nav]');
+      this.openToggle = null;
+      if (!this.megaNav) return;
+      const toggles = this.megaNav.querySelectorAll('[data-mega-toggle]');
+      if (!toggles.length) return;
+
+      toggles.forEach((toggle) => {
+        toggle.hidden = false;
+        toggle.addEventListener('click', () => {
+          if (this.openToggle === toggle) this.closePanel();
+          else this.openPanel(toggle);
+        }, { signal });
+      });
+
+      this.megaNav.querySelectorAll('[data-mega-item]').forEach((item) => {
+        const toggle = item.querySelector('[data-mega-toggle]');
+        // A `#` parent is a label, not a link. Clicking it opens its panel (never closes it, since hover
+        // may already have opened it); the toggle stays the keyboard control.
+        item.querySelector('[data-mega-label]')?.addEventListener('click', () => toggle && this.openPanel(toggle), { signal });
+        item.addEventListener('pointerenter', (event) => {
+          if (event.pointerType !== 'mouse') return;
+          this.scheduleHover(() => (toggle ? this.openPanel(toggle) : this.closePanel()));
+        }, { signal });
+        item.addEventListener('pointerleave', (event) => {
+          if (event.pointerType !== 'mouse') return;
+          this.scheduleHover(() => this.closePanel());
+        }, { signal });
+      });
+
+      // Focus leaving the nav closes the panel. A null relatedTarget (a click on the panel's
+      // background, or Safari's button focus) is not treated as leaving.
+      this.megaNav.addEventListener('focusout', (event) => {
+        if (event.relatedTarget && !this.megaNav.contains(event.relatedTarget)) this.closePanel();
+      }, { signal });
+      document.addEventListener('pointerdown', (event) => {
+        if (this.openToggle && !this.megaNav.contains(event.target)) this.closePanel();
+      }, { signal });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !this.openToggle) return;
+        const toggle = this.openToggle;
+        const hadFocus = this.megaNav.contains(document.activeElement);
+        this.closePanel();
+        if (hadFocus) toggle.focus();
+      }, { signal });
+
+      // Theme Editor: selecting a menu feature block shows the panel it sits in.
+      document.addEventListener('shopify:block:select', (event) => {
+        const panel = event.target.closest?.('[data-mega-panel]');
+        const toggle = panel && this.megaNav.querySelector(`[aria-controls="${panel.id}"]`);
+        if (toggle) this.openPanel(toggle);
+      }, { signal });
+      document.addEventListener('shopify:block:deselect', () => this.closePanel(), { signal });
+    }
+
+    scheduleHover(action) {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = setTimeout(action, 150);
+    }
+
+    openPanel(toggle) {
+      if (this.openToggle === toggle) return;
+      this.closePanel();
+      const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+      if (!panel) return;
+      panel.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      this.openToggle = toggle;
+      this.setAttribute('data-panel-open', '');
+    }
+
+    closePanel() {
+      clearTimeout(this.hoverTimer);
+      const toggle = this.openToggle;
+      if (!toggle) return;
+      const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+      if (panel) panel.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      this.openToggle = null;
+      this.removeAttribute('data-panel-open');
     }
 
     async openSearch() {
       const dialog = this.searchDialog;
       if (!dialog || dialog.open) return;
+      this.closePanel();
       this.searchReturnFocus = document.activeElement;
       dialog.showModal();
       this.searchTrigger.setAttribute('aria-expanded', 'true');
@@ -105,11 +198,14 @@
 
     disconnectedCallback() {
       this.controller?.abort();
+      this.announcementObserver?.disconnect();
+      clearTimeout(this.hoverTimer);
       document.body.classList.remove('menu-open');
     }
 
     openMenu() {
       if (!this.dialog || this.dialog.open) return;
+      this.closePanel();
       this.previouslyFocused = document.activeElement;
       this.dialog.showModal();
       this.trigger?.setAttribute('aria-expanded', 'true');
@@ -127,8 +223,25 @@
       this.previouslyFocused?.focus();
     }
 
+    observeAnnouncement() {
+      this.announcementObserver.disconnect();
+      this.announcement = document.querySelector('[data-announcement]');
+      if (this.announcement) this.announcementObserver.observe(this.announcement);
+      this.measureAnnouncement();
+    }
+
+    measureAnnouncement() {
+      this.announcementHeight = this.announcement?.isConnected ? this.announcement.offsetHeight : 0;
+      this.updateScrollState();
+    }
+
     updateScrollState() {
       this.toggleAttribute('data-scrolled', window.scrollY > 24);
+      const shift = `${Math.max(0, (this.announcementHeight || 0) - window.scrollY)}px`;
+      if (shift !== this.headerShift) {
+        this.headerShift = shift;
+        this.style.setProperty('--ad-header-shift', shift);
+      }
     }
 
     async updateCartCount() {
