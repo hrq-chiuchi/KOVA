@@ -799,7 +799,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 - **Equipment Index:**
   - `templates/collection.index.json` (rows) and `collection.index-grid.json` (grid).
   - The `all` collection was assigned the `index` template through `collectionUpdate`.
-  - `snippets/index-row.liquid` renders the numbered rows.
+  - `snippets/index-row.liquid` renders the numbered rows. Each row has a thumbnail, so the rows view stays visual like the grid. Products without photography show a small pending frame. The image is decorative: its text is already in the row, and there is one link per row.
 - **Search:**
   - The search command is `sections/header.liquid`, `assets/search-command.js` and `sections/predictive-search.liquid` (D-037).
   - The search page is rebuilt, and the `search.*` locale keys now hold KOVA copy.
