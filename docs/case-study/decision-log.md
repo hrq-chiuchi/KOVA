@@ -342,7 +342,7 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - There is no backend, and there is no App Home yet. The template showed that App Home can run without a hosted server, so it stays available for later.
 - `apps/**` is excluded from `.shopifyignore` and Theme Check.
 - Functions are TypeScript, not Rust: the system Rust toolchain on the development machine has no `wasm32-wasip1` standard library.
-- The app runs through `shopify app dev` only. It has not been deployed or released.
+- The app runs through `shopify app dev` only. It has not been deployed or released. *(Superseded by D-028: version `kova-core-1.0.0` was deployed and released on 2026-09-24.)*
 - Live testing showed that Shopify ignores a `linesMerge` whose parent product is not on the Online Store channel. The "KOVA Loadout" parent is therefore published there only, hidden from search and the sitemap with `seo.hidden`, untagged so no collection lists it, and blocked by the guard when added directly.
 
 **Reasoning:** One repository keeps the rules, the theme that renders them, and the documentation in the same review. A development-only app keeps the enforcement testable without releasing anything.
@@ -351,3 +351,44 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 - The functions stop running when `shopify app dev` stops. Before Phase 10 ships, the user decides whether to deploy a version.
 - The parent product's page is reachable by direct URL. Its $0 price cannot be bought, but the page should get a redirect or template if it becomes a problem.
 - Switch to Rust if instruction counts approach the limit. The largest fixture uses about 0.85M of 11M.
+
+## D-027 — Build loadouts in one section that adds a single atomic group
+
+**Context:** Phase 10 needs a storefront surface for the loadouts modelled in D-024. The functions judge line properties the browser sets, so the builder can guide a customer but cannot be trusted to enforce anything. D-024 left two questions open: how to keep each product to one line per loadout, and how the builder presents quantity.
+
+**Options considered:**
+- A theme block that merchants compose, or one section used on both a page and the product page.
+- Adding lines one at a time, or in one `/cart/add.js` request with `items`.
+- A quantity stepper on the builder, or quantity only on the merged cart line.
+
+**Decision:**
+- One section, `sections/loadout-builder.liquid`, enabled on page and product templates, with each choice rendered by `snippets/loadout-option.liquid`.
+  - On a page it uses the loadout chosen in its settings and starts with a platform step; `?platform=<handle>` preselects one.
+  - On a product page it finds the loadout whose platforms include the product and locks the platform to it. For any other product it renders nothing.
+- The builder adds the platform and modules in one JSON `/cart/add.js` request. Every line carries a fresh `_kova_loadout` id (`crypto.randomUUID`) and its `_kova_slot`, so the request succeeds or fails as a whole, and two loadouts never share a group.
+- Client checks mirror `judgeGroup` in `apps/kova-core/shared/loadout-rules.ts`: platform, required slots, slot maximum, minimum modules and tier. The functions stay authoritative, and the summary labels its price "Estimate only".
+- Multi-item slots are checkboxes that disable the unchosen products once the slot is full; single-item slots are radios, with a "No … module" option when optional. A product therefore appears at most once per loadout, which answers D-024's duplicate-module limit.
+- The builder always adds quantity 1. A second identical loadout is either a second build (a new group) or the quantity control on the merged cart line, which D-024 verified doubles components and price.
+- Without JavaScript the form is hidden and a list of links to each object is shown, saying that the loadout price applies only when built here.
+- The loadout teaser gains an optional page setting that links to the builder page.
+
+**Reasoning:** Loadouts depend on metaobject rules, not on a merchant's arrangement of parts, so a block would add editor surface without adding composition. One atomic request avoids a half-added loadout that the guard would then refuse. Mirroring the shared rules lets customers see a problem before the request, without creating a second authority.
+
+**Tradeoff / reconsideration:**
+- The client mirror is a second copy of the rules logic in JavaScript. If `judgeGroup` changes, `assets/theme.js` must change with it; the fixtures do not cover the mirror.
+- The product page only finds the first loadout that lists the product as a platform. Revisit if a platform belongs to more than one loadout.
+- Copy in the section (rules line, hints, fallback) is English-only, like the rest of the theme's section copy.
+
+## D-028 — Deploy and release KOVA Core 1.0.0
+
+**Context:** D-026 ran KOVA Core through `shopify app dev` only, so loadout rules stopped whenever that process stopped. Phase 10 puts a loadout builder on the storefront, which is misleading if the functions are not running. The user asked for the deploy and release on 2026-09-24.
+
+**Options considered:** keep development-only; create a version with `--no-release`; deploy and release.
+
+**Decision:** `shopify app deploy --allow-updates` created and released version `kova-core-1.0.0` of KOVA Core, containing the `loadout-merge` cart transform and the `loadout-guard` validation. There is still no backend and no App Home.
+
+**Reasoning:** The builder only works while the functions run. After the release, `CartTransform/135725315` and `Validation/138477827` still referenced the same function IDs, so no re-activation was needed.
+
+**Tradeoff / reconsideration:**
+- Rule edits still need `scripts/sync-rules.mjs`. A code change to either function now needs a new deploy to reach the store.
+- `app dev` still overrides the released functions while it runs, so a later dev session can test changes without a release.

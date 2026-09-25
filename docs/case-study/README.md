@@ -593,7 +593,55 @@ The largest fixture ran at 0.84M of the 11M-instruction limit.
 ### Phase 9 backlog
 
 - **Drop 002 photography (owner: user).** Upload images to the five products. The pending frames disappear without code changes.
-- **Deploy decision (owner: user).** The functions run only while `shopify app dev` runs. Decide whether to deploy a KOVA Core version before Phase 10 ships.
+- ~~**Deploy decision (owner: user).**~~ Resolved in Phase 10: `kova-core-1.0.0` was deployed and released (D-028).
 - **Rules editing.** Re-run `node apps/kova-core/scripts/sync-rules.mjs` after any change to a loadout or slot in the admin, until an App Home screen replaces it.
 - **Parent product page.** `/products/kova-loadout` returns 200 for anyone with the URL; consider a redirect or a dedicated template.
-- **Loadout quantity.** Decide in Phase 10 how the builder presents a quantity-two loadout (see D-024).
+- ~~**Loadout quantity.**~~ Resolved in Phase 10: the builder always adds quantity 1; the merged cart line's quantity control handles more (D-027).
+
+## Phase 10 loadout builder log
+
+Phase 10 adds the storefront surface for Phase 9's loadouts: a builder on its own page and on each platform's product page, and a release of KOVA Core so the rules run without a development session (D-027, D-028).
+
+**2026-09-24 — Theme:**
+
+- `sections/loadout-builder.liquid` (commerce section) and `snippets/loadout-option.liquid` (one choosable object). The page `/pages/build-a-loadout` uses `templates/page.loadout.json` with the "Relay Grid loadout" entry.
+- `templates/product.json` places the builder after the main product section. It renders only on the four platform products, with the platform locked.
+- `assets/theme.js`: `addProduct` became `addToCart(url, body)`, which also sends a JSON `{ items }` body, and a `loadout-builder` custom element. It cleans up its listeners with an `AbortController` when disconnected.
+- The homepage loadout teaser has a "Build your own" link to the builder page.
+- Theme Check: 76 files, no offenses.
+
+**2026-09-24 — KOVA Core:** `kova-core-1.0.0` was deployed and released (D-028). The cart transform and the validation kept their function IDs, so no re-activation was needed. Fixtures: `loadout-merge` 12/12, `loadout-guard` 14/14.
+
+**Live cart results** (AJAX cart through the `shopify theme dev` preview, with no `app dev` running, so the released version was serving; every test cart was cleared):
+
+| Case | Result |
+| --- | --- |
+| Sling + Cell + Sleeve + Beacon | One line "Loadout — Relay Sling 8", $261.80 (15% off $308) |
+| Backpack + Pouch Array + Flask | One line "Loadout — After Dark Utility Backpack", $430.20 (10% off $478) |
+| Sling with two hydration modules | Refused (422): "The Relay Sling 8 loadout is incomplete or has changed…" |
+| Sling with one module | Refused (422), same message |
+| Two loadouts in one cart (Sling; Courier) | Two merged lines, $225.00 and $345.60 |
+
+**Browser checks** (headless Chromium, 390 and 1440px):
+
+- `/pages/build-a-loadout?platform=relay-sling-8` preselects the Sling and shows "Choose 2 more modules." There is no horizontal overflow at either width.
+- With three modules the summary shows −15% and an estimate of $261.80. Choosing both organizer modules fills that slot (maximum two) and announces "Organizer is full: up to 2."
+- "Add loadout to bag" with five objects gave a cart of one line at $387.60, equal to the estimate. After the add, the platform stays chosen and the modules clear.
+- Submitting with nothing chosen reports "Choose a platform." and moves focus to the platform fieldset.
+- The Relay Sling 8 product page shows one builder with the platform locked and no overflow; Sector Sleeve shows none.
+- With JavaScript disabled, the form is hidden and the fallback lists 10 product links.
+- No page errors were logged.
+
+**Not verified:**
+
+- Checkout itself (**Unavailable** here): the storefront is password-protected. The guard's refusal was verified at add-to-cart.
+- The builder in the actual Theme Editor UI, including choosing a loadout in the section setting and section reload.
+- Lighthouse was not run on the builder page, and the keyboard path through the option cards was not exercised in full.
+- Reduced-motion rendering of the estimate change was not checked in a browser.
+- Safari (**Unavailable**, as in Phase 8).
+
+### Phase 10 backlog
+
+- **Mirror drift.** The builder's checks in `assets/theme.js` copy `judgeGroup`; add a fixture or shared test if the rules change.
+- **One loadout per platform.** The product page uses the first loadout that lists the product; revisit if a platform joins a second loadout.
+- Items carried from Phase 9: Drop 002 photography, rules syncing, and the parent product page.
