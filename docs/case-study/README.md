@@ -843,14 +843,22 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 
 **Not verified:**
 
-- **The TYPE, SYSTEM, ENVIRONMENT, COLOUR and STATUS filters on the storefront.** They appear only once the Search & Discovery filters are configured, which is a manual admin step. Until then the index shows Availability and Price only.
+- **The TYPE, SYSTEM, ENVIRONMENT and STATUS filters on the storefront.** The user configured them in Search & Discovery on 2026-09-25, but after more than 10 minutes of polling, no collection rendered them. The definitions are `PUBLIC_READ` and eligible for filtering. The likely cause is Search & Discovery still processing, or the filters not having been saved.
+- **Colour filter:** it is live, with swatch presentation and 2 values, but it is labelled "Cor", the admin's Portuguese default. Selecting a swatch value was not exercised.
 - The actual Theme Editor UI. Section reload was simulated with the same events.
 - Safari (**Unavailable**).
 
 ### Phase 13 backlog
 
+- **Check the facet filters once Search & Discovery finishes (owner: user, then Claude):**
+  - Confirm that Index type, Systems, Environments and Status render on `/collections/all`. If not, check their status in Search & Discovery.
+  - Then verify:
+    - each value narrows the set to the counts in the facet table;
+    - filters combine as AND across groups and OR within one;
+    - chips, the swatch values and the mobile dialog work with the new groups;
+    - Archive appears under Status during a temporary assignment.
+  - Rename the labels to Type, System, Environment, Colour (currently "Cor") and Status.
 - **Manual store setup:**
-  - Add the four facet filters and the Colour swatch filter in Search & Discovery.
   - The header has no menu assigned, so the site menu's coded fallback is used. Its first link now reads "Equipment Index" and goes to `/collections/all`. If a menu is assigned later, it needs its own "Equipment Index" link. The CLI's store auth has no menu scope.
 - **Deferred:** Markets-aware facet labels, and hardware generations (V1/V2).
 - **Photography:** the Drop 002 products and the Field Notes still show empty thumbnails in search suggestions.
