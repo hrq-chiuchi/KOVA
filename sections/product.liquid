@@ -5,6 +5,11 @@
   assign fit = kova.fit_profile.value
   assign edition = kova.edition_profile.value
   assign guide = kova.reference_guide.value
+  assign form_id = 'ProductForm-' | append: section.id
+  capture product_status
+    render 'product-status', product: product, format: 'key'
+  endcapture
+  assign product_status = product_status | strip
 %}
 
 <section class="product-page full-width">
@@ -20,8 +25,8 @@
         {% if edition.drop_code.value != blank %}{{ edition.drop_code.value | escape }}{% else %}Object {{ product.id | modulo: 100 | prepend: '0' | slice: -2, 2 }}{% endif %}
         {% if edition.edition_quantity.value != blank %}<span>/ {{ edition.edition_quantity.value }} units</span>{% endif %}
       </p>
-      {% if kova.status.value contains 'Archive' %}
-        <p class="product-page__status"><span class="status-badge status-badge--archive">Archive</span> <span>Retired object. Kept in the index for reference.</span></p>
+      {% if product_status == 'archive' %}
+        <p class="product-page__status">{% render 'product-status', product: product %} <span>Retired object. Kept in the index for reference.</span></p>
       {% endif %}
       {% if section.settings.show_manual_link %}
         <a class="product-page__manual-link" href="#field-manual">
@@ -67,13 +72,19 @@
       {% endfor %}
     </div>
 
-    <product-purchase class="product-purchase">
+    <product-purchase class="product-purchase" data-dock-id="PurchaseDock-{{ section.id }}">
       <div class="product-purchase__topline">
-        <p class="product-purchase__price" data-product-price>{{ current_variant.price | money }}</p>
-        {% if current_variant.compare_at_price > current_variant.price %}<s>{{ current_variant.compare_at_price | money }}</s>{% endif %}
+        <p class="product-purchase__price">
+          <span data-product-price>{{ current_variant.price | money }}</span>
+          <s data-product-compare{% unless current_variant.compare_at_price > current_variant.price %} hidden{% endunless %}>{{ current_variant.compare_at_price | money }}</s>
+        </p>
+        {%- comment -%} Variant-level lifecycle state; Archive stays in the identity column. {%- endcomment -%}
+        <p class="product-purchase__status" data-variant-status>
+          {%- unless product_status == 'archive' %}{% render 'product-status', product: product, variant: current_variant %}{% endunless -%}
+        </p>
       </div>
 
-      {% form 'product', product, class: 'product-purchase__form', data-product-purchase-form: '' %}
+      {% form 'product', product, id: form_id, class: 'product-purchase__form', data-product-purchase-form: '' %}
         <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-id>
 
         {% unless product.has_only_default_variant %}
@@ -180,13 +191,18 @@
         {% endif %}
       </div>
 
+
       <script type="application/json" data-variant-json>
         [
           {% for variant in product.variants %}
+            {%- capture variant_status %}{% render 'product-status', product: product, variant: variant, format: 'key' %}{% endcapture -%}
             {
               "id": {{ variant.id }},
+              "title": {{ variant.title | json }},
               "available": {{ variant.available | json }},
+              "status": {{ variant_status | strip | json }},
               "price": {{ variant.price | money | json }},
+              "compare_at_price": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | json }}{% else %}null{% endif %},
               "options": {{ variant.options | json }},
               "featured_media_id": {{ variant.featured_media.id | default: 'null' }}
             }{% unless forloop.last %},{% endunless %}
@@ -196,6 +212,30 @@
     </product-purchase>
   </div>
 </section>
+
+{% comment %}
+  Purchase dock (D-042): a mirror of this form, shown once the form has scrolled away. Its button submits
+  the same form through the `form` attribute, and ProductPurchase writes every mirror, so there is no
+  second variant state. It sits outside the sticky purchase column, whose stacking context would
+  otherwise let later sections paint over it. Hidden without JavaScript, where the form itself is the only purchase path.
+{% endcomment %}
+<aside class="purchase-dock" id="PurchaseDock-{{ section.id }}" aria-label="{{ product.title | escape }}, quick purchase" data-purchase-dock hidden>
+  <div class="purchase-dock__inner section-shell">
+    <p class="purchase-dock__identity">
+      <span class="purchase-dock__eyebrow">KOVA /</span>
+      <span class="purchase-dock__title">{{ product.title | escape }}</span>
+      {% unless product.has_only_default_variant %}<span class="purchase-dock__variant" data-variant-label>{{ current_variant.title | escape }}</span>{% endunless %}
+    </p>
+    <p class="purchase-dock__price">
+      <span data-product-price>{{ current_variant.price | money }}</span>
+      <s data-product-compare{% unless current_variant.compare_at_price > current_variant.price %} hidden{% endunless %}>{{ current_variant.compare_at_price | money }}</s>
+    </p>
+    <a class="purchase-dock__loadout" href="#" data-dock-loadout hidden>Build a loadout <span aria-hidden="true">↓</span></a>
+    <button class="button button--accent purchase-dock__add" type="submit" form="{{ form_id }}" data-add-button{% unless current_variant.available %} disabled{% endunless %}>
+      {% if current_variant.available %}Add to bag{% else %}Sold out{% endif %}
+    </button>
+  </div>
+</aside>
 
 {% stylesheet %}
   .product-page { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
@@ -220,7 +260,9 @@
   .product-page__media svg { width: 100%; height: 100%; object-fit: cover; }
   .product-purchase { display: block; }
   .product-purchase__topline { display: flex; padding-block-end: var(--ad-space-300); align-items: baseline; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
-  .product-purchase__price { font-family: var(--font-display-family); font-size: clamp(1.75rem, 3vw, 2.6rem); }
+  .product-purchase__price { margin: 0; font-family: var(--font-display-family); font-size: clamp(1.75rem, 3vw, 2.6rem); }
+  .product-purchase__price s { margin-inline-start: var(--ad-space-200); color: var(--ad-color-text-muted); font-size: 0.5em; }
+  .product-purchase__status { margin: 0; }
   .product-purchase__form { display: grid; gap: var(--ad-space-400); padding-block: var(--ad-space-400); }
   .product-purchase__options { display: grid; gap: var(--ad-space-400); }
   .product-purchase__options fieldset { padding: 0; border: 0; }
@@ -249,6 +291,23 @@
   .product-purchase__specs dd { margin: 0; grid-column: 2; }
   .product-purchase__guide { display: flex; min-height: var(--ad-control-minimum); padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
 
+  /* Purchase dock (D-042). Fixed to the viewport; only transform, opacity and visibility change. */
+  .purchase-dock { position: fixed; z-index: 60; inset: auto 0 0; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: color-mix(in srgb, var(--ad-color-background-elevated) 94%, transparent); color: var(--ad-color-text-primary); backdrop-filter: blur(24px); opacity: 0; transform: translateY(100%); visibility: hidden; transition: transform var(--ad-duration-base) var(--ad-ease-standard), opacity var(--ad-duration-base) var(--ad-ease-standard), visibility 0s linear var(--ad-duration-base); }
+  .purchase-dock[data-visible] { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+  .purchase-dock__inner { display: flex; min-height: calc(var(--ad-control-minimum) + var(--ad-space-400)); padding-block: var(--ad-space-200); align-items: center; gap: var(--ad-space-400); }
+  .purchase-dock__identity { display: flex; min-width: 0; margin: 0; flex: 1; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ad-space-200); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .purchase-dock__eyebrow,
+  .purchase-dock__variant { color: var(--ad-color-text-muted); }
+  .purchase-dock__title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .purchase-dock__price { margin: 0; font-family: var(--font-display-family); font-size: 1.5rem; white-space: nowrap; }
+  .purchase-dock__price s { margin-inline-start: var(--ad-space-100); color: var(--ad-color-text-muted); font-size: 0.6em; }
+  .purchase-dock__loadout { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+  .purchase-dock__add { min-width: 12rem; }
+  @media (prefers-reduced-motion: reduce) {
+    .purchase-dock,
+    .purchase-dock[data-visible] { transform: none; transition: none; }
+  }
+
   @media (max-width: 74.99rem) {
     .product-page__inner { grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 0.8fr); }
     .product-page__identity { position: static; grid-column: 1 / -1; }
@@ -261,6 +320,14 @@
     .product-page__gallery { order: 2; margin-inline: calc(var(--ad-page-padding) * -1); gap: 2px; }
     .product-purchase { position: static; order: 3; }
     .product-page__media--primary { aspect-ratio: 4 / 5; }
+    .purchase-dock__inner { gap: var(--ad-space-200); }
+    .purchase-dock__eyebrow,
+    .purchase-dock__variant,
+    .purchase-dock__loadout,
+    .purchase-dock__price s { display: none; }
+    .purchase-dock__identity { flex-direction: column; gap: 0; }
+    .purchase-dock__price { font-size: 1.15rem; }
+    .purchase-dock__add { min-width: 0; padding-inline: var(--ad-space-300); }
   }
 {% endstylesheet %}
 

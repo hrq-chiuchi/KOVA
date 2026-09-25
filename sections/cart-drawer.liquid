@@ -1,3 +1,7 @@
+{% comment %}
+  Cart drawer. The header, close button and live region stay in place; JavaScript swaps only the
+  `data-cart-region` parts after a change, so focus and announcements survive a refresh.
+{% endcomment %}
 <cart-drawer
   class="cart-drawer"
   data-section-id="{{ section.id }}"
@@ -9,12 +13,13 @@
       <header class="cart-drawer__header">
         <div>
           <p class="eyebrow">Current loadout</p>
-          <h2 id="CartDrawerTitle">Bag / {{ cart.item_count | prepend: '0' | slice: -2, 2 }}</h2>
+          <h2 id="CartDrawerTitle" tabindex="-1">Bag / <span data-cart-region="count">{{ cart.item_count | prepend: '0' | slice: -2, 2 }}</span></h2>
         </div>
         <button class="cart-drawer__close" type="button" data-cart-close>Close</button>
       </header>
+      <p class="cart-drawer__status" role="status" aria-live="polite" data-cart-live></p>
 
-      <div class="cart-drawer__body" data-cart-drawer-content>
+      <div class="cart-drawer__body" data-cart-region="body">
         {% if cart.empty? %}
           <div class="cart-drawer__empty">
             <p>Your bag is standing by.</p>
@@ -23,66 +28,24 @@
         {% else %}
           <ul class="cart-drawer__items" role="list">
             {% for item in cart.items %}
-              {%- liquid
-                # A merged loadout's parent product is hidden, so the line links to and shows its platform.
-                assign line_title = item.product.title
-                assign line_url = item.url
-                assign line_image = item.image
-                assign is_loadout = false
-                if item.properties._kova_loadout_platform != blank
-                  assign is_loadout = true
-                  assign line_title = item.title
-                  assign platform = item.item_components.first
-                  for component in item.item_components
-                    if component.product.title == item.properties._kova_loadout_platform
-                      assign platform = component
-                      break
-                    endif
-                  endfor
-                  assign line_url = platform.url
-                  if line_image == blank
-                    assign line_image = platform.image
-                  endif
-                endif
-              -%}
-              <li class="cart-drawer__item">
-                <a class="cart-drawer__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
-                  {% if line_image %}
-                    {{ line_image | image_url: width: 320 | image_tag: widths: '160, 240, 320', sizes: '7rem', loading: 'lazy', alt: '' }}
-                  {% else %}
-                    {% render 'media-pending', title: line_title, compact: true %}
-                  {% endif %}
-                </a>
-                <div class="cart-drawer__item-copy">
-                  <a href="{{ line_url }}">{{ line_title | escape }}</a>
-                  {% unless is_loadout or item.product.has_only_default_variant %}<small>{{ item.variant.title | escape }}</small>{% endunless %}
-                  {% render 'cart-line-components', item: item %}
-                  {% if item.error_message != blank %}<small class="cart-drawer__error" role="alert">{{ item.error_message | escape }}</small>{% endif %}
-                  <span>{{ item.final_line_price | money }}</span>
-                  <form action="{{ routes.cart_change_url }}" method="post" data-cart-change>
-                    <input type="hidden" name="id" value="{{ item.key }}">
-                    <label>
-                      <span class="visually-hidden">Quantity for {{ line_title | escape }}</span>
-                      <input type="number" name="quantity" value="{{ item.quantity }}" min="0" inputmode="numeric">
-                    </label>
-                    <button type="submit">Update</button>
-                    <button type="submit" name="quantity" value="0">Remove</button>
-                  </form>
-                </div>
-              </li>
+              {% render 'cart-line', item: item, layout: 'drawer' %}
             {% endfor %}
           </ul>
+          {% render 'cart-upsell' %}
         {% endif %}
       </div>
 
-      {% unless cart.empty? %}
-        <footer class="cart-drawer__footer">
-          <div><span>Subtotal</span><strong>{{ cart.total_price | money }}</strong></div>
-          <p>Taxes and shipping calculated at checkout.</p>
-          <form action="{{ routes.cart_url }}" method="post"><button class="button button--accent" type="submit" name="checkout">Checkout</button></form>
-          <a href="{{ routes.cart_url }}">View full bag</a>
-        </footer>
-      {% endunless %}
+      <div data-cart-region="footer">
+        {% unless cart.empty? %}
+          <footer class="cart-drawer__footer">
+            {% render 'field-supply', class: 'cart-drawer__supply' %}
+            <div class="cart-drawer__subtotal"><span>Subtotal</span><strong>{{ cart.total_price | money }}</strong></div>
+            <p>Taxes and shipping calculated at checkout.</p>
+            <form action="{{ routes.cart_url }}" method="post"><button class="button button--accent" type="submit" name="checkout">Checkout</button></form>
+            <a href="{{ routes.cart_url }}">View full bag</a>
+          </footer>
+        {% endunless %}
+      </div>
     </div>
   </dialog>
 </cart-drawer>
@@ -91,7 +54,7 @@
   .cart-drawer { position: relative; z-index: 80; }
   .cart-drawer__dialog { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; }
   .cart-drawer__dialog::backdrop { background: rgb(0 0 0 / 66%); backdrop-filter: blur(4px); }
-  .cart-drawer__panel { display: flex; width: min(100%, 34rem); height: 100%; margin-inline-start: auto; padding: var(--ad-space-400); flex-direction: column; background: rgb(25 25 25 / 94%); color: var(--ad-color-text-primary); backdrop-filter: blur(24px); }
+  .cart-drawer__panel { display: flex; width: min(100%, 34rem); height: 100%; margin-inline-start: auto; padding: var(--ad-space-400); flex-direction: column; background: color-mix(in srgb, var(--ad-color-background-elevated) 94%, transparent); color: var(--ad-color-text-primary); backdrop-filter: blur(24px); }
   .cart-drawer__header { display: flex; padding-block-end: var(--ad-space-400); align-items: start; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
   .cart-drawer__header h2 { margin-block-start: var(--ad-space-100); font-family: var(--font-display-family); font-size: clamp(2.4rem, 5vw, 4.5rem); letter-spacing: -0.06em; line-height: 0.85; text-transform: uppercase; }
   .cart-drawer__close { min-width: var(--ad-control-minimum); border: 0; background: transparent; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -109,8 +72,16 @@
   .cart-drawer__item-copy input { width: 4rem; min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; }
   .cart-drawer__item-copy button { min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: 0; background: transparent; font-size: var(--ad-text-label); text-transform: uppercase; }
   .cart-drawer__footer { display: grid; gap: var(--ad-space-200); padding-block-start: var(--ad-space-400); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
-  .cart-drawer__footer > div { display: flex; justify-content: space-between; font-family: var(--font-display-family); font-size: 1.5rem; text-transform: uppercase; }
-  .cart-drawer__footer p { color: var(--ad-color-text-muted); font-size: 0.8rem; }
+  .cart-drawer__status { margin: 0; padding-block: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  /* Routine updates are for screen readers only (the bag itself shows them); errors are visible too. */
+  .cart-drawer__status:not([data-tone='error']) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .cart-drawer__status:empty { padding: 0; border: 0; }
+  .cart-drawer__status[data-tone='error'] { color: var(--ad-color-action-critical); }
+  .cart-drawer__header h2:focus { outline: none; }
+  .cart-drawer__header h2:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+  .cart-drawer__supply { padding-block-start: 0; }
+  .cart-drawer__subtotal { display: flex; justify-content: space-between; font-family: var(--font-display-family); font-size: 1.5rem; text-transform: uppercase; }
+  .cart-drawer__footer > p { color: var(--ad-color-text-muted); font-size: 0.8rem; }
   .cart-drawer__footer .button { width: 100%; }
   .cart-drawer__footer > a { justify-self: center; font-size: var(--ad-text-label); text-transform: uppercase; }
   @media (min-width: 48rem) { .cart-drawer__panel { border-inline-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); } }

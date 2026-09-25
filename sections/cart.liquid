@@ -17,50 +17,7 @@
       <form class="cart-page__form" action="{{ routes.cart_url }}" method="post">
         <ol class="cart-page__items">
           {% for item in cart.items %}
-            {%- liquid
-              # A merged loadout's parent product is hidden, so the line links to and shows its platform.
-              assign line_title = item.product.title
-              assign line_url = item.url
-              assign line_image = item.image
-              assign is_loadout = false
-              if item.properties._kova_loadout_platform != blank
-                assign is_loadout = true
-                assign line_title = item.title
-                assign platform = item.item_components.first
-                for component in item.item_components
-                  if component.product.title == item.properties._kova_loadout_platform
-                    assign platform = component
-                    break
-                  endif
-                endfor
-                assign line_url = platform.url
-                if line_image == blank
-                  assign line_image = platform.image
-                endif
-              endif
-            -%}
-            <li class="cart-line">
-              <a class="cart-line__media" href="{{ line_url }}" tabindex="-1" aria-hidden="true">
-                {% if line_image %}
-                  {{ line_image | image_url: width: 600 | image_tag: widths: '240, 360, 480, 600', sizes: '(max-width: 767px) 7rem, 12rem', loading: 'lazy', alt: '' }}
-                {% else %}
-                  {% render 'media-pending', title: line_title, compact: true %}
-                {% endif %}
-              </a>
-              <div class="cart-line__identity">
-                <p class="eyebrow">{% if is_loadout %}Loadout{% else %}Object{% endif %} {{ forloop.index | prepend: '0' }}</p>
-                <h2><a href="{{ line_url }}">{{ line_title | escape }}</a></h2>
-                {% unless is_loadout or item.product.has_only_default_variant %}<p>{{ item.variant.title | escape }}</p>{% endunless %}
-                {% render 'cart-line-components', item: item, class: 'cart-line__components' %}
-                {% if item.error_message != blank %}<p class="cart-line__error" role="alert">{{ item.error_message | escape }}</p>{% endif %}
-                <a href="{{ item.url_to_remove }}">{{ 'cart.remove' | t }}<span class="visually-hidden"> {{ line_title | escape }}</span></a>
-              </div>
-              <div class="cart-line__quantity form-field">
-                <label for="Quantity-{{ item.index }}">Quantity<span class="visually-hidden"> for {{ line_title | escape }}</span></label>
-                <input id="Quantity-{{ item.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric">
-              </div>
-              <p class="cart-line__price">{{ item.final_line_price | money }}</p>
-            </li>
+            {% render 'cart-line', item: item, layout: 'page', index: forloop.index %}
           {% endfor %}
         </ol>
 
@@ -72,6 +29,7 @@
           <div class="cart-page__totals">
             <div><span>Subtotal</span><strong>{{ cart.total_price | money }}</strong></div>
             <p>Taxes and shipping calculated at checkout.</p>
+            {% render 'field-supply' %}
             <div class="cart-page__actions">
               <button class="button" type="submit" name="update">{{ 'cart.update' | t }}</button>
               <button class="button button--accent" type="submit" name="checkout">{{ 'cart.checkout' | t }}</button>

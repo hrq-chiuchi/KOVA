@@ -1,0 +1,57 @@
+{% doc %}
+  Field Supply: progress toward the store's free standard shipping rate (D-041). Server-rendered from
+  `cart.total_price`, which already includes discounts and the loadout cart transform, so the theme never
+  adds up lines itself. The threshold is a theme setting that mirrors the shipping rate condition.
+
+  Renders nothing when the setting is off, the cart is empty, the visitor's country has no free rate,
+  or the cart is in a currency other than the store's (the threshold is in the store currency).
+  The sentence carries the information; the bar is decoration.
+
+  @param {string} [class] - Extra class for placement.
+
+  @example
+  {% render 'field-supply' %}
+{% enddoc %}
+{%- liquid
+  assign threshold = settings.free_shipping_threshold | default: 0 | times: 100
+  assign country = localization.country.iso_code | default: '' | upcase
+  assign eligible = false
+  assign countries = settings.free_shipping_countries | upcase | remove: ' ' | split: ','
+  if countries contains country
+    assign eligible = true
+  endif
+  if cart.currency.iso_code != shop.currency
+    assign eligible = false
+  endif
+-%}
+{%- if settings.free_shipping_enabled and threshold > 0 and eligible and cart.item_count > 0 -%}
+  {%- liquid
+    assign remaining = threshold | minus: cart.total_price
+    if remaining < 0
+      assign remaining = 0
+    endif
+    assign progress = cart.total_price | times: 100 | divided_by: threshold | at_most: 100
+  -%}
+  <div class="field-supply{% if class %} {{ class }}{% endif %}" data-field-supply data-unlocked="{% if remaining == 0 %}true{% else %}false{% endif %}">
+    <p class="field-supply__label">Field supply</p>
+    <p class="field-supply__message">
+      {%- if remaining == 0 -%}
+        Complimentary standard shipping unlocked <span aria-hidden="true">✓</span>
+      {%- else -%}
+        Add <strong>{{ remaining | money }}</strong> to unlock complimentary standard shipping
+      {%- endif -%}
+    </p>
+    <div class="field-supply__bar" aria-hidden="true"><span style="--field-supply-progress: {{ progress }};"></span></div>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .field-supply { display: grid; gap: var(--ad-space-100); padding-block: var(--ad-space-300); }
+  .field-supply__label { margin: 0; color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .field-supply__message { margin: 0; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .field-supply__message strong { color: var(--color-accent); }
+  .field-supply__bar { height: 0.25rem; overflow: hidden; background: var(--ad-color-border-subtle); }
+  .field-supply__bar span { display: block; width: 100%; height: 100%; background: var(--color-accent); transform: scaleX(calc(var(--field-supply-progress) / 100)); transform-origin: left center; transition: transform var(--ad-duration-base) var(--ad-ease-standard); }
+  .field-supply[data-unlocked='true'] .field-supply__message { color: var(--color-accent); }
+  @media (prefers-reduced-motion: reduce) { .field-supply__bar span { transition: none; } }
+{% endstylesheet %}

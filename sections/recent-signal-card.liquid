@@ -1,0 +1,19 @@
+{% comment %}
+  Renders one product card for Recent signals, requested as /products/<handle>?section_id=recent-signal-card.
+  It has no preset: it is never placed on a page, only rendered through the Section Rendering API.
+{% endcomment %}
+{% comment %} A removed handle still answers 200 with an empty product, so say so explicitly. {% endcomment %}
+{% if product.id %}
+  <div data-recent-card>
+    {% render 'product-card', product: product, sizes: '(max-width: 767px) 50vw, 25vw', quick_add: true %}
+  </div>
+{% else %}
+  <div data-recent-missing></div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Recent signal card",
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}

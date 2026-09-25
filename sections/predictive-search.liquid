@@ -28,6 +28,8 @@
             <span class="predictive-search__title">{{ product.title | escape }}</span>
             <span class="predictive-search__meta">
               {% if product.metafields.custom.index_type.value != blank %}<span>{{ product.metafields.custom.index_type.value | escape }}</span>{% endif %}
+              {%- capture status_text %}{% render 'product-status', product: product, format: 'text' %}{% endcapture -%}
+              {% if status_text != blank %}<span>{{ status_text }}</span>{% endif %}
               <span>{% if product.price_varies %}{{ 'search.command.from' | t }} {% endif %}{{ product.price | money }}</span>
             </span>
           </a>

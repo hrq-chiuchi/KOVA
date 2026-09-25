@@ -1,9 +1,14 @@
 (() => {
   document.documentElement.classList.add('js');
 
+  // A refusal from Shopify (sold out, quantity limit). Network failures stay plain errors, so callers
+  // can fall back to a native form post only when the request itself could not be made.
+  class CartError extends Error {}
+
   // Posts to /cart/add.js. `body` is FormData from a product form, or an object such as
   // `{ items: [...] }`, which is sent as JSON so several lines are added in one atomic request.
-  async function addToCart(url, body) {
+  // `opener` is the control that asked, so the bag can hand focus back to it when it closes.
+  async function addToCart(url, body, opener = null) {
     const isForm = body instanceof FormData;
     const response = await fetch(`${url}.js`, {
       method: 'POST',
@@ -11,8 +16,8 @@
       body: isForm ? body : JSON.stringify(body),
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.description || 'Unable to add this item.');
-    document.dispatchEvent(new CustomEvent('afterdark:cart-updated', { detail: { open: true } }));
+    if (!response.ok) throw new CartError(payload.description || 'Unable to add this item.');
+    document.dispatchEvent(new CustomEvent('afterdark:cart-updated', { detail: { open: true, added: payload, opener } }));
     return payload;
   }
 
@@ -136,31 +141,72 @@
     }
   }
 
+  // Only the `data-cart-region` parts are replaced on refresh. The live region and header stay, so
+  // announcements are heard and focus can be put back on the same line after a change.
   class CartDrawer extends HTMLElement {
     connectedCallback() {
       this.controller?.abort();
       this.controller = new AbortController();
       const { signal } = this.controller;
       this.dialog = this.querySelector('[data-cart-dialog]');
+      this.live = this.querySelector('[data-cart-live]');
+      this.heading = this.querySelector('#CartDrawerTitle');
       this.querySelector('[data-cart-close]')?.addEventListener('click', () => this.close(), { signal });
       this.dialog?.addEventListener('click', (event) => {
         if (event.target === this.dialog) this.close();
       }, { signal });
+      this.dialog?.addEventListener('close', () => {
+        this.setExpanded(false);
+        this.announce('');
+        this.returnFocus();
+      }, { signal });
       this.addEventListener('submit', (event) => this.onSubmit(event), { signal });
-      document.addEventListener('afterdark:cart-open', () => this.open(), { signal });
-      document.addEventListener('afterdark:cart-updated', (event) => this.refresh(Boolean(event.detail?.open)), { signal });
+      document.addEventListener('afterdark:cart-open', (event) => this.open(event.detail?.opener), { signal });
+      document.addEventListener('afterdark:cart-updated', (event) => this.refresh(Boolean(event.detail?.open), event.detail), { signal });
+      document.addEventListener('afterdark:cart-error', (event) => this.showError(event.detail?.message, event.detail?.opener), { signal });
+      document.querySelectorAll('[data-cart-open]').forEach((trigger) => {
+        trigger.setAttribute('aria-haspopup', 'dialog');
+        trigger.setAttribute('aria-expanded', 'false');
+      });
     }
 
     disconnectedCallback() {
       this.controller?.abort();
     }
 
-    open() {
-      if (!this.dialog?.open) this.dialog?.showModal();
+    open(opener = null) {
+      if (!this.dialog?.open) {
+        const active = document.activeElement;
+        this.opener = opener || (active && active !== document.body ? active : null);
+        this.dialog?.showModal();
+      }
+      this.setExpanded(true);
+    }
+
+    // Focus goes back to whatever opened the bag, or to the bag link when that control is gone.
+    returnFocus() {
+      const target = this.opener?.isConnected && !this.opener.disabled ? this.opener : document.querySelector('[data-cart-open]');
+      this.opener = null;
+      target?.focus();
     }
 
     close() {
       this.dialog?.close();
+    }
+
+    setExpanded(expanded) {
+      document.querySelectorAll('[data-cart-open]').forEach((trigger) => trigger.setAttribute('aria-expanded', String(expanded)));
+    }
+
+    announce(message, tone = 'status') {
+      if (!this.live) return;
+      this.live.dataset.tone = tone;
+      this.live.textContent = message;
+    }
+
+    showError(message, opener = null) {
+      this.open(opener);
+      this.announce(message || 'That item could not be added.', 'error');
     }
 
     async onSubmit(event) {
@@ -169,6 +215,8 @@
       event.preventDefault();
       const data = new FormData(form);
       if (event.submitter?.name) data.set(event.submitter.name, event.submitter.value);
+      // Read focus before disabling the button, which would otherwise drop it to the page.
+      const focus = this.focusState();
       event.submitter?.setAttribute('disabled', '');
       try {
         const response = await fetch(this.dataset.changeUrl, {
@@ -176,28 +224,81 @@
           headers: { Accept: 'application/json' },
           body: data,
         });
-        if (!response.ok) throw new Error('Cart update failed.');
+        const payload = await response.json().catch(() => ({}));
         document.dispatchEvent(new CustomEvent('afterdark:cart-count'));
-        await this.refresh(true);
+        if (!response.ok) {
+          // Shopify may have applied part of the change, so re-read the bag before explaining.
+          await this.refresh(true, { focus });
+          this.announce(payload.description || 'The bag could not be updated.', 'error');
+          return;
+        }
+        await this.refresh(true, { message: 'Bag updated.', focus });
       } catch (_) {
+        // The native post drops the submitter, so carry Remove's quantity of 0 over to the field.
+        const quantity = form.querySelector('input[name="quantity"]');
+        if (event.submitter?.name === 'quantity' && quantity) quantity.value = event.submitter.value;
         form.submit();
       }
     }
 
-    async refresh(openAfter = false) {
+    // Remembers which line control had focus, so it can be restored in the new markup.
+    focusState() {
+      const active = document.activeElement;
+      if (!active || !this.contains(active)) return null;
+      const line = active.closest('[data-line-key]');
+      if (!line) return { inside: true };
+      const lines = Array.from(this.querySelectorAll('[data-line-key]'));
+      return { key: line.dataset.lineKey, control: active.dataset.lineControl, index: lines.indexOf(line) };
+    }
+
+    restoreFocus(state, addedKey) {
+      const lines = Array.from(this.querySelectorAll('[data-line-key]'));
+      const byKey = (key) => lines.find((line) => line.dataset.lineKey === key);
+      let target = null;
+      if (addedKey && byKey(addedKey)) {
+        target = byKey(addedKey).querySelector('[data-line-title]');
+      } else if (state?.key) {
+        const line = byKey(state.key);
+        if (line) {
+          target = line.querySelector(`[data-line-control="${state.control}"]`) || line.querySelector('[data-line-title]');
+        } else {
+          // The line was removed: move to the line that took its place, or the one before it.
+          const next = lines[Math.min(state.index, lines.length - 1)];
+          target = next?.querySelector('[data-line-title]');
+        }
+      }
+      if (!target && state) target = this.heading;
+      target?.focus();
+    }
+
+    async refresh(openAfter = false, detail = {}) {
       if (this.refreshing) return this.refreshing;
+      const wasOpen = Boolean(this.dialog?.open);
+      const focus = detail?.focus || this.focusState();
+      const wasUnlocked = this.querySelector('[data-field-supply]')?.dataset.unlocked === 'true';
       this.refreshing = fetch(this.dataset.refreshUrl, { headers: { Accept: 'text/html' } })
         .then((response) => {
           if (!response.ok) throw new Error('Cart refresh failed.');
           return response.text();
         })
         .then((html) => {
-          const documentFragment = new DOMParser().parseFromString(html, 'text/html');
-          const replacement = documentFragment.querySelector('cart-drawer');
-          if (!replacement) throw new Error('Cart drawer markup missing.');
-          this.innerHTML = replacement.innerHTML;
-          this.connectedCallback();
-          if (openAfter) this.open();
+          const fragment = new DOMParser().parseFromString(html, 'text/html');
+          const regions = this.querySelectorAll('[data-cart-region]');
+          if (!regions.length || !fragment.querySelector('cart-drawer [data-cart-region]')) throw new Error('Cart drawer markup missing.');
+          regions.forEach((region) => {
+            const replacement = fragment.querySelector(`cart-drawer [data-cart-region="${region.dataset.cartRegion}"]`);
+            if (replacement) region.innerHTML = replacement.innerHTML;
+          });
+          if (openAfter) this.open(detail?.opener);
+          const added = detail?.added;
+          const addedKey = wasOpen && added?.key ? added.key : null;
+          const messages = [];
+          if (detail?.message) messages.push(detail.message);
+          if (addedKey) messages.push(`Added ${added.product_title || 'item'} to bag.`);
+          const supply = this.querySelector('[data-field-supply]');
+          if (!wasUnlocked && supply?.dataset.unlocked === 'true') messages.push('Complimentary standard shipping unlocked.');
+          if (messages.length) this.announce(messages.join(' '));
+          if (wasOpen) this.restoreFocus(focus, addedKey);
           return this;
         })
         .catch(() => {
@@ -210,7 +311,12 @@
     }
   }
 
+  // Lifecycle labels written on variant change. The states come from snippets/product-status.liquid
+  // through the variant JSON; Archive is product-level and stays in the identity column.
+  const VARIANT_STATUS_LABELS = { 'sold-out': 'Sold out', 'low-supply': 'Low supply' };
 
+  // The product form owns the selected variant. The purchase dock (D-042) and every other mirror are
+  // written here, and the dock's button submits this same form through its `form` attribute.
   class ProductPurchase extends HTMLElement {
     connectedCallback() {
       this.controller?.abort();
@@ -218,10 +324,11 @@
       const { signal } = this.controller;
       this.form = this.querySelector('[data-product-purchase-form]');
       this.status = this.querySelector('[data-product-status]');
-      this.price = this.querySelector('[data-product-price]');
       this.variantInput = this.querySelector('[data-variant-id]');
-      this.addButton = this.querySelector('[data-add-button]');
+      this.variantStatus = this.querySelector('[data-variant-status]');
       this.quantity = this.querySelector('[data-quantity-input]');
+      this.dock = this.dataset.dockId ? document.getElementById(this.dataset.dockId) : null;
+      this.addButtons = this.mirrors('[data-add-button]');
       try {
         this.variants = JSON.parse(this.querySelector('[data-variant-json]')?.textContent || '[]');
       } catch (_) {
@@ -234,10 +341,19 @@
       this.querySelector('[data-quantity-plus]')?.addEventListener('click', () => this.changeQuantity(1), { signal });
       this.form?.addEventListener('submit', (event) => this.onSubmit(event), { signal });
       this.updateVariant();
+      this.setupDock();
     }
 
     disconnectedCallback() {
       this.controller?.abort();
+      this.dockObserver?.disconnect();
+      this.dockObserver = null;
+      document.documentElement.style.removeProperty('--ad-dock-offset');
+    }
+
+    // Elements inside the form column and the dock that reflect the selected variant.
+    mirrors(selector) {
+      return [this, this.dock].filter(Boolean).flatMap((root) => Array.from(root.querySelectorAll(selector)));
     }
 
     selectedOptions() {
@@ -254,21 +370,44 @@
       const variant = hasOptionInputs
         ? this.variants.find((candidate) => candidate.options.every((option, index) => option === selected[index]))
         : this.variants[0];
-      if (!variant) {
-        this.variantInput.value = '';
-        this.addButton.disabled = true;
-        this.addButton.textContent = 'Unavailable';
-        return;
-      }
-      this.variantInput.value = variant.id;
-      this.price.textContent = variant.price;
-      this.addButton.disabled = !variant.available;
-      this.addButton.textContent = variant.available ? 'Add to bag' : 'Sold out';
+      this.variant = variant || null;
+      this.variantInput.value = variant ? variant.id : '';
+      this.render();
+      if (!variant) return;
       const url = new URL(window.location.href);
       url.searchParams.set('variant', variant.id);
       window.history.replaceState({}, '', url);
       if (variant.featured_media_id) {
         this.querySelector(`[data-media-id="${variant.featured_media_id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // Writes the selected variant into the form and every mirror of it.
+    render() {
+      const variant = this.variant;
+      if (variant) {
+        this.mirrors('[data-product-price]').forEach((price) => { price.textContent = variant.price; });
+      }
+      this.mirrors('[data-product-compare]').forEach((compare) => {
+        compare.textContent = variant?.compare_at_price || '';
+        compare.hidden = !variant?.compare_at_price;
+      });
+      this.mirrors('[data-variant-label]').forEach((label) => { label.textContent = variant ? variant.title : selectedLabel(this); });
+      const label = !variant ? 'Unavailable' : variant.available ? 'Add to bag' : 'Sold out';
+      this.addButtons.forEach((button) => {
+        button.disabled = !variant?.available;
+        button.textContent = label;
+      });
+      if (this.variantStatus) {
+        const key = variant ? variant.status : 'sold-out';
+        const text = variant ? VARIANT_STATUS_LABELS[key] : 'Unavailable';
+        this.variantStatus.replaceChildren();
+        if (text) {
+          const badge = document.createElement('span');
+          badge.className = `status-badge status-badge--${key}`;
+          badge.textContent = text;
+          this.variantStatus.append(badge);
+        }
       }
     }
 
@@ -279,17 +418,52 @@
 
     async onSubmit(event) {
       event.preventDefault();
-      this.addButton.disabled = true;
+      this.addButtons.forEach((button) => { button.disabled = true; });
       this.status.textContent = 'Adding to bag…';
       try {
-        await addToCart(this.form.action, new FormData(this.form));
+        await addToCart(this.form.action, new FormData(this.form), event.submitter);
         this.status.textContent = 'Added to bag.';
       } catch (error) {
         this.status.textContent = error.message;
       } finally {
-        this.addButton.disabled = false;
+        this.render();
       }
     }
+
+    // Shows the dock once the whole form is above the viewport, and hides it again over the footer.
+    setupDock() {
+      if (!this.dock || !this.form || !('IntersectionObserver' in window)) return;
+      this.dock.hidden = false;
+      const builder = document.querySelector('loadout-builder');
+      const builderSection = builder?.closest('.shopify-section');
+      const loadoutLink = this.dock.querySelector('[data-dock-loadout]');
+      if (loadoutLink && builderSection?.id) {
+        loadoutLink.href = `#${builderSection.id}`;
+        loadoutLink.hidden = false;
+      }
+      const footer = document.querySelector('.site-footer');
+      let formAbove = false;
+      let footerVisible = false;
+      this.dockObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === this.form) formAbove = !entry.isIntersecting && entry.boundingClientRect.bottom < 0;
+          if (entry.target === footer) footerVisible = entry.isIntersecting;
+        });
+        const visible = formAbove && !footerVisible;
+        this.dock.toggleAttribute('data-visible', visible);
+        if (visible) {
+          document.documentElement.style.setProperty('--ad-dock-offset', `${this.dock.offsetHeight}px`);
+        } else {
+          document.documentElement.style.removeProperty('--ad-dock-offset');
+        }
+      });
+      this.dockObserver.observe(this.form);
+      if (footer) this.dockObserver.observe(footer);
+    }
+  }
+
+  function selectedLabel(root) {
+    return Array.from(root.querySelectorAll('[data-option-value]:checked')).map((input) => input.value).join(' / ');
   }
 
   // Builds a KOVA loadout and adds it as one group. Every line carries the same `_kova_loadout` id
@@ -675,9 +849,14 @@
     const submitter = event.submitter;
     submitter?.setAttribute('disabled', '');
     try {
-      await addToCart(form.action, new FormData(form));
-    } catch (_) {
-      form.submit();
+      await addToCart(form.action, new FormData(form), submitter);
+    } catch (error) {
+      // A refusal is shown in the bag; only a failed request falls back to the native post.
+      if (error instanceof CartError) {
+        document.dispatchEvent(new CustomEvent('afterdark:cart-error', { detail: { message: error.message, opener: submitter } }));
+      } else {
+        form.submit();
+      }
     } finally {
       submitter?.removeAttribute('disabled');
     }

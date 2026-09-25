@@ -1,0 +1,37 @@
+{% doc %}
+  One Complete the system row in the cart drawer: thumbnail, title, the reason it is shown, price, a Low
+  supply label when real stock is low, and the shared quick-add action.
+
+  @param {product} product - Recommended product.
+  @param {string} reason - Why it is shown, for example "Works with Relay Sling 8".
+
+  @example
+  {% render 'cart-upsell-row', product: candidate, reason: 'Works with Relay Sling 8' %}
+{% enddoc %}
+<li class="cart-upsell__item" data-upsell-handle="{{ product.handle }}">
+  <a class="cart-upsell__media" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+    {% if product.featured_image %}
+      {{ product.featured_image | image_url: width: 160 | image_tag: widths: '80, 160', sizes: '4rem', loading: 'lazy', alt: '' }}
+    {% else %}
+      {% render 'media-pending', title: product.title, compact: true %}
+    {% endif %}
+  </a>
+  <div class="cart-upsell__copy">
+    <a class="cart-upsell__title" href="{{ product.url }}">{{ product.title | escape }}</a>
+    <small>{{ reason | escape }}</small>
+    <span class="cart-upsell__price">{% if product.price_varies %}From {% endif %}+{{ product.price | money }}</span>
+    {% render 'product-status', product: product %}
+  </div>
+  <div class="cart-upsell__action">{% render 'quick-add', product: product, choose_option: true, id_suffix: 'cart' %}</div>
+</li>
+
+{% stylesheet %}
+  .cart-upsell__item { display: grid; grid-template-columns: 4rem minmax(0, 1fr); gap: var(--ad-space-100) var(--ad-space-300); }
+  .cart-upsell__media { grid-row: span 2; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ad-color-background-primary); }
+  .cart-upsell__media img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-upsell__copy { display: flex; min-width: 0; flex-direction: column; align-items: start; gap: var(--ad-space-50); }
+  .cart-upsell__title { font-family: var(--font-display-family); font-size: 1.1rem; line-height: 0.95; text-decoration: none; text-transform: uppercase; }
+  .cart-upsell__copy small { color: var(--ad-color-text-muted); }
+  .cart-upsell__price { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.08em; }
+  .cart-upsell__action .quick-add__select { flex: 1; }
+{% endstylesheet %}

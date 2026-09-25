@@ -1,0 +1,74 @@
+{% doc %}
+  Resolves an object's lifecycle state and renders it in one of several formats (D-040). This is the only
+  place that decides between Archive, Sold out, Low supply and Active, so every surface agrees.
+
+  Order: Archive (a `custom.status` value) > Sold out (availability) > Low supply > Active.
+  Low supply is real inventory only: a variant tracked by Shopify, with the `deny` policy, holding at most
+  `settings.low_supply_threshold` units. Without `variant`, the product qualifies when every available
+  variant is tracked that way and their combined stock is within the threshold. No count is ever shown.
+  Release tags (Drop 001, Drop 002, Limited) are not lifecycle states and are not rendered here.
+  Coming is reserved (Deferred): `custom.status` has no such choice yet.
+
+  @param {product} product - Product to resolve.
+  @param {variant} [variant] - Resolve for one variant instead of the whole product.
+  @param {string} [format] - `badge` (default, `.status-badge`), `card` (product card overlay), `text`
+    (plain label), `sr` (visually hidden sentence) or `key` (`archive`, `sold-out`, `low-supply`, `active`).
+
+  @example
+  {% capture status_key %}{% render 'product-status', product: product, format: 'key' %}{% endcapture %}
+{% enddoc %}
+{%- liquid
+  assign format = format | default: 'badge'
+  assign key = 'active'
+  assign threshold = settings.low_supply_threshold | default: 0
+
+  if product.metafields.custom.status.value contains 'Archive'
+    assign key = 'archive'
+  elsif variant != blank
+    if variant.available == false
+      assign key = 'sold-out'
+    elsif threshold > 0 and variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny' and variant.inventory_quantity <= threshold
+      assign key = 'low-supply'
+    endif
+  elsif product.available == false
+    assign key = 'sold-out'
+  elsif threshold > 0 and product.variants.size > 0
+    assign stock = 0
+    assign tracked = true
+    for candidate in product.variants
+      if candidate.available
+        if candidate.inventory_management != 'shopify' or candidate.inventory_policy != 'deny'
+          assign tracked = false
+          break
+        endif
+        assign stock = stock | plus: candidate.inventory_quantity
+      endif
+    endfor
+    if tracked and stock <= threshold
+      assign key = 'low-supply'
+    endif
+  endif
+
+  case key
+    when 'archive'
+      assign label = 'Archive'
+    when 'sold-out'
+      assign label = 'Sold out'
+    when 'low-supply'
+      assign label = 'Low supply'
+  endcase
+-%}
+{%- if format == 'key' -%}
+  {{- key -}}
+{%- elsif key != 'active' -%}
+  {%- case format -%}
+    {%- when 'card' -%}
+      <span class="product-card__badge product-card__badge--{{ key }}">{{ label }}</span>
+    {%- when 'text' -%}
+      {{- label -}}
+    {%- when 'sr' -%}
+      <span class="visually-hidden">{{ label }}.</span>
+    {%- else -%}
+      <span class="status-badge status-badge--{{ key }}">{{ label }}</span>
+  {%- endcase -%}
+{%- endif -%}

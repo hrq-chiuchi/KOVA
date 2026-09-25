@@ -93,5 +93,48 @@
         "default": true
       }
     ]
+  },
+  {
+    "name": "Commerce",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Field Supply (free shipping)"
+      },
+      {
+        "type": "checkbox",
+        "id": "free_shipping_enabled",
+        "label": "Show free-shipping progress",
+        "default": true
+      },
+      {
+        "type": "number",
+        "id": "free_shipping_threshold",
+        "label": "Free-shipping threshold",
+        "info": "In the store currency. Must match the minimum order price on the free rate in Settings > Shipping and delivery; the theme cannot read shipping rates.",
+        "default": 70
+      },
+      {
+        "type": "text",
+        "id": "free_shipping_countries",
+        "label": "Eligible countries",
+        "info": "Comma-separated ISO codes for the zones that have the free rate, for example US.",
+        "default": "US"
+      },
+      {
+        "type": "header",
+        "content": "Inventory"
+      },
+      {
+        "type": "range",
+        "id": "low_supply_threshold",
+        "label": "Low supply at or below",
+        "info": "Units left on a tracked variant that sells only while in stock. 0 turns the Low supply state off. No count is shown.",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "default": 5
+      }
+    ]
   }
 ]
