@@ -27,7 +27,7 @@
             <div class="site-header__nav-item" data-mega-item>
               {%- comment -%} A `#` placeholder URL is a group label, not a destination. {%- endcomment -%}
               {% if link.url == '#' %}
-                <span class="site-header__nav-label">{{ link.title | escape }}</span>
+                <span class="site-header__nav-label"{% if link.links != blank %} data-mega-label{% endif %}>{{ link.title | escape }}</span>
               {% else %}
                 <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
               {% endif %}
@@ -338,6 +338,8 @@
   .site-header__nav-item { display: flex; align-items: center; gap: var(--ad-space-50); }
   .site-header__nav-toggle { display: inline-grid; min-width: 1.5rem; min-height: var(--ad-control-minimum); padding: 0; place-items: center; border: 0; background: transparent; color: inherit; font: inherit; }
   .site-header__nav-toggle[hidden] { display: none; }
+  /* A label opens its panel on click (the toggle stays the keyboard control), so it reads as clickable like the links. */
+  .js .site-header__nav-label[data-mega-label] { cursor: pointer; user-select: none; }
   .site-header__nav-toggle > span[aria-hidden] { transition: transform var(--ad-duration-fast) var(--ad-ease-standard); }
   .site-header__nav-toggle[aria-expanded='true'] { color: var(--color-accent); }
   .site-header__nav-toggle[aria-expanded='true'] > span[aria-hidden] { transform: rotate(45deg); }

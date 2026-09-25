@@ -113,6 +113,9 @@
 
       this.megaNav.querySelectorAll('[data-mega-item]').forEach((item) => {
         const toggle = item.querySelector('[data-mega-toggle]');
+        // A `#` parent is a label, not a link. Clicking it opens its panel (never closes it, since hover
+        // may already have opened it); the toggle stays the keyboard control.
+        item.querySelector('[data-mega-label]')?.addEventListener('click', () => toggle && this.openPanel(toggle), { signal });
         item.addEventListener('pointerenter', (event) => {
           if (event.pointerType !== 'mouse') return;
           this.scheduleHover(() => (toggle ? this.openPanel(toggle) : this.closePanel()));
