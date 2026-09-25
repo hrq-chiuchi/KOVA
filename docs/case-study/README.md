@@ -941,6 +941,7 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
   - Opening focuses the email field. Escape closes it and returns focus to the tab. It is hidden while the bag is open. A bad email is stopped by native validation.
   - "Don't show this for 30 days" hid it, moved focus to the main content, and it stayed hidden after a reload.
   - Restyled at the user's request as a 44 × 121px vertical tab at `left: 0`. The arrival and pings ran on the first page, not on the next page. The indicator turned to an outline after opening. Under reduced motion neither animation ran. axe-core was clean with the tab open and closed. At 390px the open panel ends 16px inside the viewport, with no overflow.
+  - Phones (390px): the notch measures 24 × 72px at `left: 0`. The sheet opens at the full 390px width, flush with the viewport bottom, or ending exactly at the dock's top (775px) on a product page. Focus goes to the field, and Escape returns focus to the notch. axe-core was clean open and closed, with no overflow. At 768px the full 44 × 121px tab remains. The first measurement found a 44px notch: the global button `min-block-size` acts as width in vertical writing mode, and is now reset on phones.
   - On a product page with the dock visible, the tab sits above the dock. This was measured on the first design (tab bottom 815px, dock top 831px); the same offset rule applies to the new one.
   - **The signup itself:** the fetch returned HTTP 403, Shopify's "Verifying your connection" challenge for headless browsers, and the tab fell back to a native post as designed. Success and the duplicate-email answer were therefore not observed.
 - **Checks:**
@@ -952,6 +953,7 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 **Not verified (PR B):**
 
 - A successful SIGNAL signup and Shopify's duplicate-email answer (needs a real browser).
+- The phone bottom sheet with a real on-screen keyboard (iOS Safari and Android Chrome); headless emulation has no keyboard.
 - The Menu feature block (none is configured) and the Theme Editor UI for all three surfaces.
 - The Shipping announcement (it is second, behind the Drop message), zero blocks, and the non-US skip.
 - Lighthouse after PR B.
