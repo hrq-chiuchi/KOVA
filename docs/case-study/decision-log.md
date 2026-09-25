@@ -723,7 +723,8 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Context:** Newsletter capture lived only in the footer. Popups that open on a timer interrupt the storefront and trap focus.
 
 **Decision:**
-- A collapsed bottom-left tab opens a non-modal panel. It never opens by itself, hides while any dialog is open, and sits above the purchase dock.
+- A vertical tab on the viewport's left edge opens a non-modal panel. It never opens by itself, hides while any dialog is open, and sits above the purchase dock.
+- **Revised with the user (2026-09-25):** the first version was a small pill in the bottom-left corner, which was easy to miss. The user asked for a tab rotated against the left edge that gives the impression a new message just arrived, noticeable without being distracting. It is now an acid, square, vertical tab. On the first page of a visit it slides in and its indicator pings three times, then stays lit until opened. The motion never loops and is removed under reduced motion.
 - It posts the same `customer` form as the footer (tags `newsletter,signal-tab`) with fetch. Success is only Shopify's `customer_posted=true` redirect. An error list returned for this form is shown. A bot challenge, a non-OK answer or anything unreadable falls back to a native post, so a person can pass the challenge.
 - Dismissal hides it for 30 days and a signup hides it for good, in `localStorage`. Failing storage shows it.
 - The footer form stays the no-JavaScript path. The tab is hidden without JavaScript.

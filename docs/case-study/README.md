@@ -940,7 +940,8 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 - **SIGNAL tab:**
   - Opening focuses the email field. Escape closes it and returns focus to the tab. It is hidden while the bag is open. A bad email is stopped by native validation.
   - "Don't show this for 30 days" hid it, moved focus to the main content, and it stayed hidden after a reload.
-  - On a product page with the dock visible, the tab's bottom edge (815px) sits above the dock (831px).
+  - Restyled at the user's request as a 44 × 121px vertical tab at `left: 0`. The arrival and pings ran on the first page, not on the next page. The indicator turned to an outline after opening. Under reduced motion neither animation ran. axe-core was clean with the tab open and closed. At 390px the open panel ends 16px inside the viewport, with no overflow.
+  - On a product page with the dock visible, the tab sits above the dock. This was measured on the first design (tab bottom 815px, dock top 831px); the same offset rule applies to the new one.
   - **The signup itself:** the fetch returned HTTP 403, Shopify's "Verifying your connection" challenge for headless browsers, and the tab fell back to a native post as designed. Success and the duplicate-email answer were therefore not observed.
 - **Checks:**
   - axe-core (WCAG 2.2 AA and best practice) found no violations in the header with a panel open, the announcement bar, the open SIGNAL panel, or the mobile menu dialog with a group open.

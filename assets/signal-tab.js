@@ -17,6 +17,24 @@ function readState() {
   return null;
 }
 
+// Per-visit flags: the arrival plays on the first page of a visit, and the indicator stays lit until
+// the tab is opened once.
+function readVisit(flag) {
+  try {
+    return window.sessionStorage.getItem(`${STORAGE_KEY}:${flag}`) === 'true';
+  } catch (_) {
+    return false;
+  }
+}
+
+function writeVisit(flag) {
+  try {
+    window.sessionStorage.setItem(`${STORAGE_KEY}:${flag}`, 'true');
+  } catch (_) {
+    // Without session storage the arrival may replay on the next page, which is harmless.
+  }
+}
+
 function writeState(state) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -42,6 +60,12 @@ class SignalTab extends HTMLElement {
     const designMode = Boolean(window.Shopify?.designMode);
     if (readState() && !designMode) return;
     this.hidden = false;
+    if (readVisit('seen')) {
+      this.setAttribute('data-seen', '');
+    } else if (!readVisit('announced') && !designMode) {
+      this.setAttribute('data-arrive', '');
+      writeVisit('announced');
+    }
 
     this.toggle.addEventListener('click', () => (this.isOpen ? this.close() : this.open()), { signal });
     this.querySelector('[data-signal-close]')?.addEventListener('click', () => this.close(true), { signal });
@@ -74,6 +98,8 @@ class SignalTab extends HTMLElement {
 
   open(moveFocus = true) {
     this.panel.hidden = false;
+    this.setAttribute('data-seen', '');
+    writeVisit('seen');
     this.toggle.setAttribute('aria-expanded', 'true');
     if (moveFocus) this.input?.focus();
   }
