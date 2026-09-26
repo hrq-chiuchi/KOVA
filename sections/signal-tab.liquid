@@ -3,10 +3,11 @@
   itself, is not a dialog, and hides while any dialog (menu, search, bag) is open. It posts the same
   `customer` form as the footer, which stays the no-JavaScript path, so without JavaScript the tab is
   not shown at all. Dismissing hides it for 30 days; subscribing hides it for good.
-  Art direction: a vertical tab on the viewport's left edge. On the first page of a visit it slides in
-  and its indicator pings three times, like an incoming signal; the indicator stays lit until the tab
-  is opened. The motion is finite and removed under reduced motion. On phones the tab shrinks to a
-  24px notch and the panel opens as a full-width bottom sheet above the purchase dock.
+  Art direction: a horizontal tab flush with the viewport's bottom-left corner; the panel opens above it.
+  On the first page of a visit it rises in and its indicator pings three times, like an incoming signal;
+  the indicator stays lit until the tab is opened. The motion is finite and removed under reduced motion.
+  On phones the tab shrinks to a 24px strip and the panel opens as a full-width bottom sheet above the
+  purchase dock.
 {%- endcomment -%}
 <signal-tab
   class="signal-tab"
@@ -60,19 +61,19 @@
 <script src="{{ 'signal-tab.js' | asset_url }}" type="module"></script>
 
 {% stylesheet %}
-  .signal-tab { position: fixed; z-index: 55; inset-inline-start: 0; inset-block-end: var(--ad-space-600); display: flex; align-items: flex-end; color: var(--ad-color-text-primary); transform: translateY(calc(-1 * var(--ad-dock-offset, 0px))); transition: transform var(--ad-duration-base) var(--ad-ease-standard); }
+  .signal-tab { position: fixed; z-index: 55; inset-inline-start: 0; inset-block-end: 0; display: flex; flex-direction: column-reverse; align-items: flex-start; color: var(--ad-color-text-primary); transform: translateY(calc(-1 * var(--ad-dock-offset, 0px))); transition: transform var(--ad-duration-base) var(--ad-ease-standard); }
   .signal-tab[hidden],
   body:has(dialog[open]) .signal-tab { display: none; }
 
-  /* Vertical tab, reading bottom to top, flush with the viewport edge. */
-  .signal-tab__toggle { display: inline-flex; width: 2.75rem; padding: var(--ad-space-400) 0; align-items: center; gap: var(--ad-space-200); border: 0; border-radius: var(--ad-radius-none); background: var(--ad-color-action-primary); color: var(--ad-color-text-inverse); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; writing-mode: vertical-rl; rotate: 180deg; }
+  /* Horizontal tab, flush with the bottom-left corner of the viewport. */
+  .signal-tab__toggle { display: inline-flex; min-height: var(--ad-control-minimum); padding: 0 var(--ad-space-300); align-items: center; gap: var(--ad-space-200); border: 0; border-radius: var(--ad-radius-none); background: var(--ad-color-action-primary); color: var(--ad-color-text-inverse); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
   .signal-tab__toggle:hover { background: var(--ad-color-background-inverse); }
   .signal-tab__toggle[aria-expanded='true'] { background: var(--ad-color-background-inverse); }
   .signal-tab__dot { position: relative; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentcolor; }
   .signal-tab__dot::after { position: absolute; inset: 0; border-radius: 50%; background: currentcolor; opacity: 0; content: ''; }
   .signal-tab[data-seen] .signal-tab__dot { background: transparent; box-shadow: inset 0 0 0 1px currentcolor; }
 
-  .signal-tab__panel { display: grid; width: min(24rem, calc(100vw - 2.75rem - var(--ad-page-padding))); padding: var(--ad-space-400); gap: var(--ad-space-300); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-inline-start: 0; background: var(--ad-color-background-elevated); }
+  .signal-tab__panel { display: grid; width: min(24rem, calc(100vw - var(--ad-page-padding))); padding: var(--ad-space-400); gap: var(--ad-space-300); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); border-inline-start: 0; border-block-end: 0; background: var(--ad-color-background-elevated); }
   .signal-tab__panel[hidden] { display: none; }
   .signal-tab__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ad-space-300); }
   .signal-tab__top .eyebrow { margin: 0; color: var(--color-accent); }
@@ -96,11 +97,9 @@
 
   .signal-tab__short { display: none; }
 
-  /* Phones: a slim notch (24px, the WCAG 2.2 target minimum) and a bottom sheet with room to type. */
+  /* Phones: a slim strip (24px, the WCAG 2.2 target minimum) and a bottom sheet with room to type. */
   @media (max-width: 47.99rem) {
-    .signal-tab { inset-block-end: var(--ad-space-800); }
-    /* The global button minimum is a block size, which is the width in vertical writing mode. */
-    .signal-tab__toggle { width: 1.5rem; min-block-size: 0; min-height: 4.5rem; justify-content: center; padding: var(--ad-space-200) 0; gap: var(--ad-space-100); font-size: 0.5625rem; letter-spacing: 0.14em; }
+    .signal-tab__toggle { min-block-size: 0; min-height: 1.5rem; padding: 0 var(--ad-space-200); gap: var(--ad-space-100); font-size: 0.5625rem; letter-spacing: 0.14em; }
     .signal-tab__text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .signal-tab__short { display: inline; }
     .signal-tab__dot { width: 0.375rem; height: 0.375rem; }
@@ -124,7 +123,7 @@
   }
 
   @keyframes signal-tab-arrive {
-    from { translate: -100% 0; }
+    from { translate: 0 100%; }
   }
 
   @keyframes signal-tab-ping {
@@ -133,7 +132,7 @@
   }
 
   @keyframes signal-tab-in {
-    from { opacity: 0; transform: translateX(-0.75rem); }
+    from { opacity: 0; transform: translateY(0.75rem); }
   }
 {% endstylesheet %}
 

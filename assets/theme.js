@@ -231,7 +231,8 @@
     }
 
     measureAnnouncement() {
-      this.announcementHeight = this.announcement?.isConnected ? this.announcement.offsetHeight : 0;
+      // Fractional height: offsetHeight rounds down, and the header would then cover the bar's bottom border.
+      this.announcementHeight = this.announcement?.isConnected ? this.announcement.getBoundingClientRect().height : 0;
       this.updateScrollState();
     }
 
@@ -292,6 +293,10 @@
       if (!this.dialog?.open) {
         const active = document.activeElement;
         this.opener = opener || (active && active !== document.body ? active : null);
+        // The entrance stagger runs only while this flag is set, so re-rendered lines don't replay it.
+        this.dialog?.setAttribute('data-entering', '');
+        window.clearTimeout(this.enterTimer);
+        this.enterTimer = window.setTimeout(() => this.dialog?.removeAttribute('data-entering'), 1000);
         this.dialog?.showModal();
       }
       this.setExpanded(true);
