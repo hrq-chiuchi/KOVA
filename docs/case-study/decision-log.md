@@ -840,11 +840,11 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 ## D-055 — The footer wordmark spans the content column
 
-**Context:** The footer wordmark was sized in viewport units, capped at 25rem, so it covered only 50–70% of the column. The user asked for it to take the full width.
+**Context:** The footer wordmark was sized in viewport units, capped at 25rem, so it covered only 50–70% of the column. On phones the user asked for it to take the full width. **Revised (2026-09-26):** only on phones; desktop keeps the original viewport-based size.
 
-**Decision:** A new `fit-text` custom element (Primitive, `assets/theme.js`) wraps the wordmark. It sets its parent's font size so the text matches the parent's content width. It refits on width changes and on every web-font load, because `document.fonts.ready` can resolve before the display face is requested. The CSS size stays as the no-JavaScript fallback. Trailing padding of 0.085em restores the last letter's advance, which the negative tracking removes. The existing crop (line-height 0.62 with overflow hidden) is unchanged.
+**Decision:** A new `fit-text` custom element (Primitive, `assets/theme.js`) wraps the wordmark. Its `media` attribute limits the fitting to a media query, here `(max-width: 47.99rem)`, and it clears its inline size when the query stops matching. It sets its parent's font size so the text matches the parent's content width. It refits on width changes and on every web-font load, because `document.fonts.ready` can resolve before the display face is requested. The CSS size stays as the no-JavaScript fallback. Trailing padding of 0.085em restores the last letter's advance, which the negative tracking removes. The existing crop (line-height 0.62 with overflow hidden) is unchanged.
 
-**Evidence:** In headless Chromium, the text matches the column width at 390px (358/358), 1440px (1376/1376) and 1920px (1792/1792).
+**Evidence:** In headless Chromium, the text matches the column width at 390px (358/358). At 1440 and 1920px the original CSS size applies (331.2px and 400px). Resizing across the breakpoint switches in both directions.
 
 **Tradeoff / reconsideration:** There's a one-frame size change once the font loads. Use `fit-text` only for single-line display text.
 
