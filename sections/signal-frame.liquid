@@ -154,7 +154,11 @@
     .signal-frame__annotation::before { position: absolute; inset-block-start: 0; inset-inline-start: calc(-0.25rem - 0.5px); width: 0.5rem; height: 0.5rem; background: var(--frame-accent); content: ''; }
     .signal-frame__annotation--end { padding-inline: 0 var(--ad-space-300); border-inline-start: 0; border-inline-end: var(--ad-border-hairline) solid var(--frame-accent); text-align: end; translate: -100% 0; }
     .signal-frame__annotation--end::before { inset-inline: auto calc(-0.25rem - 0.5px); }
-    .signal-frame__tag { display: grid; grid-template-columns: auto 1fr; column-gap: var(--ad-space-200); row-gap: var(--ad-space-50); }
+    .signal-frame__annotation { padding-inline-start: 0; }
+    .signal-frame__annotation--end { padding-inline-end: 0; }
+    /* Scrim plate keeps annotation text legible over bright or busy photography. */
+    .signal-frame__tag { display: grid; padding: var(--ad-space-100) var(--ad-space-200); grid-template-columns: auto 1fr; column-gap: var(--ad-space-200); row-gap: var(--ad-space-50); background: color-mix(in srgb, var(--ad-color-background-primary) 72%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .signal-frame__note { color: color-mix(in srgb, currentcolor 86%, transparent); }
     .signal-frame__annotation--end .signal-frame__tag { grid-template-columns: 1fr auto; }
     .signal-frame__annotation--end .signal-frame__index { order: 2; }
     .signal-frame__note { grid-column: 2; }
