@@ -811,3 +811,17 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** The edition record, loadout builder and FAQ now run as three dark sections in a row. The Search & Discovery metafield filters still don't reach the storefront (see Phase 13 backlog); the theme renders every filter Shopify returns, so the fix is in the app's filter configuration.
 
+## D-053 — Legal pages as native Shopify policies in a theme frame
+
+**Context:** The user asked for legal pages. Only Shopify's generated privacy policy existed, and it rendered unstyled, with its title hidden under the fixed header. Nothing in the footer linked to it.
+
+**Options considered:** write the policies as Online Store pages with a custom template, or use Shopify's store policies (Settings → Policies) and style them.
+
+**Decision:**
+- Use Shopify's store policies: refund, shipping, terms of service and contact information, next to the existing privacy policy. Checkout, order emails and the FAQ's policy question already link to these objects, so there's one source for each document.
+- Policies have no theme template, so `layout/theme.liquid` wraps `content_for_layout` in `snippets/legal-page.liquid` when `request.page_type == 'policy'`. The frame adds a "KOVA / Legal" masthead, a numbered index of every published policy (`shop.policies`, current page marked with `aria-current`), and document typography for Shopify's `.shopify-policy__*` markup.
+- The footer lists every published policy next to the copyright line.
+- The texts match the store's configuration: USD, US-only shipping, free standard shipping from $70 (the Field Supply threshold), numbered limited runs that aren't restocked, and loadout pricing.
+
+**Tradeoff / reconsideration:** KOVA is a portfolio store, so the business details are illustrative. The governing law (New York) and the shipping rates ($8 standard, $22 express, $14 for non-contiguous US) were chosen for the demo. Match the rates to Settings → Shipping and delivery, and have the texts reviewed before the store takes real orders.
+
