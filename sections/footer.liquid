@@ -20,7 +20,7 @@
       {% endif %}
     </div>
 
-    <a class="site-footer__wordmark" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} home">{{ section.settings.wordmark | default: shop.name | escape }}</a>
+    <a class="site-footer__wordmark" href="{{ routes.root_url }}" aria-label="{{ shop.name | escape }} home"><fit-text>{{ section.settings.wordmark | default: shop.name | escape }}</fit-text></a>
 
     <div class="site-footer__bottom">
       <nav aria-label="Footer navigation">
@@ -81,6 +81,9 @@
   .site-footer__newsletter > div { display: grid; grid-template-columns: 1fr auto; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-strong); }
   .site-footer__newsletter input { min-height: var(--ad-control-minimum); padding: var(--ad-space-200) 0; border: 0; background: transparent; }
   .site-footer__newsletter button { border: 0; background: transparent; font-size: var(--ad-text-label); font-weight: 700; text-transform: uppercase; }
+  /* The wordmark spans the content column: fit-text sizes it to the text's real width (D-055). The trailing
+     padding restores the last letter's advance, which the negative letter-spacing removes. */
+  .site-footer__wordmark fit-text { padding-inline-end: 0.085em; }
   .site-footer__wordmark { display: block; margin-block: var(--ad-space-800) var(--ad-space-600); overflow: hidden; font-family: var(--font-display-family); font-size: clamp(6rem, 23vw, 25rem); font-weight: var(--font-display-weight); letter-spacing: -0.085em; line-height: 0.62; text-align: center; text-decoration: none; text-transform: uppercase; }
   .site-footer__bottom { display: grid; grid-template-columns: 1fr auto; gap: var(--ad-space-400); align-items: end; }
   .site-footer__bottom nav { display: flex; flex-wrap: wrap; gap: var(--ad-space-300); }

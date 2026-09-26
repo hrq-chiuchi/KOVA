@@ -954,6 +954,45 @@
     }
   }
 
+  // Fit text (Primitive): sizes its parent's font so the text spans the parent's content width. The
+  // parent's CSS size stays the fallback without JavaScript. Refits when the width changes and once
+  // web fonts load; height changes are ignored so resizing the text can't loop.
+  class FitText extends HTMLElement {
+    connectedCallback() {
+      this.width = 0;
+      this.observer = new ResizeObserver(([entry]) => {
+        const width = entry.contentRect.width;
+        if (Math.abs(width - this.width) < 0.5) return;
+        this.width = width;
+        this.fit();
+      });
+      this.observer.observe(this.parentElement);
+      // `fonts.ready` can resolve before the display face is requested, so also refit on each load.
+      this.onFonts = () => this.fit();
+      document.fonts?.ready.then(this.onFonts);
+      document.fonts?.addEventListener('loadingdone', this.onFonts);
+      window.addEventListener('load', this.onFonts, { once: true });
+    }
+
+    disconnectedCallback() {
+      this.observer?.disconnect();
+      document.fonts?.removeEventListener('loadingdone', this.onFonts);
+      window.removeEventListener('load', this.onFonts);
+    }
+
+    fit() {
+      const box = this.parentElement;
+      if (!box) return;
+      const style = getComputedStyle(box);
+      const available = box.clientWidth - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd);
+      const current = parseFloat(style.fontSize);
+      const measured = this.getBoundingClientRect().width;
+      if (!available || !measured || !current) return;
+      box.style.fontSize = `${Math.floor((current * available / measured) * 100) / 100}px`;
+    }
+  }
+
+  if (!customElements.get('fit-text')) customElements.define('fit-text', FitText);
   if (!customElements.get('afterdark-header')) customElements.define('afterdark-header', AfterdarkHeader);
   if (!customElements.get('cart-drawer')) customElements.define('cart-drawer', CartDrawer);
   if (!customElements.get('product-purchase')) customElements.define('product-purchase', ProductPurchase);
