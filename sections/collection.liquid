@@ -17,6 +17,11 @@
         </aside>
 
         <div data-filters-swap="results" data-motion-scope>
+          {%- capture current_query -%}{% render 'index-query', collection: collection %}{%- endcapture -%}
+          <nav class="index-views" aria-label="Collection view">
+            <a href="{{ collection.url }}?{{ current_query | strip }}&view=index">Index</a>
+            <span aria-current="page">Grid</span>
+          </nav>
           {% if collection.products_count > 0 %}
             <div class="collection-page__grid">
               {% for product in collection.products %}
