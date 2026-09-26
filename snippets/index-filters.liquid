@@ -54,6 +54,7 @@
     aria-haspopup="dialog"
     aria-controls="IndexFiltersDialog-{{ id_prefix }}"
   >
+    <svg class="index-filters__icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M1 4h9M13 4h2M1 12h2M6 12h9" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="10" y="2" width="3" height="4" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="10" width="3" height="4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
     Filter<span data-filters-swap="open-count">{% if active_count > 0 %} / {{ active_count }}{% endif %}</span>
   </button>
   <p class="index-filters__count" role="status" data-filters-count>{{ count_label | strip }}</p>
@@ -214,6 +215,7 @@
   .index-filters__open { display: none; }
   .index-filters__open,
   .index-filters__close { min-height: var(--ad-control-minimum); padding: 0; border: 0; background: transparent; color: inherit; font-size: var(--ad-text-label); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.12em; text-transform: uppercase; }
+  .index-filters__icon { flex: none; }
   .index-filters__active:not(:empty) { display: flex; padding-block: var(--ad-space-200); flex-wrap: wrap; align-items: center; gap: var(--ad-space-100); }
   .index-filters__chips { display: contents; margin: 0; padding: 0; list-style: none; }
   .index-filters__chip,
@@ -254,7 +256,7 @@
 
   /* With JavaScript, narrow screens move the form into the dialog; without it the form stays inline. */
   @media (max-width: 47.99rem) {
-    .js .index-filters__open { display: inline-flex; }
+    .js .index-filters__open { display: inline-flex; align-items: center; gap: var(--ad-space-200); }
     .js .index-filters__home { display: none; }
   }
 

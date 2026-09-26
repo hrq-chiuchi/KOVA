@@ -53,6 +53,9 @@
   .collection-page__description { max-width: 42rem; margin-block-start: var(--ad-space-400); color: var(--ad-color-text-muted); }
   .collection-page__layout { display: grid; grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 2fr); gap: var(--ad-content-gap); padding-block-start: var(--ad-space-600); }
   .collection-page__tools { max-height: calc(100vh - var(--ad-header-height) - var(--ad-space-500)); align-self: start; position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-300)); overflow-y: auto; overscroll-behavior: contain; }
+  /* The filter column scrolls on its own; its scrollbar only shows while the pointer or focus is inside. */
+  .collection-page__tools { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  .collection-page__tools:is(:hover, :focus-within) { scrollbar-color: var(--ad-color-border-subtle) transparent; }
   .collection-page__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ad-space-600) clamp(0.75rem, 2vw, 2rem); }
   .collection-page__empty { display: grid; min-height: 28rem; place-content: center; justify-items: center; gap: var(--ad-space-300); }
   .collection-pagination { display: flex; margin-block-start: var(--ad-space-700); justify-content: center; }

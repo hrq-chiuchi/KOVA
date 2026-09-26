@@ -86,15 +86,28 @@
   .cart-drawer__footer > a { justify-self: center; font-size: var(--ad-text-label); text-transform: uppercase; }
   @media (min-width: 48rem) { .cart-drawer__panel { border-inline-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); } }
 
-  /* Bag entrance: the panel slides in from the right edge and the backdrop fades. Items are not staggered
-     because the drawer re-renders them on every cart change while open. */
+  /* Bag entrance, matching the menu: the panel slides in from its edge, then the header, lines and
+     footer rise in sequence. The stagger only runs while the drawer is opening (`data-entering`), so
+     lines re-rendered after a cart change don't replay it. */
+  .cart-drawer__dialog { overflow: clip; }
   @media (prefers-reduced-motion: no-preference) {
     .cart-drawer__dialog[open]::backdrop { animation: cart-drawer-fade var(--ad-duration-fast) linear; }
     .cart-drawer__dialog[open] .cart-drawer__panel { animation: cart-drawer-in var(--ad-duration-base) var(--ad-ease-standard); }
+    .cart-drawer__dialog[data-entering] :is(.cart-drawer__header, .cart-drawer__items > *, .cart-drawer__empty, .cart-drawer__footer) { animation: cart-drawer-item-in var(--ad-duration-base) var(--ad-ease-standard) both; animation-delay: calc(120ms + var(--bag-step, 0) * 45ms); }
+    .cart-drawer__items > :nth-child(1),
+    .cart-drawer__empty { --bag-step: 1; }
+    .cart-drawer__items > :nth-child(2) { --bag-step: 2; }
+    .cart-drawer__items > :nth-child(3) { --bag-step: 3; }
+    .cart-drawer__items > :nth-child(n + 4) { --bag-step: 4; }
+    .cart-drawer__footer { --bag-step: 5; }
   }
 
   @keyframes cart-drawer-in {
     from { transform: translateX(100%); }
+  }
+
+  @keyframes cart-drawer-item-in {
+    from { opacity: 0; transform: translateY(1.25rem); }
   }
 
   @keyframes cart-drawer-fade {

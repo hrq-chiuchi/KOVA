@@ -825,3 +825,16 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** KOVA is a portfolio store, so the business details are illustrative. The governing law (New York) and the shipping rates ($8 standard, $22 express, $14 for non-contiguous US) were chosen for the demo. Match the rates to Settings → Shipping and delivery, and have the texts reviewed before the store takes real orders.
 
+## D-054 — SIGNAL in the corner, a menu-style bag entrance, quieter filter scrolling
+
+**Context:** A third review pass by the user.
+
+**Decision:**
+- **SIGNAL tab (revises D-046):** it's now a horizontal tab flush with the viewport's bottom-left corner (bottom 0, left 0), with its panel opening above it. The first-visit arrival rises from the bottom edge. Phones get a 24px-high "Msg" strip in the same corner and keep the bottom sheet. The vertical edge tab had started to read as clutter over the filter column and page content.
+- **Bag entrance (revises D-052):** it now mirrors the menu. The panel slides in, then the header, cart lines and footer rise in sequence. The stagger only runs while `data-entering` is set; `CartDrawer.open()` sets it and clears it after one second, so lines re-rendered after a cart change don't replay it. The dialog clips its overflow, which removes the horizontal scrollbar the slide-in used to cause.
+- **Filter column:** the sticky filter column's scrollbar is thin and transparent until the pointer or focus is inside it.
+- **Phone filter bar:** the Filter button is vertically centred with the object count and has a sliders icon.
+- **Announcement bar:** the header offset now uses the bar's fractional height. `offsetHeight` rounded 59.3px down to 59px on phones, so the header covered the bar's bottom border.
+
+**Tradeoff / reconsideration:** A thin transparent scrollbar still reserves its gutter, so hiding it doesn't shift the layout. The corner tab can overlap the first filter rows on short screens until the user scrolls.
+

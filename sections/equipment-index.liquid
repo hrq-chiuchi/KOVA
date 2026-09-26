@@ -106,6 +106,9 @@
   .equipment-index__description { max-width: 42rem; margin-block-start: var(--ad-space-400); color: var(--ad-color-text-muted); }
   .equipment-index__layout { display: grid; grid-template-columns: minmax(14rem, 0.45fr) minmax(0, 2fr); gap: var(--ad-content-gap); padding-block-start: var(--ad-space-600); }
   .equipment-index__tools { max-height: calc(100vh - var(--ad-header-height) - var(--ad-space-500)); align-self: start; position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-300)); overflow-y: auto; overscroll-behavior: contain; }
+  /* The filter column scrolls on its own; its scrollbar only shows while the pointer or focus is inside. */
+  .equipment-index__tools { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  .equipment-index__tools:is(:hover, :focus-within) { scrollbar-color: var(--ad-color-border-subtle) transparent; }
   .equipment-index__results { min-width: 0; }
   .equipment-index__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ad-space-600) clamp(0.75rem, 2vw, 2rem); }
   .equipment-index__pagination { display: flex; margin-block-start: var(--ad-space-700); justify-content: center; }
