@@ -1,14 +1,21 @@
 {% comment %}
-  Reviews come only from real data: Shopify's standard `reviews` metafields, which review apps populate,
-  and review-app blocks. The theme never ships authored or sample reviews.
+  Real reviews come only from Shopify's standard `reviews` metafields, which review apps populate, and
+  review-app blocks. Until those exist, merchants can add Sample review blocks (D-051). Samples are always
+  labelled as placeholder content, never feed the rating summary or structured data, and disappear as
+  soon as real ratings or a review app are present.
 {% endcomment %}
 {% liquid
   assign rating = product.metafields.reviews.rating.value
   assign rating_count = product.metafields.reviews.rating_count.value | default: 0
   assign has_app_block = false
+  assign sample_count = 0
   for block in section.blocks
     if block.type == '@app'
       assign has_app_block = true
+    elsif block.type == 'sample_review'
+      if block.settings.product == blank or block.settings.product.id == product.id
+        assign sample_count = sample_count | plus: 1
+      endif
     endif
   endfor
 %}
@@ -49,6 +56,27 @@
           {% if block.type == '@app' %}{% render block %}{% endif %}
         {% endfor %}
       </div>
+    {% elsif rating_count == 0 and sample_count > 0 %}
+      <p class="product-reviews__sample-note">Sample field reports. Placeholder content while reviews are set up, not written by customers.</p>
+      <ol class="product-reviews__list" role="list">
+        {% for block in section.blocks %}
+          {% if block.type == 'sample_review' %}
+            {% if block.settings.product == blank or block.settings.product.id == product.id %}
+              <li class="product-reviews__item" {{ block.shopify_attributes }}>
+                <p class="product-reviews__rating">
+                  <span class="visually-hidden">Sample rating: {{ block.settings.rating }} out of 5</span>
+                  <span class="product-reviews__pips" aria-hidden="true">
+                    {%- for pip in (1..5) -%}<span{% if pip <= block.settings.rating %} class="is-on"{% endif %}></span>{%- endfor -%}
+                  </span>
+                </p>
+                <p class="product-reviews__title">{{ block.settings.title | escape }}</p>
+                <p class="product-reviews__body">{{ block.settings.body | escape }}</p>
+                <p class="product-reviews__byline">{{ block.settings.byline | escape }} <span>/ Sample</span></p>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </ol>
     {% elsif rating_count == 0 %}
       <div class="product-reviews__empty">
         <p class="product-reviews__empty-title">{{ section.settings.empty_title | escape }}</p>
@@ -77,6 +105,18 @@
   .product-reviews__empty-text { max-width: 32rem; color: color-mix(in srgb, currentcolor 68%, transparent); }
   .product-reviews__empty-text > * { margin: 0; }
 
+  .product-reviews__sample-note { margin: 0 0 var(--ad-space-400); color: color-mix(in srgb, currentcolor 68%, transparent); font-size: var(--ad-text-label); letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-reviews__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); margin: 0; padding: 0; gap: var(--ad-space-400) var(--ad-content-gap); list-style: none; }
+  .product-reviews__item { display: grid; align-content: start; gap: var(--ad-space-200); padding-block-start: var(--ad-space-300); border-block-start: var(--ad-border-hairline) solid currentcolor; }
+  .product-reviews__item > p { margin: 0; }
+  .product-reviews__pips { display: inline-flex; gap: var(--ad-space-50); }
+  .product-reviews__pips > span { width: 0.625rem; height: 0.625rem; border: var(--ad-border-hairline) solid currentcolor; }
+  .product-reviews__pips > .is-on { background: currentcolor; }
+  .product-reviews__title { font-family: var(--font-display-family); font-size: clamp(1.25rem, 2vw, 1.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.03em; line-height: 1; text-transform: uppercase; }
+  .product-reviews__body { max-width: 36rem; color: color-mix(in srgb, currentcolor 78%, transparent); }
+  .product-reviews__byline { font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .product-reviews__byline span { color: color-mix(in srgb, currentcolor 60%, transparent); }
+
   @media (max-width: 47.99rem) {
     .product-reviews__header,
     .product-reviews__empty { grid-template-columns: 1fr; }
@@ -97,7 +137,21 @@
     { "type": "richtext", "id": "empty_text", "label": "Empty state text", "default": "<p>Customer reviews will appear here once this object has been in the field.</p>" },
     { "type": "select", "id": "tone", "label": "Tone", "default": "dark", "options": [{ "value": "dark", "label": "Dark" }, { "value": "inverse", "label": "Light" }] }
   ],
-  "blocks": [{ "type": "@app" }],
+  "blocks": [
+    { "type": "@app" },
+    {
+      "type": "sample_review",
+      "name": "Sample review",
+      "settings": [
+        { "type": "paragraph", "content": "Placeholder content, always labelled as a sample. Hidden once real ratings or a review app exist." },
+        { "type": "product", "id": "product", "label": "Product", "info": "Leave blank to show on every product." },
+        { "type": "range", "id": "rating", "label": "Rating", "min": 1, "max": 5, "step": 1, "default": 5 },
+        { "type": "text", "id": "title", "label": "Title", "default": "Holds up after dark" },
+        { "type": "textarea", "id": "body", "label": "Text", "default": "Placeholder review text." },
+        { "type": "text", "id": "byline", "label": "Byline", "default": "Night commuter" }
+      ]
+    }
+  ],
   "presets": [{ "name": "Product reviews" }]
 }
 {% endschema %}
