@@ -791,13 +791,11 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Context:** The review section only reads Shopify's standard `reviews` metafields and review-app blocks, and no review app is installed. Every product showed "No field reports yet". The user asked for placeholder reviews on the main products.
 
-**Decision:** Add a **Sample review** block to `sections/product-reviews.liquid` with optional product targeting, a 1–5 rating, title, text and byline. Sixteen samples cover eight main products.
-- Samples always render under a visible note: "Sample field reports. Placeholder content while reviews are set up, not written by customers." Each byline ends in "/ Sample" and uses a role instead of a person's name.
-- Samples never feed the rating summary, the `reviews` metafields or structured data. They disappear once a product has real ratings or a review-app block is added.
+**Decision:** Add a **Sample review** block to `sections/product-reviews.liquid` with optional product targeting, a 1–5 rating, title, text and byline. Sixteen samples cover eight main products. Bylines use a role instead of a person's name.
+- **Revised with the user (2026-09-26):** the first version showed a visible "Sample field reports" notice and "/ Sample" bylines. KOVA is a portfolio piece whose visitors know the store is fictional, and the user wants it to read like a live store, so the notice was removed. The block keeps its "Sample review" name in the Theme Editor.
+- Samples still never feed the rating summary, the `reviews` metafields or structured data, so search engines don't index them as ratings. They disappear once a product has real ratings or a review-app block is added.
 
-**Reasoning:** The page needs to show how reviews will look, but reviews presented as genuine would mislead shoppers, and search engines would read them as real ratings. Labelling them and keeping them out of the data meets both needs.
-
-**Tradeoff / reconsideration:** The labels make the section read as unfinished to a careful shopper. Remove the blocks once a review app is installed.
+**Tradeoff / reconsideration:** Unlabelled reviews are only acceptable while the store stays a portfolio piece. Before the store takes real orders, delete the blocks or restore the notice.
 
 ## D-052 — Collection views, edition sizes, PDP order and panel entrances
 
