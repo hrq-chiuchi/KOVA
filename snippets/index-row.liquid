@@ -45,6 +45,8 @@
       {% unless status == 'Archive' %}<span class="index-row__status-value">{{ status | escape }}</span>{% endunless %}
     {% endfor %}
     {% render 'product-status', product: product %}
+    {% assign edition_quantity = kova.edition_profile.value.edition_quantity.value %}
+    {% if edition_quantity != blank %}<span class="index-row__edition">Limited / {{ edition_quantity }} units</span>{% endif %}
   </span>
   <span class="index-row__price">
     <span class="visually-hidden">Price: </span>
@@ -81,6 +83,7 @@
     background-repeat: no-repeat;
     color: var(--ad-color-text-muted);
   }
+  .index-row__edition { display: block; margin-block-start: var(--ad-space-50); color: var(--color-accent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
   .index-row__pending { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; text-align: center; text-transform: uppercase; }
   .index-row__name { margin: 0; font-size: var(--ad-text-body); font-weight: 600; line-height: 1.2; text-transform: uppercase; }
   .index-row__name a { text-decoration: none; }

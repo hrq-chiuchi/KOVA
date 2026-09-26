@@ -171,6 +171,85 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
   text-transform: uppercase;
 }
 
+/* Index views (Primitive): the Index / Grid switch above collection results. Each view is a real URL. */
+.index-views {
+  display: flex;
+  min-height: var(--ad-control-minimum);
+  margin-block-end: var(--ad-space-300);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ad-space-300);
+  font-size: var(--ad-text-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.index-views a {
+  color: var(--ad-color-text-muted);
+  text-decoration: none;
+}
+
+.index-views a:hover {
+  color: var(--ad-color-text-primary);
+}
+
+.index-views [aria-current] {
+  color: var(--color-accent);
+}
+
+@media (max-width: 47.99rem) {
+  .index-views {
+    margin-block-end: var(--ad-space-100);
+  }
+}
+
+/* Link row (Primitive): full-width "Shop …" row closing a section. On hover or keyboard focus the label
+   steps in, the arrow lifts toward its heading and an accent rule draws along the bottom edge. */
+.link-row {
+  position: relative;
+  display: flex;
+  margin-block-start: var(--ad-space-600);
+  padding-block: var(--ad-space-300);
+  justify-content: space-between;
+  align-items: center;
+  border-block: var(--ad-border-hairline) solid currentcolor;
+  font-family: var(--font-display-family);
+  font-size: clamp(1.5rem, 3vw, 2.75rem);
+  font-weight: var(--font-display-weight);
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.link-row > span {
+  transition: transform var(--ad-duration-base) var(--ad-ease-standard), color var(--ad-duration-fast) var(--ad-ease-standard);
+}
+
+.link-row::after {
+  position: absolute;
+  inset: auto 0 calc(-1 * var(--ad-border-hairline));
+  height: 3px;
+  background: var(--link-row-accent, currentcolor);
+  content: '';
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--ad-duration-base) var(--ad-ease-standard);
+}
+
+.link-row:is(:hover, :focus-visible) > span:first-child {
+  transform: translateX(var(--ad-space-300));
+}
+
+.link-row:is(:hover, :focus-visible) > span:last-child {
+  color: var(--link-row-accent, currentcolor);
+  transform: translate(0.15em, -0.15em);
+}
+
+.link-row:is(:hover, :focus-visible)::after {
+  transform: scaleX(1);
+}
+
 .form-field {
   display: grid;
   gap: var(--ad-space-100);
@@ -260,6 +339,10 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .link-row:is(:hover, :focus-visible) > span {
+    transform: none;
+  }
+
   html {
     scroll-behavior: auto;
   }

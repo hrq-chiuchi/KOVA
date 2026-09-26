@@ -219,7 +219,7 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Reasoning:** Each fact keeps one home (the D-016 rule). Reusing the grid and the frame keeps the system small while the page rhythm changes. Deriving data means the page cannot drift from the catalogue.
 
-**Tradeoff / reconsideration:** The pending frames make the page visibly unfinished until photography exists. Shopify's placeholder illustrations were tried first and dropped: five of them inlined 320 KB of SVG into a 437 KB document and delayed the hero LCP. Replace pending frames as soon as approved campaign imagery exists. Promote the signal frame's annotation model only if a third use appears.
+**Tradeoff / reconsideration:** The pending frames make the page visibly unfinished until photography exists. Shopify's placeholder illustrations were tried first and dropped: five of them inlined 320 KB of SVG into a 437 KB document and delayed the hero LCP. Replace pending frames as soon as approved campaign imagery exists (done in D-048). Promote the signal frame's annotation model only if a third use appears.
 
 ## D-019 — Let the hero follow a collection without losing the authored hero
 
@@ -745,3 +745,71 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Reasoning:** One price owner. A theme-side tier table would drift from the function and could show prices the checkout won't honour.
 
 **Tradeoff / reconsideration:** The incentive is only visible after a loadout is in the bag. **Not verified:** the transform didn't merge loadout groups on 2026-09-25, so the line hasn't rendered live.
+
+## D-048 — Campaign photography from the field record, uploaded to Shopify Files
+
+**Context:** D-018 left five homepage image slots in their pending state until approved campaign imagery existed: three release-record frames and both signal frames. The user supplied a 12-shot campaign set (`BRAND/ASSETS/kova-afterdark-field-record/`) and four shots each for seven products (`BRAND/ASSETS/products/<handle>/`). `BRAND/` is gitignored.
+
+**Options considered:** check the PNGs into `assets/` and reference them with `asset_url`; upload them to Shopify Files and reference them from image settings.
+
+**Decision:**
+- Upload to Shopify Files with unique, prefixed filenames (`kova-field-record-NN-*`, `<handle>-NN-*`) and written alt text, then reference them as `shopify://shop_images/…`. They stay merchant-editable, get Shopify's responsive CDN transforms, and keep 2–3 MB PNGs out of the theme (and out of `assets/`, where untracked images have broken `theme dev`).
+- Homepage: release-record frames use 4:5 portrait shots (Transit: overhead crew; Weather: portrait through a fence; Carry: backpack buckle detail). The campaign frame uses the architectural formation (shell, pack and cargo pant visible on one figure) with the collective as its phone crop. The field test uses the movement shot, with the hooded technical portrait as its phone crop.
+- Annotation coordinates were re-placed on the garments for the new images, because signal-frame annotations are fixed percentages over a `cover` crop.
+- Products: the 02–04 lifestyle and detail shots are appended to the seven matching products. Existing media and featured images are unchanged, because the new 01 stills are near-identical to the current ones.
+- Collections (drop-001, outerwear, apparel, carry-systems, worn-accessories, field-objects, limited-editions) get images from the same set. Field Notes article images were tried and removed at the user's request: the journal reads better as a text-only index.
+- On desktop, each annotation sits on a translucent dark plate (`background-primary` at 72% with a 6px backdrop blur), and the note text rises from 72% to 86% opacity. Real photography put the text over bright concrete and sky, where it wasn't legible.
+
+**Reasoning:** Each image is used once on the homepage, and no frame repeats the product card in the section next to it. Store-hosted files keep the theme light and editable.
+
+**Tradeoff / reconsideration:** The landscape originals are 1536 px wide, so the full-bleed frames upscale on screens wider than that. Replace them if higher-resolution exports exist. The field test's Hood marker sits on a lowered hood; a shot with the hood up in landscape would fit that annotation better. **Not verified:** the parallax state with motion enabled, and the crops in the Theme Editor.
+
+## D-049 — Recent signals as a compact strip
+
+**Context:** On the product page, Related equipment and Recent signals sat back to back with the same display heading and the same four-column editorial card grid. The user saw them as two near-identical sections and asked for Recent signals to be smaller.
+
+**Decision:** Recent signals keeps its data contract (D-043) but renders as a history strip. It has a hairline top rule, a small label-sized heading beside the list, and rows of 4rem thumbnail, title and price that link to the product. The quick-add action and editorial card are dropped there. Its thumbnails hide the "Photography pending" label, which doesn't fit at 4rem; the frame corners remain.
+
+**Reasoning:** Related equipment is a buying surface. Recent signals is navigation back to something already seen, so it doesn't need the full card or a second add path. The different scale and layout make the two sections read as distinct.
+
+**Tradeoff / reconsideration:** Recently viewed products can no longer be added from the strip, and status only shows when it isn't Active. Restore quick add if data shows people use it from this strip.
+
+## D-050 — Homepage layout fixes and a shared link row
+
+**Context:** The user reviewed the homepage with real photography and flagged three issues. The loadout teaser left a large empty area above its copy. In the feature grid the lead card and the stacked cards didn't end on the same line. The full-width "Shop …" rows had no hover response.
+
+**Decision:**
+- **Loadout teaser:** the columns are centred instead of bottom-aligned, and on desktop the image is capped at the viewport height minus the header and some padding. Phones keep the 4:5 frame.
+- **Feature grid:** the lead card spans as many rows as there are stacked cards (`:has()` on the card count) instead of always three. With three products it had spanned an empty third row.
+- **Link row (new Primitive):** the three sections used identical "Shop …" row CSS, so it becomes `.link-row` in `assets/theme.css`. On hover or `:focus-visible` the label steps in, the arrow lifts toward its heading and takes the section accent, and a 3px accent rule scales in from the left. It uses transform only, with base-duration tokens. Inverse tones use the text colour because the acid accent disappears on the light background. Reduced motion removes the movement but keeps the colour and the rule.
+
+**Reasoning:** One primitive replaces three copies, so the interaction stays consistent. Keyboard focus gets the same feedback as hover.
+
+**Tradeoff / reconsideration:** Browsers without `:has()` fall back to the three-row span. The capped loadout image crops wider on short screens.
+
+## D-051 — Labelled sample reviews until real reviews exist
+
+**Context:** The review section only reads Shopify's standard `reviews` metafields and review-app blocks, and no review app is installed. Every product showed "No field reports yet". The user asked for placeholder reviews on the main products.
+
+**Decision:** Add a **Sample review** block to `sections/product-reviews.liquid` with optional product targeting, a 1–5 rating, title, text and byline. Sixteen samples cover eight main products.
+- Samples always render under a visible note: "Sample field reports. Placeholder content while reviews are set up, not written by customers." Each byline ends in "/ Sample" and uses a role instead of a person's name.
+- Samples never feed the rating summary, the `reviews` metafields or structured data. They disappear once a product has real ratings or a review-app block is added.
+
+**Reasoning:** The page needs to show how reviews will look, but reviews presented as genuine would mislead shoppers, and search engines would read them as real ratings. Labelling them and keeping them out of the data meets both needs.
+
+**Tradeoff / reconsideration:** The labels make the section read as unfinished to a careful shopper. Remove the blocks once a review app is installed.
+
+## D-052 — Collection views, edition sizes, PDP order and panel entrances
+
+**Context:** A second review pass by the user.
+
+**Decision:**
+- **Current Transmission** uses the aligned layout, so the three cards are top-aligned.
+- **Loadout teaser:** the image stretches to the row and the copy panel carries vertical padding, so the image runs slightly taller than the centred copy. This replaces D-050's viewport cap. Phones keep a 4:5 image.
+- **Index view for every collection:** the default collection page gets an Index / Grid switch linking to `?view=index`. The Equipment Index section keeps its authored heading only on collections assigned an index template; other collections keep their own title, and their Grid link returns to the default template. The query builder moved to `snippets/index-query.liquid` and the switch to `.index-views` in `theme.css`.
+- **Edition size:** product cards show a "Limited run / N units" tag on the image (with a visually hidden sentence in the card text), and Index rows show it under status. The number comes from `edition_profile.edition_quantity`, so only products with a real edition size show it.
+- **PDP order:** main, field manual, edition record, loadout builder (now dark), FAQ, works with, reviews, related equipment, recent signals.
+- **Entrance animations:** the menu panel slides in from its edge, and its links rise in sequence; the bag drawer slides in from the right. Backdrops fade. Bag items aren't staggered, because the drawer re-renders them on every cart change. There's no motion under reduced motion.
+
+**Tradeoff / reconsideration:** The edition record, loadout builder and FAQ now run as three dark sections in a row. The Search & Discovery metafield filters still don't reach the storefront (see Phase 13 backlog); the theme renders every filter Shopify returns, so the fix is in the app's filter configuration.
+

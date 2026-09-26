@@ -1,0 +1,31 @@
+{% doc %}
+  Echoes the collection's current sort and filters as a query string (no leading `?`), so a link to another
+  view of the same collection keeps them. Liquid cannot read the query string, so it is rebuilt from the
+  filter objects.
+
+  @param {collection} collection - The collection being viewed.
+
+  @example
+  {% capture query %}{% render 'index-query', collection: collection %}{% endcapture %}
+{% enddoc %}
+{%- liquid
+    assign current_sort = collection.sort_by | default: collection.default_sort_by
+    echo 'sort_by=' | append: current_sort
+    for filter in collection.filters
+      if filter.type == 'price_range'
+        if filter.min_value.value != null
+          assign price_value = filter.min_value.value | money_without_currency | replace: ',', ''
+          echo '&' | append: filter.min_value.param_name | append: '=' | append: price_value
+        endif
+        if filter.max_value.value != null
+          assign price_value = filter.max_value.value | money_without_currency | replace: ',', ''
+          echo '&' | append: filter.max_value.param_name | append: '=' | append: price_value
+        endif
+      else
+        for value in filter.active_values
+          assign encoded_value = value.value | url_encode
+          echo '&' | append: value.param_name | append: '=' | append: encoded_value
+        endfor
+      endif
+    endfor
+-%}

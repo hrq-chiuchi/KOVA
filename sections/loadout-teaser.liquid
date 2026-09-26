@@ -113,9 +113,14 @@
 {% stylesheet %}
   .loadout { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); --color-accent: var(--loadout-accent); }
   .loadout--inverse { background: var(--ad-color-background-inverse); color: var(--ad-color-text-inverse); }
-  .loadout__inner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr); gap: var(--ad-content-gap); align-items: end; padding-block: var(--ad-section-space); }
-  .loadout__figure { margin: 0; }
-  .loadout__media { position: relative; display: block; overflow: hidden; aspect-ratio: 5 / 6; background: var(--ad-color-background-elevated); }
+  .loadout__inner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr); gap: var(--ad-content-gap); align-items: center; padding-block: var(--ad-section-space); }
+  /* Desktop: the figure stretches to the row and the panel carries vertical padding, so the image runs
+     slightly taller than the copy, which stays centred beside it. */
+  .loadout__figure { display: flex; margin: 0; flex-direction: column; align-self: stretch; }
+  .loadout__media { position: relative; display: block; min-height: 24rem; overflow: hidden; flex: 1; background: var(--ad-color-background-elevated); }
+  .loadout__media img,
+  .loadout__placeholder { position: absolute; inset: 0; }
+  .loadout__panel { padding-block: var(--ad-space-600); }
   .loadout__media img,
   .loadout__placeholder { display: block; width: 100%; height: 100%; object-fit: cover; }
   .loadout__figure figcaption { margin-block-start: var(--ad-space-300); color: color-mix(in srgb, currentcolor 62%, transparent); }
@@ -138,7 +143,8 @@
 
   @media (max-width: 47.99rem) {
     .loadout__inner { grid-template-columns: 1fr; }
-    .loadout__media { aspect-ratio: 4 / 5; }
+    .loadout__media { min-height: 0; aspect-ratio: 4 / 5; flex: none; }
+    .loadout__panel { padding-block: 0; }
   }
 {% endstylesheet %}
 

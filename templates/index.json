@@ -42,7 +42,7 @@
           "dead-channel-utility-hoodie"
         ],
         "product_limit": 3,
-        "layout": "staggered",
+        "layout": "aligned",
         "tone": "inverse",
         "accent": "#dfff00",
         "link_label": "Shop the full index",
@@ -98,18 +98,21 @@
         "frame_1": {
           "type": "frame",
           "settings": {
+            "image": "shopify://shop_images/kova-field-record-04-overhead-surveillance-crew.png",
             "caption": "Campaign frame / Transit"
           }
         },
         "frame_2": {
           "type": "frame",
           "settings": {
+            "image": "shopify://shop_images/kova-field-record-10-reflection-obstruction-portrait.png",
             "caption": "Campaign frame / Weather"
           }
         },
         "frame_3": {
           "type": "frame",
           "settings": {
+            "image": "shopify://shop_images/after-dark-utility-backpack-04-human-detail.png",
             "caption": "Campaign frame / Carry"
           }
         }
@@ -145,9 +148,9 @@
             "label": "",
             "text": "Storm layer",
             "feature_index": 1,
-            "x": 58,
-            "y": 26,
-            "align": "start"
+            "x": 40,
+            "y": 30,
+            "align": "end"
           }
         },
         "a2": {
@@ -157,8 +160,8 @@
             "label": "",
             "text": "Load system",
             "feature_index": 1,
-            "x": 72,
-            "y": 48,
+            "x": 62,
+            "y": 26,
             "align": "start"
           }
         },
@@ -181,6 +184,8 @@
         "a3"
       ],
       "settings": {
+        "image": "shopify://shop_images/kova-field-record-03-architectural-formation.png",
+        "mobile_image": "shopify://shop_images/kova-field-record-02-kova-collective.png",
         "image_alt": "",
         "height": 100,
         "eyebrow": "Afterdark supply / Drop 001",
@@ -260,8 +265,8 @@
             "label": "Construction",
             "text": "",
             "feature_index": 1,
-            "x": 14,
-            "y": 30,
+            "x": 74,
+            "y": 32,
             "align": "start"
           }
         },
@@ -272,9 +277,9 @@
             "label": "Hood",
             "text": "",
             "feature_index": 2,
-            "x": 86,
-            "y": 42,
-            "align": "end"
+            "x": 63,
+            "y": 20,
+            "align": "start"
           }
         },
         "f3": {
@@ -284,9 +289,9 @@
             "label": "Closure",
             "text": "",
             "feature_index": 3,
-            "x": 20,
-            "y": 62,
-            "align": "start"
+            "x": 34,
+            "y": 41,
+            "align": "end"
           }
         }
       },
@@ -296,6 +301,8 @@
         "f3"
       ],
       "settings": {
+        "image": "shopify://shop_images/kova-field-record-06-movement-transit.png",
+        "mobile_image": "shopify://shop_images/kova-field-record-01-anonymous-technical-portrait.png",
         "image_alt": "",
         "height": 90,
         "eyebrow": "Field test / Shell system",

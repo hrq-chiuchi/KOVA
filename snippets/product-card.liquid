@@ -11,6 +11,7 @@
 {% liquid
   assign alternate_image = blank
   assign heading_tag = heading_tag | default: 'h3'
+  assign edition_quantity = product.metafields.custom.edition_profile.value.edition_quantity.value
   if product.featured_image
     for image in product.images
       if image.id != product.featured_image.id
@@ -49,12 +50,16 @@
     {% endif %}
     {% if index %}<span class="product-card__index" aria-hidden="true">{{ index | prepend: '0' | slice: -2, 2 }}</span>{% endif %}
     {% render 'product-status', product: product, format: 'card' %}
+    {% if edition_quantity != blank %}
+      <span class="product-card__edition"><span>Limited run</span> {{ edition_quantity }} units</span>
+    {% endif %}
   </a>
   <div class="product-card__details">
     <div>
       <{{ heading_tag }} class="product-card__title"><a href="{{ product.url }}">{{ product.title | escape }}</a></{{ heading_tag }}>
       <p class="product-card__price">
         {% render 'product-status', product: product, format: 'sr' %}
+        {% if edition_quantity != blank %}<span class="visually-hidden">Limited run of {{ edition_quantity }} units.</span>{% endif %}
         {% if product.price_varies %}From {% endif %}{{ product.price | money }}
         {% if product.compare_at_price > product.price %}<s>{{ product.compare_at_price | money }}</s>{% endif %}
       </p>
@@ -79,6 +84,9 @@
   .product-card__badge { inset-inline-end: var(--ad-space-300); padding: var(--ad-space-50) var(--ad-space-100); background: var(--color-accent); color: var(--ad-color-text-inverse); }
   .product-card__badge--archive { background: var(--ad-color-background-inverse); }
   .product-card__badge--low-supply { border: var(--ad-border-hairline) solid var(--color-accent); background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  /* Limited run: the edition size from the product's edition profile, pinned to the image's lower edge. */
+  .product-card__edition { position: absolute; z-index: 2; inset-block-end: var(--ad-space-300); inset-inline-start: var(--ad-space-300); display: inline-flex; padding: var(--ad-space-50) var(--ad-space-100); gap: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--color-accent); background: color-mix(in srgb, var(--ad-color-background-primary) 80%, transparent); color: var(--ad-color-text-primary); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .product-card__edition > span { color: var(--color-accent); }
   .product-card__details { display: flex; padding-block: var(--ad-space-300); align-items: start; justify-content: space-between; gap: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 24%, transparent); }
   .product-card__title,
   .product-card__price { margin: 0; font-size: var(--ad-text-body); font-weight: 500; }

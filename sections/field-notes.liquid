@@ -29,7 +29,7 @@
         {% endfor %}
       </ol>
 
-      <a class="field-notes__link" href="{{ notes_blog.url }}">
+      <a class="link-row field-notes__link" href="{{ notes_blog.url }}">
         <span>{{ section.settings.link_label | escape }}</span><span aria-hidden="true">↗</span>
       </a>
     {% else %}
@@ -49,7 +49,8 @@
   .field-notes__list { margin: 0; padding: 0; list-style: none; border-block-start: var(--ad-border-hairline) solid currentcolor; }
   .field-notes--inverse .field-note-row__index { color: inherit; }
   .field-notes--inverse .field-note-row:hover .field-note-row__title { color: inherit; text-decoration: underline; }
-  .field-notes__link { display: flex; margin-block-start: var(--ad-space-600); padding-block: var(--ad-space-300); justify-content: space-between; border-block: var(--ad-border-hairline) solid currentcolor; font-family: var(--font-display-family); font-size: clamp(1.5rem, 3vw, 2.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; text-decoration: none; text-transform: uppercase; }
+  .field-notes__link { --link-row-accent: var(--notes-accent); }
+  .field-notes--inverse .field-notes__link { --link-row-accent: currentcolor; }
   .field-notes__empty { margin: 0; padding-block: var(--ad-space-500); border-block: var(--ad-border-hairline) solid color-mix(in srgb, currentcolor 22%, transparent); color: color-mix(in srgb, currentcolor 68%, transparent); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 
   @media (max-width: 47.99rem) {

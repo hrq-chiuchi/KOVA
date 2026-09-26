@@ -371,6 +371,25 @@
     .search-command[open] { animation: search-command-in var(--ad-duration-base) var(--ad-ease-standard); }
     .mega-panel:not([hidden]) { animation: search-command-in var(--ad-duration-base) var(--ad-ease-standard); }
     .search-command[open]::backdrop { animation: search-command-fade var(--ad-duration-fast) linear; }
+    /* Menu entrance: the panel slides in from its edge, then the links rise in sequence. */
+    .site-menu[open]::backdrop { animation: search-command-fade var(--ad-duration-fast) linear; }
+    .site-menu[open] .site-menu__panel { animation: site-menu-in var(--ad-duration-base) var(--ad-ease-standard); }
+    .site-menu[open] :is(.site-menu__nav > *, .site-menu__utility) { animation: site-menu-item-in var(--ad-duration-base) var(--ad-ease-standard) both; animation-delay: calc(120ms + var(--menu-step, 0) * 45ms); }
+    .site-menu__nav > :nth-child(2) { --menu-step: 1; }
+    .site-menu__nav > :nth-child(3) { --menu-step: 2; }
+    .site-menu__nav > :nth-child(4) { --menu-step: 3; }
+    .site-menu__nav > :nth-child(5) { --menu-step: 4; }
+    .site-menu__nav > :nth-child(6) { --menu-step: 5; }
+    .site-menu__nav > :nth-child(n + 7),
+    .site-menu__utility { --menu-step: 6; }
+  }
+
+  @keyframes site-menu-in {
+    from { transform: translateX(-100%); }
+  }
+
+  @keyframes site-menu-item-in {
+    from { opacity: 0; transform: translateY(1.25rem); }
   }
 
   @keyframes search-command-in {
