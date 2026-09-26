@@ -74,7 +74,7 @@
     </dl>
 
     {% if release != blank and section.settings.link_label != blank %}
-      <a class="release-record__link" href="{{ release.url }}">
+      <a class="link-row release-record__link" href="{{ release.url }}">
         <span>{{ section.settings.link_label | escape }}</span><span aria-hidden="true">↗</span>
       </a>
     {% endif %}
@@ -125,7 +125,8 @@
   .release-record__record dt { color: color-mix(in srgb, currentcolor 62%, transparent); }
   .release-record__record dd { margin: 0; font-weight: 700; text-align: end; }
   .release-record__status dd::before { display: inline-block; width: 0.5em; height: 0.5em; margin-inline-end: var(--ad-space-100); background: var(--record-accent); content: ''; }
-  .release-record__link { display: flex; grid-area: link; margin-block-start: var(--ad-space-600); padding-block: var(--ad-space-300); justify-content: space-between; border-block: var(--ad-border-hairline) solid currentcolor; font-family: var(--font-display-family); font-size: clamp(1.5rem, 3vw, 2.75rem); font-weight: var(--font-display-weight); letter-spacing: -0.04em; text-decoration: none; text-transform: uppercase; }
+  .release-record__link { grid-area: link; --link-row-accent: var(--record-accent); }
+  .release-record--inverse .release-record__link { --link-row-accent: currentcolor; }
 
   /* Native horizontal scroll with snap: no pinning, so the page keeps normal scrolling. */
   .release-record__frames { display: grid; grid-auto-columns: minmax(18rem, 36vw); grid-auto-flow: column; gap: clamp(0.75rem, 2vw, 2rem); margin: var(--ad-space-700) 0 0; padding: 0 var(--ad-page-padding) var(--ad-space-300); overflow-x: auto; list-style: none; overscroll-behavior-x: contain; scroll-padding-inline: var(--ad-page-padding); scroll-snap-type: x mandatory; scrollbar-width: thin; }
