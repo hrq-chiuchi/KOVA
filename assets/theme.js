@@ -956,10 +956,14 @@
 
   // Fit text (Primitive): sizes its parent's font so the text spans the parent's content width. The
   // parent's CSS size stays the fallback without JavaScript. Refits when the width changes and once
-  // web fonts load; height changes are ignored so resizing the text can't loop.
+  // web fonts load; height changes are ignored so resizing the text can't loop. An optional `media`
+  // attribute limits fitting to a media query; outside it the CSS size applies.
   class FitText extends HTMLElement {
     connectedCallback() {
       this.width = 0;
+      this.query = this.getAttribute('media') ? window.matchMedia(this.getAttribute('media')) : null;
+      this.onMedia = () => this.fit();
+      this.query?.addEventListener('change', this.onMedia);
       this.observer = new ResizeObserver(([entry]) => {
         const width = entry.contentRect.width;
         if (Math.abs(width - this.width) < 0.5) return;
@@ -976,6 +980,7 @@
 
     disconnectedCallback() {
       this.observer?.disconnect();
+      this.query?.removeEventListener('change', this.onMedia);
       document.fonts?.removeEventListener('loadingdone', this.onFonts);
       window.removeEventListener('load', this.onFonts);
     }
@@ -983,6 +988,11 @@
     fit() {
       const box = this.parentElement;
       if (!box) return;
+      if (this.query && !this.query.matches) {
+        box.style.removeProperty('font-size');
+        return;
+      }
+      box.style.removeProperty('font-size');
       const style = getComputedStyle(box);
       const available = box.clientWidth - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd);
       const current = parseFloat(style.fontSize);
