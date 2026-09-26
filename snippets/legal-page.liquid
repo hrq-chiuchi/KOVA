@@ -1,0 +1,66 @@
+{% doc %}
+  Frames a Shopify store policy page (privacy, refund, shipping, terms, contact). Policies have no theme
+  template: the layout renders this snippet around `content_for_layout` when `request.page_type` is
+  `policy`. Adds a masthead, an index of every published policy, and document typography (D-053).
+
+  @param {string} content - The policy markup Shopify renders (`.shopify-policy__container`).
+
+  @example
+  {% render 'legal-page', content: content_for_layout %}
+{% enddoc %}
+<div class="legal-page full-width">
+  <div class="legal-page__inner section-shell">
+    <p class="eyebrow legal-page__eyebrow">{{ shop.name | escape }} / Legal</p>
+    <div class="legal-page__layout">
+      {% if shop.policies.size > 0 %}
+        <nav class="legal-page__nav" aria-label="Legal documents">
+          <ol role="list">
+            {% for policy in shop.policies %}
+              <li>
+                <a href="{{ policy.url }}"{% if request.path == policy.url %} aria-current="page"{% endif %}>
+                  <span aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+                  {{ policy.title | escape }}
+                </a>
+              </li>
+            {% endfor %}
+          </ol>
+        </nav>
+      {% endif %}
+      <div class="legal-page__document">{{ content }}</div>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .legal-page { background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
+  .legal-page__inner { padding-block: calc(var(--ad-header-height) + var(--ad-space-700)) var(--ad-section-space); }
+  .legal-page__eyebrow { margin: 0 0 var(--ad-space-400); }
+  .legal-page__layout { display: grid; grid-template-columns: minmax(12rem, 0.3fr) minmax(0, 1fr); align-items: start; gap: var(--ad-content-gap); }
+  .legal-page__nav { position: sticky; top: calc(var(--ad-header-height) + var(--ad-space-400)); }
+  .legal-page__nav ol { display: grid; margin: 0; padding: 0; list-style: none; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .legal-page__nav a { display: flex; min-height: var(--ad-control-minimum); padding-block: var(--ad-space-200); align-items: center; gap: var(--ad-space-300); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-decoration: none; text-transform: uppercase; }
+  .legal-page__nav a:hover,
+  .legal-page__nav [aria-current] { color: var(--ad-color-text-primary); }
+  .legal-page__nav [aria-current] span { color: var(--color-accent); }
+
+  /* Shopify's policy markup: title, then the rich-text body. */
+  .legal-page .shopify-policy__container { max-width: none; margin: 0; padding: 0; }
+  .legal-page .shopify-policy__title { margin-block-end: var(--ad-space-600); padding-block-end: var(--ad-space-500); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); text-align: start; }
+  .legal-page .shopify-policy__title h1 { margin: 0; font-family: var(--font-display-family); font-size: var(--ad-text-title); font-weight: var(--font-display-weight); letter-spacing: -0.05em; line-height: 0.9; text-transform: uppercase; }
+  .legal-page .shopify-policy__body { max-width: 44rem; color: color-mix(in srgb, currentcolor 82%, transparent); line-height: 1.65; }
+  .legal-page .shopify-policy__body :is(h2, h3) { margin: var(--ad-space-600) 0 var(--ad-space-200); color: var(--ad-color-text-primary); font-family: var(--font-display-family); font-weight: var(--font-display-weight); letter-spacing: -0.02em; line-height: 1.05; text-transform: uppercase; }
+  .legal-page .shopify-policy__body h2 { font-size: clamp(1.375rem, 2.2vw, 1.875rem); }
+  .legal-page .shopify-policy__body h3 { font-size: 1.125rem; }
+  .legal-page .shopify-policy__body p,
+  .legal-page .shopify-policy__body :is(ul, ol) { margin: 0 0 var(--ad-space-300); }
+  .legal-page .shopify-policy__body li + li { margin-block-start: var(--ad-space-100); }
+  .legal-page .shopify-policy__body :is(strong, b) { color: var(--ad-color-text-primary); }
+  .legal-page .shopify-policy__body a { color: var(--ad-color-text-primary); text-decoration-color: var(--color-accent); text-underline-offset: 0.2em; }
+  .legal-page .shopify-policy__body table { width: 100%; margin-block: var(--ad-space-300); border-collapse: collapse; font-size: 0.9rem; }
+  .legal-page .shopify-policy__body :is(th, td) { padding: var(--ad-space-200); border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); text-align: start; vertical-align: top; }
+
+  @media (max-width: 61.99rem) {
+    .legal-page__layout { grid-template-columns: 1fr; }
+    .legal-page__nav { position: static; }
+  }
+{% endstylesheet %}

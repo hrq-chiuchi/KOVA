@@ -57,6 +57,11 @@
 
       <div class="site-footer__legal">
         <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | escape }}</span>
+        {% if shop.policies.size > 0 %}
+          <nav class="site-footer__policies" aria-label="Legal">
+            {% for policy in shop.policies %}<a href="{{ policy.url }}">{{ policy.title | escape }}</a>{% endfor %}
+          </nav>
+        {% endif %}
         {% if section.settings.show_payment_icons %}
           <div class="site-footer__payment" aria-label="Payment methods">
             {% for type in shop.enabled_payment_types %}{{ type | payment_type_svg_tag }}{% endfor %}
@@ -85,6 +90,9 @@
   .site-footer__localization { display: flex; grid-column: 2; gap: var(--ad-space-100); }
   .site-footer__localization select,
   .site-footer__localization button { min-height: var(--ad-control-minimum); padding-inline: var(--ad-space-100); border: var(--ad-border-hairline) solid var(--ad-color-border-subtle); background: transparent; }
+  .site-footer__policies { display: flex; flex-wrap: wrap; gap: var(--ad-space-100) var(--ad-space-300); }
+  .site-footer__policies a { color: inherit; text-decoration: none; }
+  .site-footer__policies a:hover { color: var(--ad-color-text-primary); text-decoration: underline; }
   .site-footer__legal { display: flex; grid-column: 1 / -1; padding-block-start: var(--ad-space-400); justify-content: space-between; align-items: center; border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); color: var(--ad-color-text-muted); }
   .site-footer__payment { display: flex; flex-wrap: wrap; gap: var(--ad-space-100); }
   .site-footer__payment svg { width: 2rem; }

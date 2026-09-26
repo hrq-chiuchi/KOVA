@@ -1,7 +1,7 @@
 {% comment %}
   Real reviews come only from Shopify's standard `reviews` metafields, which review apps populate, and
-  review-app blocks. Until those exist, merchants can add Sample review blocks (D-051). They render like
-  reviews but never feed the rating summary or structured data, and they disappear as soon as real ratings
+  review-app blocks. Until those exist, merchants can add Review blocks (type `sample_review`, D-051). They
+  render as reviews but never feed the rating summary or structured data, and they disappear as soon as real ratings
   or a review app are present.
 {% endcomment %}
 {% liquid
@@ -138,9 +138,9 @@
     { "type": "@app" },
     {
       "type": "sample_review",
-      "name": "Sample review",
+      "name": "Review",
       "settings": [
-        { "type": "paragraph", "content": "Placeholder content for demonstration. Hidden once real ratings or a review app exist." },
+        { "type": "paragraph", "content": "Hidden once the product has real ratings or a review app block is added." },
         { "type": "product", "id": "product", "label": "Product", "info": "Leave blank to show on every product." },
         { "type": "range", "id": "rating", "label": "Rating", "min": 1, "max": 5, "step": 1, "default": 5 },
         { "type": "text", "id": "title", "label": "Title", "default": "Holds up after dark" },
