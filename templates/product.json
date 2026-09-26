@@ -23,7 +23,7 @@
         "heading": "BUILD ON\nTHIS PLATFORM",
         "cta_label": "Add loadout to bag",
         "field_locker_url": "https://shopify.com/84211761411/account/pages/01a0d72a-61ed-77b8-88ed-ec877b8e2118",
-        "tone": "inverse"
+        "tone": "dark"
       }
     },
     "recommendations": {
@@ -122,16 +122,196 @@
         "empty_title": "No field reports yet",
         "empty_text": "<p>Customer reviews will appear here once this object has been in the field.</p>",
         "tone": "inverse"
-      }
+      },
+      "blocks": {
+        "sample_01": {
+          "type": "sample_review",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "rating": 5,
+            "title": "Roll-top swallows a full shift",
+            "body": "Roll-top expands for a jacket and groceries after work, and the side access means I never unroll it on the platform. Laptop sleeve sits off the floor.",
+            "byline": "Bike commuter"
+          }
+        },
+        "sample_02": {
+          "type": "sample_review",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "rating": 4,
+            "title": "Grid webbing earns its place",
+            "body": "Clipped a Gridlink pouch to the front webbing and it stays put on stairs. Takes a week to learn where everything lives.",
+            "byline": "Photographer"
+          }
+        },
+        "sample_03": {
+          "type": "sample_review",
+          "settings": {
+            "product": "night-shift-cargo-pant",
+            "rating": 5,
+            "title": "Knees that actually move",
+            "body": "Gusseted seat and articulated knees mean I can crouch on site without the pant fighting me. The zip hem sits right over boots.",
+            "byline": "Site lead"
+          }
+        },
+        "sample_04": {
+          "type": "sample_review",
+          "settings": {
+            "product": "night-shift-cargo-pant",
+            "rating": 4,
+            "title": "Too many pockets, in a good way",
+            "body": "Twelve zones felt excessive until I started indexing: keys left thigh, card right. Belt is low enough to wear under a pack hip belt.",
+            "byline": "Night courier"
+          }
+        },
+        "sample_05": {
+          "type": "sample_review",
+          "settings": {
+            "product": "dead-channel-utility-hoodie",
+            "rating": 5,
+            "title": "Heavy in the right way",
+            "body": "The 460 gsm fleece has real weight and holds its shape after washing. The buckle cargo pocket keeps a phone from bouncing.",
+            "byline": "Late-shift barista"
+          }
+        },
+        "sample_06": {
+          "type": "sample_review",
+          "settings": {
+            "product": "dead-channel-utility-hoodie",
+            "rating": 4,
+            "title": "Structured hood, finally",
+            "body": "Double-layer hood stands up on its own instead of collapsing. Sleeve panels come off for days I want it quieter.",
+            "byline": "Student"
+          }
+        },
+        "sample_07": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 5,
+            "title": "Dry through a full storm",
+            "body": "Wore it through a two-hour downpour on the bike and stayed dry underneath. The hood fits over a helmet and still turns with me.",
+            "byline": "Cycle courier"
+          }
+        },
+        "sample_08": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 4,
+            "title": "Pockets you can find in the dark",
+            "body": "Six pockets sounds like a lot, but each one is placed where a hand lands. Runs slightly long in the back, which I like on the bike.",
+            "byline": "Field technician"
+          }
+        },
+        "sample_09": {
+          "type": "sample_review",
+          "settings": {
+            "product": "gridlink-pouch-array",
+            "rating": 5,
+            "title": "Modules that nest",
+            "body": "Three pouches, three jobs: cables, meds, snacks. They nest flat when I don't need them and clip onto the backpack grid in seconds.",
+            "byline": "Sound engineer"
+          }
+        },
+        "sample_10": {
+          "type": "sample_review",
+          "settings": {
+            "product": "gridlink-pouch-array",
+            "rating": 4,
+            "title": "Colour tabs help",
+            "body": "Internal colour tabs mean I stop opening the wrong pouch. The tether hardware is fiddly at first.",
+            "byline": "Commuter"
+          }
+        },
+        "sample_11": {
+          "type": "sample_review",
+          "settings": {
+            "product": "touchpoint-field-glove",
+            "rating": 5,
+            "title": "Phone works, fingers stay warm",
+            "body": "Conductive tips work on my phone without taking the glove off. Knuckle guards are low enough not to catch on pockets.",
+            "byline": "Delivery rider"
+          }
+        },
+        "sample_12": {
+          "type": "sample_review",
+          "settings": {
+            "product": "touchpoint-field-glove",
+            "rating": 4,
+            "title": "Snug cuff",
+            "body": "The locking cuff stops rain running down the wrist. Size up if you're between sizes.",
+            "byline": "Hiker"
+          }
+        },
+        "sample_13": {
+          "type": "sample_review",
+          "settings": {
+            "product": "veil-02-air-hood",
+            "rating": 5,
+            "title": "Breathes on the bike",
+            "body": "The perforated panel keeps my glasses from fogging at speed and it fits under a helmet without bunching.",
+            "byline": "Winter cyclist"
+          }
+        },
+        "sample_14": {
+          "type": "sample_review",
+          "settings": {
+            "product": "veil-02-air-hood",
+            "rating": 4,
+            "title": "Warm neck, clear view",
+            "body": "Extended neck tucks into a jacket collar. Eye opening is wide enough for peripheral vision.",
+            "byline": "Night walker"
+          }
+        },
+        "sample_15": {
+          "type": "sample_review",
+          "settings": {
+            "product": "static-5-panel-cap",
+            "rating": 5,
+            "title": "Sheds light rain",
+            "body": "Ripstop shell beads water in a drizzle and the brim is low enough to sit under a hood.",
+            "byline": "Runner"
+          }
+        },
+        "sample_16": {
+          "type": "sample_review",
+          "settings": {
+            "product": "static-5-panel-cap",
+            "rating": 4,
+            "title": "Reflective detail is subtle",
+            "body": "Tonal markings only show up in headlights, which is exactly what I wanted. Rear closure adjusts in small steps.",
+            "byline": "Commuter"
+          }
+        }
+      },
+      "block_order": [
+        "sample_01",
+        "sample_02",
+        "sample_03",
+        "sample_04",
+        "sample_05",
+        "sample_06",
+        "sample_07",
+        "sample_08",
+        "sample_09",
+        "sample_10",
+        "sample_11",
+        "sample_12",
+        "sample_13",
+        "sample_14",
+        "sample_15",
+        "sample_16"
+      ]
     }
   },
   "order": [
     "main",
-    "loadout_builder",
     "field_manual",
     "edition",
-    "compatibility",
+    "loadout_builder",
     "faq",
+    "compatibility",
     "reviews",
     "recommendations",
     "recent_signals"
