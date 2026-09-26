@@ -14,7 +14,7 @@
   <div class="section-shell recent-signals__inner" data-motion-scope>
     <header class="recent-signals__header">
       <p class="eyebrow">{{ section.settings.eyebrow | escape }}</p>
-      {% render 'display-heading', text: section.settings.heading, class: 'section-heading' %}
+      <h2 class="recent-signals__heading">{{ section.settings.heading | escape }}</h2>
     </header>
     <div class="recent-signals__grid" data-recent-results></div>
   </div>
@@ -24,11 +24,14 @@
 {% stylesheet %}
   .recent-signals { display: block; background: var(--ad-color-background-primary); color: var(--ad-color-text-primary); }
   .recent-signals[hidden] { display: none; }
-  .recent-signals__inner { padding-block: var(--ad-section-space); }
-  .recent-signals__header { margin-block-end: var(--ad-space-600); }
-  .recent-signals__header .section-heading { margin: var(--ad-space-200) 0 0; }
+  .recent-signals__inner { display: grid; grid-template-columns: minmax(10rem, 0.25fr) minmax(0, 1fr); align-items: start; gap: var(--ad-space-400); padding-block: var(--ad-space-600); border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
+  .recent-signals__heading { margin: var(--ad-space-100) 0 0; font-family: var(--font-display-family); font-size: 1.5rem; font-weight: var(--font-display-weight); letter-spacing: -0.03em; line-height: 0.95; text-transform: uppercase; }
   .recent-signals__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ad-space-300); }
-  @media (max-width: 47.99rem) { .recent-signals__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 61.99rem) {
+    .recent-signals__inner { grid-template-columns: 1fr; }
+    .recent-signals__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 29.99rem) { .recent-signals__grid { grid-template-columns: 1fr; } }
 {% endstylesheet %}
 
 {% schema %}
