@@ -85,6 +85,21 @@
   .cart-drawer__footer .button { width: 100%; }
   .cart-drawer__footer > a { justify-self: center; font-size: var(--ad-text-label); text-transform: uppercase; }
   @media (min-width: 48rem) { .cart-drawer__panel { border-inline-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle); } }
+
+  /* Bag entrance: the panel slides in from the right edge and the backdrop fades. Items are not staggered
+     because the drawer re-renders them on every cart change while open. */
+  @media (prefers-reduced-motion: no-preference) {
+    .cart-drawer__dialog[open]::backdrop { animation: cart-drawer-fade var(--ad-duration-fast) linear; }
+    .cart-drawer__dialog[open] .cart-drawer__panel { animation: cart-drawer-in var(--ad-duration-base) var(--ad-ease-standard); }
+  }
+
+  @keyframes cart-drawer-in {
+    from { transform: translateX(100%); }
+  }
+
+  @keyframes cart-drawer-fade {
+    from { opacity: 0; }
+  }
 {% endstylesheet %}
 
 {% schema %}
