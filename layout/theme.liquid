@@ -43,7 +43,12 @@
     {% section 'cart-drawer' %}
 
     <main id="MainContent" tabindex="-1">
-      {{ content_for_layout }}
+      {% if request.page_type == 'policy' %}
+        {%- comment -%} Store policies have no theme template, so the layout frames them (D-053). {%- endcomment -%}
+        {% render 'legal-page', content: content_for_layout %}
+      {% else %}
+        {{ content_for_layout }}
+      {% endif %}
     </main>
 
     <canvas class="webgl-reveal-canvas" data-webgl-reveal-canvas aria-hidden="true"></canvas>
