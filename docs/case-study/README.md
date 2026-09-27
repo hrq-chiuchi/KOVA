@@ -592,7 +592,7 @@ The largest fixture ran at 0.84M of the 11M-instruction limit.
 
 ### Phase 9 backlog
 
-- **Drop 002 photography (owner: user).** Upload images to the five products. The pending frames disappear without code changes.
+- ~~**Drop 002 photography (owner: user).**~~ Resolved 2026-09-26: the user supplied four images per product, which were uploaded with alt text through Admin GraphQL. The pending frames disappeared without code changes.
 - ~~**Deploy decision (owner: user).**~~ Resolved in Phase 10: `kova-core-1.0.0` was deployed and released (D-028).
 - **Rules editing.** Re-run `node apps/kova-core/scripts/sync-rules.mjs` after any change to a loadout or slot in the admin, until an App Home screen replaces it.
 - **Parent product page.** `/products/kova-loadout` returns 200 for anyone with the URL; consider a redirect or a dedicated template.
@@ -861,7 +861,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 - **Manual store setup:**
   - The header has no menu assigned, so the site menu's coded fallback is used. Its first link now reads "Equipment Index" and goes to `/collections/all`. If a menu is assigned later, it needs its own "Equipment Index" link. The CLI's store auth has no menu scope.
 - **Deferred:** Markets-aware facet labels, and hardware generations (V1/V2).
-- **Photography:** the Drop 002 products and the Field Notes still show empty thumbnails in search suggestions.
+- **Photography:** the Field Notes still show empty thumbnails in search suggestions. The Drop 002 products have had photography since 2026-09-26.
 
 ## Phase 14 commerce and merchandising log
 

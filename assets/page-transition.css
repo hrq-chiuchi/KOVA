@@ -22,10 +22,6 @@ html:active-view-transition-type(back) {
   overflow: hidden;
 }
 
-.site-header {
-  view-transition-name: kova-site-header;
-}
-
 .page-signal {
   position: fixed;
   inset: 0;
@@ -35,7 +31,10 @@ html:active-view-transition-type(back) {
   view-transition-name: kova-signal;
 }
 
-/* Page body: tear out, then resolve in. */
+/*
+ * Page body: tear out, then resolve in. The header and announcement bar stay in the root snapshot and
+ * corrupt with it: the header's offset below the bar changes with scroll, so holding it still made it jump.
+ */
 ::view-transition-old(root) {
   animation: kova-corrupt-out var(--kova-transition-out) step-end both;
   mix-blend-mode: normal;
@@ -44,20 +43,6 @@ html:active-view-transition-type(back) {
 ::view-transition-new(root) {
   animation: kova-corrupt-in var(--kova-transition-in) step-end calc(var(--kova-transition-out) * 0.7) both;
   mix-blend-mode: normal;
-}
-
-/* The header is identical on both pages, so it holds still while everything under it corrupts. */
-::view-transition-group(kova-site-header) {
-  z-index: 5;
-  animation: none;
-}
-
-::view-transition-old(kova-site-header) {
-  display: none;
-}
-
-::view-transition-new(kova-site-header) {
-  animation: none;
 }
 
 /* Signal layer: an inverted scanline band sweeps the screen once, across the cut. */
