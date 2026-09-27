@@ -26,7 +26,67 @@
         "collection": "drop-001",
         "secondary_label": "View field record",
         "secondary_link": "#field-record"
-      }
+      },
+      "blocks": {
+        "layer_07": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-07-night-cyclist.png",
+            "alt": "Cyclist in black KOVA layers stopped under an elevated road at night"
+          }
+        },
+        "layer_06": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-06-platform-field-objects.png",
+            "alt": "Close crop of a KOVA flask and carabiner-clipped keys on a transit platform"
+          }
+        },
+        "layer_05": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-05-overhead-convergence.png",
+            "alt": "Overhead view of three people in black converging on a wet plaza"
+          }
+        },
+        "layer_04": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-04-wind-rain-poncho.png",
+            "alt": "Figure in a KOVA poncho walking into wind and rain on a city footbridge"
+          }
+        },
+        "layer_03": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-03-transit-glass-portrait.png",
+            "alt": "Portrait in a KOVA cap and chest rig beside a passing train"
+          }
+        },
+        "layer_02": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-02-stairway-carry.png",
+            "alt": "Two people climbing wet concrete stairs at night carrying KOVA packs"
+          }
+        },
+        "layer_01": {
+          "type": "image",
+          "settings": {
+            "image": "shopify://shop_images/kova-kinetic-01-underpass-crossing.png",
+            "alt": "Two figures in black KOVA outerwear crossing a rain-soaked underpass at night"
+          }
+        }
+      },
+      "block_order": [
+        "layer_07",
+        "layer_06",
+        "layer_05",
+        "layer_04",
+        "layer_03",
+        "layer_02",
+        "layer_01"
+      ]
     },
     "current_release": {
       "type": "editorial-product-grid",

@@ -880,3 +880,14 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 **Not verified:** Safari (unavailable here), reduced motion in Firefox, a real GPU, a screen reader pass, high zoom, the actual Theme Editor UI (the bypass relies on `request.design_mode`), and a production Lighthouse or field Core Web Vitals.
 
 **Tradeoff / reconsideration:** Perceived first content is held back by about a second on one page view per session, even though the browser's paint metrics aren't. If field data shows first-visit bounces rising, turn off the setting. Headless Chromium uses software rendering, so the filter cost above may be lower on real GPUs; that's a reason to re-test before restoring the band-tear filters, not evidence that they are safe. A future transmission (T002 / RAIN SYSTEM and so on) should only need new copy and CSS keyed to the same states; the controller and hero contract stay as they are.
+
+## D-057 — The product gallery shows an odd number of images
+
+**Context:** The product gallery spans the first image across both columns and pairs the rest. With the four-image photography sets (a still plus three lifestyle or detail shots), the last image sat alone on its row with an empty cell beside it. Meanwhile the field manual figure repeated the gallery's second image.
+
+**Decision (Template / art direction):** `sections/product.liquid` renders `product.media` with a limit that drops an even set's last image, so the gallery always shows an odd count (1, 3, 5 …) and every row is full. `sections/product-field-manual.liquid` shows that left-over image as its figure, numbered by its position in the set (Fig. 04 of four). Odd sets keep the previous rule (second image, or a cropped detail for a single image). The dropped image is still product media: cards, variant media and search use it as before. Merchants control which image moves by the media order in the admin.
+
+**Evidence (headless Chromium against `shopify theme dev`, 2026-09-27):** Sector Sleeve (4 images) rendered 3 in the gallery and image 04 as Fig. 04; a 6-image product rendered 5 and Fig. 06; the 3-image bundle and a 1-image product were unchanged.
+
+**Tradeoff / reconsideration:** An even set's last image is no longer in the gallery. Put the image that works best as a large editorial figure (a detail shot) last. A product with only two images shows one in the gallery.
+

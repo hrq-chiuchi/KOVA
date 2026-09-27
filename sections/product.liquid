@@ -35,8 +35,17 @@
       {% endif %}
     </aside>
 
+    {%- liquid
+      # The primary image spans both columns and the rest pair up, so the gallery shows an odd count and
+      # never leaves one image alone on a row. An even set's last image moves to the field manual figure.
+      assign gallery_count = product.media.size
+      assign gallery_remainder = gallery_count | modulo: 2
+      if gallery_remainder == 0 and gallery_count > 1
+        assign gallery_count = gallery_count | minus: 1
+      endif
+    -%}
     <div class="product-page__gallery" aria-label="{{ product.title | escape }} media">
-      {% for media in product.media %}
+      {% for media in product.media limit: gallery_count %}
         {% liquid
           # The primary image is the likely LCP element, so it loads eagerly at high priority.
           if forloop.first
