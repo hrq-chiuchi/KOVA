@@ -106,7 +106,7 @@ These contracts describe the current Round 2 source. They were first exercised t
 - **Media fallback:** merchant image blocks, then current product media, then theme-owned placeholder art; five layers are always present.
 - **Interaction:** every `threshold` pixels of desktop pointer movement promotes the next layer and drops it at the pointer. The other layers stay where they were dropped, so the path leaves a spaced trail of cards; nothing follows the pointer continuously (D-029). Pointer leave returns the stack to its right-side resting composition. Coarse-pointer input advances on a non-interactive tap. Reduced motion retains a static readable stack.
 - **Merchant controls:** up to seven desktop/mobile image pairs, copy, CTA, optional quiet secondary link, height, pointer threshold, and section colors.
-- **Content source:** `custom` (default) keeps the authored copy with product media from all products. `collection` draws the stack from a selected collection, and each blank eyebrow, heading, body or CTA link falls back to that collection's title, product count, description or URL. The homepage uses collection mode on Drop 001 with the authored heading kept.
+- **Content source:** `custom` (default) keeps the authored copy with product media from all products. `collection` draws the stack from a selected collection, and each blank eyebrow, heading, body or CTA link falls back to that collection's title, product count, description or URL. The homepage uses collection mode on Drop 001 with the authored heading kept. **Implemented (2026-09-27):** the homepage stack uses seven kinetic-lifestyle campaign images as image blocks (Shopify Files `kova-kinetic-01…07`, with alt text), so image blocks override the collection's product media while the CTA still follows Drop 001. Block 01 is ordered last so it sits on top and is the LCP image.
 - **LCP:** the last layer paints on top of the stack and is the LCP image, so it alone carries `fetchpriority="high"`.
 - **Entry contract (D-056):** the stage carries `data-entry-media` and the `fetchpriority="high"` layer carries `data-entry-anchor`. The Signal Acquisition entry corrupts the former and waits for the latter's decode. The hero is not a `[data-motion-scope]`, so it has no intro timeline; the entry's tear is its intro.
 
@@ -137,7 +137,7 @@ The homepage alternates commerce, atmosphere, story and evidence rather than rep
 ### Commerce templates — Sections
 
 - **Collection:** `sections/collection.liquid` provides a sticky desktop filter/sort column, native GET filtering, two product columns, compact mobile controls, pagination, and empty state.
-- **Product:** `sections/product.liquid` provides identity, bounded two-column media gallery, sticky purchase panel, option buttons, quantity controls, native payment button, accordions, and variant URL/state updates.
+- **Product:** `sections/product.liquid` provides identity, bounded two-column media gallery (always an odd image count; an even set's last image becomes the field manual figure, D-057), sticky purchase panel, option buttons, quantity controls, native payment button, accordions, and variant URL/state updates.
 - **Recommendations:** `sections/product-recommendations.liquid` progressively loads related products through Shopify's recommendation endpoint.
 - **Cart/footer:** `sections/cart.liquid` provides editable lines, order note, totals, and checkout; `sections/footer.liquid` provides navigation, newsletter, optional localization, payment methods, and the KOVA wordmark.
 

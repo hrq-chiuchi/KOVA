@@ -131,9 +131,16 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
   transition: background-color var(--ad-duration-fast) var(--ad-ease-standard), color var(--ad-duration-fast) var(--ad-ease-standard);
 }
 
-.button:hover {
-  background: currentcolor;
-  color: var(--ad-color-text-inverse);
+/* Hover fills with the surrounding text colour. `currentcolor` can't express that: once `color` changes
+   it resolves to the new value, so fill and label matched and the button vanished. Inside `color`,
+   `currentcolor` is still the inherited ink, so the label takes its inverse (the section surface on
+   either tone) and the fill inverts that back. Without relative colour syntax the outline stays. */
+@supports (color: rgb(from red r g b)) {
+  .button:hover {
+    border-color: rgb(from currentcolor calc(255 - r) calc(255 - g) calc(255 - b));
+    background: rgb(from currentcolor calc(255 - r) calc(255 - g) calc(255 - b));
+    color: rgb(from currentcolor calc(255 - r) calc(255 - g) calc(255 - b));
+  }
 }
 
 .button--accent {
@@ -143,6 +150,7 @@ main > .shopify-section:first-child:not(.section-kinetic-hero) {
 }
 
 .button--accent:hover {
+  border-color: var(--color-accent);
   background: transparent;
   color: var(--color-accent);
 }

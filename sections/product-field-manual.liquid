@@ -13,20 +13,28 @@
     assign show_description = true
   endif
 
-  # Prefer a second product image; with a single image, the figure becomes a cropped detail of it.
+  # The product gallery shows an odd number of images, so an even set's last image appears only here.
+  # Otherwise prefer a second product image; with a single image, the figure becomes a cropped detail of it.
   assign figure = blank
   assign figure_is_detail = false
-  for media in product.media
-    if media.media_type == 'image' and forloop.index > 1
-      assign figure = media
-      break
-    endif
-  endfor
+  assign figure_number = 1
+  assign media_remainder = product.media.size | modulo: 2
+  if media_remainder == 0 and product.media.size > 1 and product.media.last.media_type == 'image'
+    assign figure = product.media.last
+    assign figure_number = product.media.size
+  else
+    for media in product.media
+      if media.media_type == 'image' and forloop.index > 1
+        assign figure = media
+        assign figure_number = forloop.index
+        break
+      endif
+    endfor
+  endif
   if figure == blank and product.featured_media
     assign figure = product.featured_media
     assign figure_is_detail = true
   endif
-  assign figure_number = product.media.size | at_most: 2 | at_least: 1
 %}
 
 <section
@@ -57,7 +65,7 @@
             }}
           </div>
           <figcaption class="field-manual__caption">
-            <span>Fig. {{ figure_number | prepend: '0' }}</span>
+            <span>Fig. {{ figure_number | prepend: '0' | slice: -2, 2 }}</span>
             <span>{% if figure_is_detail %}Detail{% else %}{{ figure.alt | default: product.title | escape }}{% endif %}</span>
           </figcaption>
         </figure>
