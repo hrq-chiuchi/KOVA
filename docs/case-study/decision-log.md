@@ -208,6 +208,8 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** Browsers without cross-document support, including Firefox 154, get no transition. Full-viewport SVG filters roughly halve delivered animation frames on an integrated GPU; drop to the transform/clip-only variant if real-device testing shows dropped steps. Reconsider if Firefox ships cross-document view transitions or if the stepped effect reads as jank rather than intent.
 
+**Revision (2026-09-26):** the header is no longer pinned. Since the announcement bar (D-045), the header's offset depends on scroll, so a pinned header jumped to its new position and sat still while the bar corrupted above it. At the user's request, the header and bar now tear out and resolve in with the page.
+
 
 ## D-018 — Restructure the homepage as a brand world, built mostly from existing systems
 
@@ -329,7 +331,7 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Reasoning:** The loadout rules need real, buyable products to be tested end to end, and an explicit pending state keeps D-013's honesty rule: nothing claims to depict an object it does not.
 
-**Tradeoff / reconsideration:** Collections now mix photographed and pending cards, which weakens the grid until photography arrives. Replace the frames product by product as images are added; no code change is needed.
+**Tradeoff / reconsideration:** Collections now mix photographed and pending cards, which weakens the grid until photography arrives. Replace the frames product by product as images are added; no code change is needed. Done 2026-09-26: all five Drop 002 products have photography, and no listed product uses the frame. It stays as the fallback for future products.
 
 ## D-026 — Keep KOVA Core in the theme repository and run it in development only
 
