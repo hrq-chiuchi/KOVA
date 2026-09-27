@@ -112,6 +112,9 @@
     .signal-tab[data-arrive] .signal-tab__toggle { animation: signal-tab-arrive var(--ad-duration-base) var(--ad-ease-standard) 1.2s backwards; }
     .signal-tab[data-arrive]:not([data-seen]) .signal-tab__dot::after { animation: signal-tab-ping 1.4s var(--ad-ease-exit) 1.8s 3; }
     .signal-tab__panel:not([hidden]) { animation: signal-tab-in var(--ad-duration-base) var(--ad-ease-standard); }
+    /* The arrival waits out the Signal Acquisition entry (D-056) rather than rising under its veil. */
+    html[data-entry] .signal-tab[data-arrive] .signal-tab__toggle,
+    html[data-entry] .signal-tab[data-arrive] .signal-tab__dot::after { animation-play-state: paused; }
   }
 
   @media (prefers-reduced-motion: no-preference) and (max-width: 47.99rem) {

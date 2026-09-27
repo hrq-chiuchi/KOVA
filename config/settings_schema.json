@@ -91,6 +91,25 @@
         "label": "Corrupted-signal page transitions",
         "info": "Glitch transition between pages in browsers that support cross-document view transitions. Always off for reduced motion and in the theme editor.",
         "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "entry_sequence",
+        "label": "Signal Acquisition entry",
+        "info": "About one second of branded signal over the homepage hero, on the first page view of a browsing session. Simplified for reduced motion; never shown in the theme editor.",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "entry_number",
+        "label": "Entry channel and drop number",
+        "default": "001"
+      },
+      {
+        "type": "text",
+        "id": "entry_source",
+        "label": "Entry source",
+        "default": "Afterdark"
       }
     ]
   },

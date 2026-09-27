@@ -1,0 +1,301 @@
+/*
+ * Signal Acquisition entry (Motion behavior, D-056). Inlined by snippets/entry-signal.liquid.
+ * Every rule is keyed to html[data-entry], which only the inline boot sets; without it the overlay
+ * keeps its `hidden` attribute. The overlay is a veil over the hero that has already rendered, never a
+ * replacement for it: hero fragments are transparent bands in the veil, and the lock tears the veil
+ * away in bands while the page transition's RGB split runs over the real hero media ([data-entry-media]).
+ * Only `#kova-corrupt-c` is used here: the band-tear filters (-a, -b) displace a full-viewport layer and
+ * cost 250–475ms frames in headless Chromium, so the veil's stepped bands carry the tear instead.
+ * Frames use step timing, like the page transition, so they read as dropped video frames.
+ */
+
+html[data-entry] .entry-signal[hidden] {
+  display: block;
+}
+
+.entry-signal {
+  --veil: var(--ad-color-background-primary);
+  /* entry-signal.js mirrors this for its reveal timer. */
+  --entry-reveal: var(--ad-duration-base);
+  position: fixed;
+  z-index: 900;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ad-color-text-primary);
+  /* Last resort if every script stalls: the boot's own failsafe fires at 4.5s. */
+  animation: entry-failsafe 1ms 5s forwards;
+}
+
+.entry-signal__veil {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--veil) 0 0);
+}
+
+/* One accent line sweeps down across the tear, as the scanline does across a page cut. */
+.entry-signal::after {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--ad-border-strong);
+  background: var(--color-accent);
+  content: '';
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.entry-signal__chrome {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  padding: var(--ad-space-400) var(--ad-page-padding);
+  grid-template-areas:
+    'mark channel'
+    '. status'
+    '. .'
+    'title title'
+    'line line'
+    '. .'
+    'source drop';
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto 1fr auto auto 1fr auto;
+  row-gap: var(--ad-space-200);
+}
+
+.entry-signal__mark {
+  grid-area: mark;
+  font-family: var(--font-display-family);
+  font-size: var(--ad-text-lead);
+  font-weight: var(--font-display-weight);
+  letter-spacing: -0.02em;
+}
+
+.entry-signal__meta {
+  display: flex;
+  min-width: min(15rem, 100%);
+  justify-content: space-between;
+  gap: var(--ad-space-400);
+  font-size: var(--ad-text-label);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.entry-signal__meta span:first-child {
+  color: var(--ad-color-text-muted);
+}
+
+.entry-signal__meta--channel { grid-area: channel; justify-self: end; }
+.entry-signal__meta--status { grid-area: status; justify-self: end; }
+.entry-signal__meta--source { grid-area: source; align-self: end; justify-self: start; }
+.entry-signal__meta--drop { grid-area: drop; align-self: end; justify-self: end; }
+
+.entry-signal__title {
+  grid-area: title;
+  margin-block-end: var(--ad-space-500);
+  font-family: var(--font-display-family);
+  font-size: var(--ad-text-title);
+  font-weight: var(--font-display-weight);
+  letter-spacing: -0.075em;
+  line-height: 0.77;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.entry-signal__acquiring {
+  display: inline-block;
+}
+
+.entry-signal__lock,
+.entry-signal__locked,
+.entry-signal__quiet {
+  display: none;
+}
+
+/* A thin rule with a banded segment scanning along it; it fills with the accent on lock. */
+.entry-signal__line {
+  position: relative;
+  grid-area: line;
+  height: var(--ad-border-hairline);
+  background: var(--ad-color-border-subtle);
+}
+
+.entry-signal__line span,
+.entry-signal__line::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.entry-signal__line span {
+  inset: -1px auto -1px 0;
+  width: 14%;
+  background: repeating-linear-gradient(90deg, var(--color-accent) 0 2px, transparent 2px 5px);
+  opacity: 0;
+}
+
+.entry-signal__line::after {
+  background: var(--color-accent);
+  transform: scaleX(0);
+}
+
+@media (max-width: 47.99rem) {
+  .entry-signal__chrome {
+    grid-template-areas:
+      'mark channel'
+      '. .'
+      'title title'
+      'line line'
+      '. .'
+      'source source';
+    grid-template-rows: auto 1fr auto auto 1fr auto;
+  }
+
+  .entry-signal__meta--status,
+  .entry-signal__meta--drop,
+  .entry-signal__meta--channel span:first-child {
+    display: none;
+  }
+
+  .entry-signal__meta--channel { min-width: 0; }
+  .entry-signal__meta--source { justify-content: flex-start; gap: var(--ad-space-100); }
+  .entry-signal__meta--source span:first-child::after { content: ' /'; }
+  .entry-signal__title { font-size: clamp(3rem, 17vw, 5.5rem); }
+}
+
+/* ---- Motion states ---- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Acquiring: the chrome resolves in bands, the line starts scanning, and fragments of the hero
+     break through the veil in short bursts while its media is displaced behind it. */
+  html[data-entry='acquiring'] .entry-signal__mark { animation: entry-resolve 200ms steps(4, end) both; }
+  html[data-entry='acquiring'] .entry-signal__acquiring { animation: entry-resolve 320ms steps(6, end) 150ms both; }
+  html[data-entry='acquiring'] .entry-signal__line { animation: entry-line-in 360ms var(--ad-ease-standard) 400ms both; }
+  html[data-entry='acquiring'] .entry-signal__line span { animation: entry-scan 1.1s linear 700ms infinite; }
+  html[data-entry='acquiring'] .entry-signal__meta { animation: entry-resolve 200ms steps(4, end) 550ms both; }
+  html[data-entry='acquiring'] .entry-signal__meta--status { animation-delay: 640ms; }
+  html[data-entry='acquiring'] .entry-signal__meta--source { animation-delay: 730ms; }
+  html[data-entry='acquiring'] .entry-signal__meta--drop { animation-delay: 820ms; }
+  html[data-entry='acquiring'] .entry-signal__veil { animation: entry-fragments 1.6s step-end 500ms infinite; }
+  html[data-entry='acquiring'] [data-entry-media] { animation: entry-displace 1.6s step-end 500ms infinite; }
+
+  /* Locked: a single channel split on the new status, then held long enough to read. */
+  html:is([data-entry='locked'], [data-entry='revealing']) .entry-signal__acquiring,
+  html:is([data-entry='locked'], [data-entry='revealing']) .entry-signal__syncing {
+    display: none;
+  }
+
+  html:is([data-entry='locked'], [data-entry='revealing']) .entry-signal__lock,
+  html:is([data-entry='locked'], [data-entry='revealing']) .entry-signal__locked {
+    display: inline-block;
+  }
+
+  html[data-entry='locked'] .entry-signal__locked { color: var(--color-accent); }
+  html[data-entry='locked'] .entry-signal__lock { animation: entry-lock var(--ad-duration-fast) step-end both; }
+  html[data-entry='locked'] .entry-signal__line::after { transform: none; transition: transform var(--ad-duration-fast) var(--ad-ease-standard); }
+
+  /* Revealing: the chrome drops out, the veil tears away in bands, and the hero media resolves
+     through the page cut's RGB split. */
+  html[data-entry='revealing'] .entry-signal { pointer-events: none; }
+  html[data-entry='revealing'] .entry-signal__chrome { animation: entry-chrome-out calc(var(--entry-reveal) * 0.5) step-end both; }
+  html[data-entry='revealing'] .entry-signal__line::after { transform: none; }
+  html[data-entry='revealing'] .entry-signal__veil { animation: entry-tear var(--entry-reveal) step-end both; }
+  html[data-entry='revealing'] .entry-signal::after { animation: entry-sweep var(--entry-reveal) linear both; }
+  html[data-entry='revealing'] [data-entry-media] { animation: entry-resolve-media var(--entry-reveal) step-end both; }
+}
+
+/* Early exit (readiness timeout, skip, reduced motion): a plain fade to the hero. */
+html[data-entry='exit'] .entry-signal {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ad-duration-fast) var(--ad-ease-exit);
+}
+
+/* Reduced motion: a quiet title card with no scanning or fragments, held briefly, then the same fade. */
+@media (prefers-reduced-motion: reduce) {
+  .entry-signal__chrome > :not(.entry-signal__quiet) {
+    display: none;
+  }
+
+  .entry-signal__chrome {
+    place-content: center;
+    grid-template: auto / auto;
+  }
+
+  .entry-signal__quiet {
+    display: block;
+    font-size: var(--ad-text-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.8;
+    text-align: center;
+    text-transform: uppercase;
+  }
+}
+
+@keyframes entry-failsafe {
+  to { visibility: hidden; }
+}
+
+@keyframes entry-resolve {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+
+@keyframes entry-line-in {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+
+@keyframes entry-scan {
+  0% { opacity: 1; transform: translateX(-100%); }
+  100% { opacity: 1; transform: translateX(715%); }
+}
+
+@keyframes entry-lock {
+  0% { filter: url('#kova-corrupt-c'); transform: translateX(-0.06em); }
+  34% { filter: none; transform: translateX(0.03em); }
+  67%, 100% { filter: none; transform: none; }
+}
+
+@keyframes entry-fragments {
+  0% { background-image: linear-gradient(var(--veil) 0 34%, transparent 0 37%, var(--veil) 0 58%, transparent 0 59%, var(--veil) 0); }
+  6% { background-image: linear-gradient(var(--veil) 0 22%, transparent 0 24%, var(--veil) 0 46%, transparent 0 52%, var(--veil) 0); }
+  12% { background-image: linear-gradient(var(--veil) 0 40%, transparent 0 41%, var(--veil) 0 64%, transparent 0 70%, var(--veil) 0); }
+  18%, 100% { background-image: linear-gradient(var(--veil) 0 0); }
+}
+
+@keyframes entry-displace {
+  0% { filter: url('#kova-corrupt-c'); transform: translateX(-2.5vw); }
+  6% { filter: none; transform: translateX(1.5vw); }
+  12% { filter: url('#kova-corrupt-c'); transform: translateX(-0.8vw); }
+  18%, 100% { filter: none; transform: none; }
+}
+
+@keyframes entry-chrome-out {
+  0% { filter: url('#kova-corrupt-c'); clip-path: inset(0); transform: translateX(1vw); }
+  34% { filter: none; clip-path: inset(38% 0 30% 0); transform: translateX(-2vw); }
+  67%, 100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+}
+
+@keyframes entry-tear {
+  0% { background-image: linear-gradient(var(--veil) 0 0); transform: none; }
+  16% { background-image: linear-gradient(var(--veil) 0 18%, transparent 0 31%, var(--veil) 0 52%, transparent 0 70%, var(--veil) 0); transform: translateX(-2vw); }
+  37% { background-image: linear-gradient(var(--veil) 0 8%, transparent 0 40%, var(--veil) 0 47%, transparent 0 78%, var(--veil) 0 84%, transparent 0); transform: translateX(3vw); }
+  60% { background-image: linear-gradient(transparent 0 12%, var(--veil) 0 16%, transparent 0 44%, var(--veil) 0 46%, transparent 0 71%, var(--veil) 0 78%, transparent 0); transform: translateX(-1vw); }
+  83% { background-image: linear-gradient(transparent 0 58%, var(--veil) 0 60%, transparent 0); transform: none; }
+  100% { background-image: none; transform: none; }
+}
+
+@keyframes entry-sweep {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(100vh); }
+}
+
+@keyframes entry-resolve-media {
+  0% { filter: url('#kova-corrupt-c'); transform: translateX(-3vw); }
+  18% { filter: none; transform: translateX(1.5vw); }
+  36% { filter: url('#kova-corrupt-c'); transform: translateX(-1vw); }
+  54% { filter: none; transform: translateX(0.4vw); }
+  72%, 100% { filter: none; transform: none; }
+}
