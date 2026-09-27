@@ -97,7 +97,9 @@
       this.items = new Map();
       this.textureBytes = 0;
       this.raf = 0;
-      this.activeItem = null;
+      // Cards mid hover glitch. Several can run at once so a card leaving still plays its
+      // reverse while the next card's forward starts.
+      this.hovers = new Set();
       this.introQueue = [];
       this.introTimer = 0;
       // A batch intro: several cards drawn into one canvas mounted over their shared container.
@@ -317,7 +319,7 @@
         this.releaseTexture(item.textureB);
         item.abort.abort();
         this.items.delete(target);
-        target.classList.remove('is-webgl-prepared', 'is-webgl-animating');
+        target.classList.remove('is-webgl-prepared', 'is-webgl-animating', 'is-webgl-settling');
       }
     }
 
@@ -339,7 +341,7 @@
     }
 
     playNextIntro() {
-      if (this.activeItem || this.batch) return;
+      if (this.hovers.size || this.batch) return;
       this.introQueue = this.introQueue.filter((queued) => this.items.has(queued.target) && queued.textureA);
       if (!this.introQueue.length) return;
 
@@ -386,7 +388,7 @@
       item.progress = 1;
       item.active = false;
       item.tween = null;
-      item.target.classList.remove('is-webgl-animating');
+      this.release(item.target);
       if (!this.batch) return;
       this.batch.items.delete(item);
       if (this.batch.items.size) {
@@ -404,7 +406,7 @@
         item.tween = null;
         item.progress = 1;
         item.active = false;
-        item.target.classList.remove('is-webgl-animating');
+        this.release(item.target);
       });
       this.batch.host.classList.remove('is-webgl-host');
       this.batch = null;
@@ -412,9 +414,30 @@
       this.parkCanvas();
     }
 
-    mountCanvas(item) {
-      this.canvas.removeAttribute('style');
-      item.target.appendChild(this.canvas);
+    // Hand the card back to its <img> without the card's opacity transition: fading in from the
+    // hidden state would expose the dark media background once the canvas is cleared.
+    release(target) {
+      if (!target.classList.contains('is-webgl-animating')) return;
+      target.classList.add('is-webgl-settling');
+      target.classList.remove('is-webgl-animating');
+      requestAnimationFrame(() => requestAnimationFrame(() => target.classList.remove('is-webgl-settling')));
+    }
+
+    // Hover frames are drawn on the shared WebGL canvas and copied onto a per-card 2D surface,
+    // so concurrent hovers never need a second WebGL context.
+    mountSurface(item) {
+      if (!item.surface) {
+        item.surface = document.createElement('canvas');
+        item.surface.className = 'webgl-reveal-canvas';
+        item.surface.setAttribute('aria-hidden', 'true');
+        item.surfaceContext = item.surface.getContext('2d');
+      }
+      if (item.surface.parentElement !== item.target) item.target.appendChild(item.surface);
+    }
+
+    unmountSurface(item) {
+      this.hovers.delete(item);
+      item.surface?.remove();
     }
 
     playHover(item, destination) {
@@ -422,15 +445,14 @@
       this.introQueue = this.introQueue.filter((queued) => queued !== item);
       // A hover takes the single canvas; any running batch intro completes instantly.
       this.endBatch();
-      const continuing = this.activeItem === item && item.active && item.mode === 1;
-      if (this.activeItem && !continuing) this.stop(this.activeItem);
-      this.activeItem = item;
+      const continuing = this.hovers.has(item) && item.mode === 1;
       item.mode = 1;
       if (!continuing) {
         item.progress = destination === 1 ? 0 : 1;
         item.mix = item.progress;
       }
-      this.mountCanvas(item);
+      this.hovers.add(item);
+      this.mountSurface(item);
       this.animate(item, destination, 0.52, 'power2.inOut');
     }
 
@@ -454,12 +476,10 @@
           const completedMode = item.mode;
           item.progress = destination;
           if (completedMode === 1) item.mix = destination;
-          item.target.classList.remove('is-webgl-animating');
+          this.release(item.target);
           item.active = false;
           item.tween = null;
-          if (this.activeItem === item) this.activeItem = null;
-          this.clearCanvas();
-          this.parkCanvas();
+          this.unmountSurface(item);
           this.playNextIntro();
         },
       });
@@ -469,14 +489,12 @@
       item.tween?.kill();
       item.tween = null;
       item.active = false;
-      item.target.classList.remove('is-webgl-animating');
-      if (this.activeItem === item) this.activeItem = null;
-      this.clearCanvas();
-      this.parkCanvas();
+      this.release(item.target);
+      this.unmountSurface(item);
     }
 
     requestRender() {
-      if (this.raf || !this.gl || this.contextLost || !(this.activeItem?.active || this.batch)) return;
+      if (this.raf || !this.gl || this.contextLost || !(this.hovers.size || this.batch)) return;
       this.raf = requestAnimationFrame(() => {
         this.raf = 0;
         this.render();
@@ -553,15 +571,26 @@
         if (this.gl && this.program) this.renderBatch();
         return;
       }
-      const item = this.activeItem;
-      if (!this.gl || !this.program || !item?.active || !item.textureA) return;
-      this.resize(item);
-      this.clearCanvas();
-      this.gl.useProgram(this.program);
-      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
-      this.gl.enableVertexAttribArray(this.position);
-      this.gl.vertexAttribPointer(this.position, 2, this.gl.FLOAT, false, 0, 0);
-      this.drawItem(item, item.target.clientWidth / item.target.clientHeight);
+      if (!this.gl || !this.program) return;
+      this.hovers.forEach((item) => {
+        if (!item.active || !item.textureA || !item.surfaceContext) return;
+        this.resize(item);
+        this.clearCanvas();
+        this.gl.useProgram(this.program);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
+        this.gl.enableVertexAttribArray(this.position);
+        this.gl.vertexAttribPointer(this.position, 2, this.gl.FLOAT, false, 0, 0);
+        this.drawItem(item, item.target.clientWidth / item.target.clientHeight);
+        // Copy before yielding: the WebGL drawing buffer is only guaranteed until compositing.
+        const { surface, surfaceContext } = item;
+        if (surface.width !== this.canvas.width || surface.height !== this.canvas.height) {
+          surface.width = this.canvas.width;
+          surface.height = this.canvas.height;
+        } else {
+          surfaceContext.clearRect(0, 0, surface.width, surface.height);
+        }
+        surfaceContext.drawImage(this.canvas, 0, 0);
+      });
     }
 
     destroy(root = document) {
@@ -578,7 +607,7 @@
         if (item.active) this.stop(item);
         item.tween?.kill();
         item.abort.abort();
-        target.classList.remove('is-webgl-prepared', 'is-webgl-animating');
+        target.classList.remove('is-webgl-prepared', 'is-webgl-animating', 'is-webgl-settling');
         this.releaseTexture(item.textureA);
         this.releaseTexture(item.textureB);
         this.items.delete(target);
@@ -608,9 +637,9 @@
         item.tween = null;
         item.active = false;
         item.abort.abort();
-        item.target.classList.remove('is-webgl-prepared', 'is-webgl-animating');
+        item.target.classList.remove('is-webgl-prepared', 'is-webgl-animating', 'is-webgl-settling');
+        this.unmountSurface(item);
       });
-      this.activeItem = null;
       this.parkCanvas();
     }
 
@@ -627,7 +656,7 @@
     dispose() {
       cancelAnimationFrame(this.raf);
       this.raf = 0;
-      this.activeItem = null;
+      this.hovers.forEach((item) => this.unmountSurface(item));
       this.observer?.disconnect();
       this.observer = null;
       this.prepareObserver?.disconnect();

@@ -43,6 +43,10 @@ body.menu-open {
   transition: none;
 }
 
+[data-webgl-reveal].is-webgl-settling img {
+  transition: none !important;
+}
+
 a {
   color: inherit;
   text-decoration-thickness: 0.08em;
