@@ -1,0 +1,96 @@
+{% doc %}
+  Signal Acquisition entry (D-056). On the first page view of a browsing session the homepage opens
+  on a short "acquiring signal" veil over the already-rendered hero, which then tears away into it.
+  Any template records the visit, so a deep link followed by a click home doesn't replay it.
+
+  Enhancement only: the overlay is `hidden` until the inline boot sets `html[data-entry]`, and the
+  boot owns `finish()` plus a hard failsafe, so a missing or broken controller still releases the page.
+
+  @param {string} part - `head` for the boot script and styles, `body` for the overlay.
+{% enddoc %}
+{%- liquid
+  assign entry_enabled = false
+  if settings.entry_sequence and request.design_mode == false
+    assign entry_enabled = true
+  endif
+  assign entry_plays = false
+  if entry_enabled and request.page_type == 'index'
+    assign entry_plays = true
+  endif
+  assign entry_number = settings.entry_number | default: '001'
+  assign entry_source = settings.entry_source | default: 'Afterdark'
+-%}
+
+{% if entry_enabled %}
+  {% if part == 'head' %}
+    {% if entry_plays %}
+      {% comment %} Inline: the overlay must be styled in the same frame the boot reveals it. {% endcomment %}
+      <style>{{ 'entry-signal.css' | inline_asset_content }}</style>
+      <script>
+        (() => {
+          let seen = true;
+          try {
+            seen = sessionStorage.getItem('kova:entry-seen') === 'true';
+            sessionStorage.setItem('kova:entry-seen', 'true');
+          } catch (_) {
+            // Without session storage the sequence could replay on every visit, so it stays off.
+          }
+          const navigation = performance.getEntriesByType?.('navigation')[0];
+          if (seen || location.hash || document.visibilityState === 'hidden') return;
+          if (navigation && navigation.type !== 'navigate') return;
+
+          const root = document.documentElement;
+          let failsafe = 0;
+          const finish = () => {
+            clearTimeout(failsafe);
+            if (!root.hasAttribute('data-entry')) return;
+            root.removeAttribute('data-entry');
+            document.dispatchEvent(new CustomEvent('afterdark:entry', { detail: { state: 'complete' } }));
+          };
+          failsafe = setTimeout(finish, 4500);
+          root.setAttribute('data-entry', 'acquiring');
+          const entry = {
+            start: performance.now(),
+            reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+            finish,
+          };
+          // Timing counts from the first frame, when the overlay (and its CSS animations) actually start;
+          // the failsafe re-arms there too, so a late first paint can't cut the sequence short.
+          requestAnimationFrame(() => {
+            entry.start = performance.now();
+            clearTimeout(failsafe);
+            failsafe = setTimeout(finish, 4500);
+          });
+          // Deferred scripts run before DOMContentLoaded, so a controller that failed to load or start
+          // is known by then; release at once instead of waiting out the failsafe.
+          document.addEventListener('DOMContentLoaded', () => { if (!entry.running) finish(); }, { once: true });
+          window.AfterdarkEntry = entry;
+        })();
+      </script>
+      <script src="{{ 'entry-signal.js' | asset_url }}" defer></script>
+    {% else %}
+      <script>
+        try { sessionStorage.setItem('kova:entry-seen', 'true'); } catch (_) {}
+      </script>
+    {% endif %}
+  {% elsif entry_plays %}
+    <div class="entry-signal" aria-hidden="true" hidden>
+      <div class="entry-signal__veil"></div>
+      <div class="entry-signal__chrome">
+        <p class="entry-signal__mark">KOVA</p>
+        <p class="entry-signal__meta entry-signal__meta--channel"><span>Channel</span> <span>{{ entry_number | escape }}</span></p>
+        <p class="entry-signal__meta entry-signal__meta--status">
+          <span>Status</span>
+          <span class="entry-signal__syncing">Syncing</span><span class="entry-signal__locked">Locked</span>
+        </p>
+        <p class="entry-signal__title">
+          <span class="entry-signal__acquiring">Acquiring<br>signal</span><span class="entry-signal__lock">Signal<br>locked</span>
+        </p>
+        <div class="entry-signal__line"><span></span></div>
+        <p class="entry-signal__meta entry-signal__meta--source"><span>Source</span> <span>{{ entry_source | escape }}</span></p>
+        <p class="entry-signal__meta entry-signal__meta--drop"><span>Drop</span> <span>{{ entry_number | escape }}</span></p>
+        <p class="entry-signal__quiet">KOVA / Drop {{ entry_number | escape }}<br>{{ entry_source | escape }} supply</p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}

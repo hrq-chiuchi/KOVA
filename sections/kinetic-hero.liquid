@@ -37,13 +37,14 @@
   data-threshold="{{ section.settings.pointer_threshold }}"
   style="--hero-bg: {{ section.settings.background }}; --hero-fg: {{ section.settings.foreground }}; --hero-accent: {{ section.settings.accent }}; --hero-height: {{ section.settings.section_height }}svh;"
 >
-  <div class="kinetic-hero__stage" data-kinetic-stage aria-hidden="true">
+  {% comment %} Entry contract (D-056): the stage is the media the entry sequence corrupts; the anchor is the image it waits for. {% endcomment %}
+  <div class="kinetic-hero__stage" data-kinetic-stage data-entry-media aria-hidden="true">
     {% for block in section.blocks %}
       {% if block.settings.image != blank %}
         {% assign layer_count = layer_count | plus: 1 %}
         {% comment %} The last layer paints on top of the stack and is the LCP image. {% endcomment %}
         {% if forloop.last %}{% assign fetch_priority = 'high' %}{% else %}{% assign fetch_priority = 'auto' %}{% endif %}
-        <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};" {{ block.shopify_attributes }}>
+        <figure class="kinetic-hero__layer" data-kinetic-layer{% if forloop.last %} data-entry-anchor{% endif %} style="--layer-index: {{ layer_count }};" {{ block.shopify_attributes }}>
           <picture>
             {% if block.settings.mobile_image != blank %}
               <source media="(max-width: 47.99rem)" srcset="{{ block.settings.mobile_image | image_url: width: 900 }}">
@@ -68,7 +69,7 @@
         {% if product.featured_image %}
           {% assign layer_count = layer_count | plus: 1 %}
           {% if forloop.last %}{% assign fetch_priority = 'high' %}{% else %}{% assign fetch_priority = 'auto' %}{% endif %}
-          <figure class="kinetic-hero__layer" data-kinetic-layer style="--layer-index: {{ layer_count }};">
+          <figure class="kinetic-hero__layer" data-kinetic-layer{% if forloop.last %} data-entry-anchor{% endif %} style="--layer-index: {{ layer_count }};">
             {{ product.featured_image
               | image_url: width: 1400
               | image_tag:

@@ -28,6 +28,7 @@
     {{ content_for_header }}
 
     {% render 'page-transition', part: 'head' %}
+    {% render 'entry-signal', part: 'head' %}
 
     <script src="{{ 'gsap.min.js' | asset_url }}" defer></script>
     <script src="{{ 'ScrollTrigger.min.js' | asset_url }}" defer></script>
@@ -38,6 +39,8 @@
   </head>
 
   <body>
+    {% render 'entry-signal', part: 'body' %}
+    {% render 'signal-filters' %}
     <a class="skip-link" href="#MainContent">Skip to content</a>
     {% sections 'header-group' %}
     {% section 'cart-drawer' %}
