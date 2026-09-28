@@ -1,0 +1,120 @@
+{
+  "sections": {
+    "intro": {
+      "type": "composition",
+      "blocks": {
+        "split": {
+          "type": "kova-layout",
+          "settings": { "arrangement": "split-wide-first", "spacing": "open", "alignment": "end" },
+          "blocks": {
+            "copy": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "standard", "alignment": "start" },
+              "blocks": {
+                "eyebrow": {
+                  "type": "kova-eyebrow",
+                  "settings": { "text": "KOVA / About" }
+                },
+                "heading": {
+                  "type": "kova-heading",
+                  "settings": { "text": "<p>Supply for</p><p>after dark</p>", "level": "h1", "size": "display", "accent_last_line": false, "reveal": true }
+                },
+                "lead": {
+                  "type": "kova-text",
+                  "settings": {
+                    "text": "<p>KOVA makes apparel and carry equipment for people who move through the city at night: late shifts, last trains, rain and low light. Every object is released in a numbered drop and built to work with the others.</p>",
+                    "width": "reading",
+                    "size": "lead",
+                    "muted": true
+                  }
+                }
+              },
+              "block_order": ["eyebrow", "heading", "lead"]
+            },
+            "image": {
+              "type": "kova-media",
+              "settings": { "image": "shopify://shop_images/kova-field-record-02-kova-collective.png", "alt": "Five people in black KOVA outerwear on wet concrete steps at night", "ratio": "4 / 5", "drift": false }
+            }
+          },
+          "block_order": ["copy", "image"]
+        }
+      },
+      "block_order": ["split"],
+      "settings": { "tone": "dark", "accent": "#dfff00", "width": "contained", "spacing": "compact" }
+    },
+    "principles": {
+      "type": "composition",
+      "blocks": {
+        "stack": {
+          "type": "kova-layout",
+          "settings": { "arrangement": "stack", "spacing": "open", "alignment": "start" },
+          "blocks": {
+            "heading_group": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "stack", "spacing": "tight", "alignment": "start" },
+              "blocks": {
+                "eyebrow": { "type": "kova-eyebrow", "settings": { "text": "How KOVA works" } },
+                "heading": {
+                  "type": "kova-heading",
+                  "settings": { "text": "<p>Three</p><p>working rules</p>", "level": "h2", "size": "title", "accent_last_line": true, "reveal": true }
+                }
+              },
+              "block_order": ["eyebrow", "heading"]
+            },
+            "rules": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "columns-3", "spacing": "standard", "alignment": "start" },
+              "blocks": {
+                "night": {
+                  "type": "kova-layout",
+                  "settings": { "arrangement": "stack", "spacing": "tight", "alignment": "start" },
+                  "blocks": {
+                    "title": { "type": "kova-heading", "settings": { "text": "<p>01 / Built for the night</p>", "level": "h3", "size": "statement", "accent_last_line": false, "reveal": false } },
+                    "text": { "type": "kova-text", "settings": { "text": "<p>Weather-resistant shells, reflective details and glove-friendly pulls. Each object is specified for rain, cold and low light before anything else.</p>", "width": "narrow", "size": "body", "muted": true } }
+                  },
+                  "block_order": ["title", "text"]
+                },
+                "system": {
+                  "type": "kova-layout",
+                  "settings": { "arrangement": "stack", "spacing": "tight", "alignment": "start" },
+                  "blocks": {
+                    "title": { "type": "kova-heading", "settings": { "text": "<p>02 / One system</p>", "level": "h3", "size": "statement", "accent_last_line": false, "reveal": false } },
+                    "text": { "type": "kova-text", "settings": { "text": "<p>Carry platforms share the Relay Grid attachment standard, so pouches, flasks and signal lights move between them. Every product page lists what it works with.</p>", "width": "narrow", "size": "body", "muted": true } }
+                  },
+                  "block_order": ["title", "text"]
+                },
+                "runs": {
+                  "type": "kova-layout",
+                  "settings": { "arrangement": "stack", "spacing": "tight", "alignment": "start" },
+                  "blocks": {
+                    "title": { "type": "kova-heading", "settings": { "text": "<p>03 / Released in runs</p>", "level": "h3", "size": "statement", "accent_last_line": false, "reveal": false } },
+                    "text": { "type": "kova-text", "settings": { "text": "<p>Objects arrive in numbered drops. Limited editions carry a fixed unit count and are not reissued once a size closes.</p>", "width": "narrow", "size": "body", "muted": true } }
+                  },
+                  "block_order": ["title", "text"]
+                }
+              },
+              "block_order": ["night", "system", "runs"]
+            },
+            "actions": {
+              "type": "kova-layout",
+              "settings": { "arrangement": "split-even", "spacing": "standard", "alignment": "start" },
+              "blocks": {
+                "drop": { "type": "kova-cta", "settings": { "label": "Enter Drop 001", "link": "shopify://collections/drop-001", "style": "accent" } },
+                "system": { "type": "kova-cta", "settings": { "label": "Read the KOVA system", "link": "shopify://pages/the-kova-system", "style": "outline" } }
+              },
+              "block_order": ["drop", "system"]
+            }
+          },
+          "block_order": ["heading_group", "rules", "actions"]
+        }
+      },
+      "block_order": ["stack"],
+      "settings": { "tone": "inverse", "accent": "#dfff00", "width": "contained", "spacing": "standard" }
+    },
+    "main": {
+      "type": "page",
+      "settings": { "show_title": false }
+    }
+  },
+  "order": ["intro", "principles", "main"]
+}
