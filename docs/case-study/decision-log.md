@@ -891,3 +891,13 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** An even set's last image is no longer in the gallery. Put the image that works best as a large editorial figure (a detail shot) last. A product with only two images shows one in the gallery.
 
+## D-058 — Deferred by design
+
+**Context:** Several backlog items were marked **Deferred** across phases (hardware generations, Markets-aware labels and thresholds, more loadout tiers, tier prompts, the Coming state, synced recently viewed, equipment registration, a wishlist, translated extension strings, and the delivery-profile shipping threshold). Listed one by one, they read like unfinished work.
+
+**Decision:** Treat them as deliberately out of scope and list them together in the case study's "Deferred by design" section, each with the reason it waits and the signal that would bring it back. None of them unlocks a core flow: navigation, discovery, product pages, loadouts, the bag and checkout all work without them.
+
+**Reasoning:** Each would add a small improvement for a large cost. Most need new data models, app work, cross-device state or Markets configuration, and each would need its own verification pass. That time is better spent on verifying what exists (Safari, the Theme Editor, checkout rendering, production performance).
+
+**Tradeoff / reconsideration:** Revisit an item when its trigger appears, for example a second market, a real V2 product or order data about loadout sizes, rather than on a schedule.
+

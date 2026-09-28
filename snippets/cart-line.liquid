@@ -31,7 +31,8 @@
       assign components_total = components_total | plus: component_total
     endfor
     assign line_url = platform.url
-    if line_image == blank
+    # The parent's generic flat lay is what checkout shows; the bag names the platform, so it shows it.
+    if platform.image != blank
       assign line_image = platform.image
     endif
   endif

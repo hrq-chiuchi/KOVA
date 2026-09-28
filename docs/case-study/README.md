@@ -595,7 +595,7 @@ The largest fixture ran at 0.84M of the 11M-instruction limit.
 - ~~**Drop 002 photography (owner: user).**~~ Resolved 2026-09-26: the user supplied four images per product, which were uploaded with alt text through Admin GraphQL. The pending frames disappeared without code changes.
 - ~~**Deploy decision (owner: user).**~~ Resolved in Phase 10: `kova-core-1.0.0` was deployed and released (D-028).
 - **Rules editing.** Re-run `node apps/kova-core/scripts/sync-rules.mjs` after any change to a loadout or slot in the admin, until an App Home screen replaces it.
-- **Parent product page.** `/products/kova-loadout` returns 200 for anyone with the URL; consider a redirect or a dedicated template.
+- **Parent product page.** `/products/kova-loadout` returns 200 for anyone with the URL; consider a redirect or a dedicated template. **Implemented (2026-09-28):** the parent carries one generic image (a square crop of the field-record flat lay of a pack, modules, flask and carabiner), so checkout no longer shows an empty thumbnail for a merged loadout. The theme's bag keeps showing the platform image, because the line is named after it.
 - ~~**Loadout quantity.**~~ Resolved in Phase 10: the builder always adds quantity 1; the merged cart line's quantity control handles more (D-027).
 
 ## Phase 10 loadout builder log
@@ -642,7 +642,7 @@ Phase 10 adds the storefront surface for Phase 9's loadouts: a builder on its ow
 
 ### Phase 10 backlog
 
-- **Mirror drift.** The builder's checks in `assets/theme.js` copy `judgeGroup`; add a fixture or shared test if the rules change.
+- ~~**Mirror drift.**~~ Resolved 2026-09-28: the builder's rule checks moved into the DOM-free `assets/loadout-verdict.js`, which reads the full compiled loadout from the section's rules JSON. `apps/kova-core/extensions/loadout-merge/tests/theme-parity.test.js` runs it and `judgeGroup` over every platform and every set of up to four module claims (including wrong-slot and foreign products) for two rule sets, and CI runs it on every push. Changing the slot maximum check by one made both parity tests fail.
 - **One loadout per platform.** The product page uses the first loadout that lists the product; revisit if a platform joins a second loadout.
 - Items carried from Phase 9: Drop 002 photography, rules syncing, and the parent product page.
 
@@ -850,7 +850,7 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
 
 ### Phase 13 backlog
 
-- **Check the facet filters once Search & Discovery finishes (owner: user, then Claude):**
+- ~~**Check the facet filters once Search & Discovery finishes.**~~ Resolved 2026-09-28: the user confirmed the filters work and renamed "Cor" to Color. `/collections/all` renders Type, System, Environments, Color and Status. The per-value counts and AND/OR checks below were not re-run.
   - Confirm that Index type, Systems, Environments and Status render on `/collections/all`. If not, check their status in Search & Discovery.
   - Then verify:
     - each value narrows the set to the counts in the facet table;
@@ -859,9 +859,9 @@ Phase 13 turns native collection filtering and search into KOVA's discovery syst
     - Archive appears under Status during a temporary assignment.
   - Rename the labels to Type, System, Environment, Colour (currently "Cor") and Status.
 - **Manual store setup:**
-  - The header has no menu assigned, so the site menu's coded fallback is used. Its first link now reads "Equipment Index" and goes to `/collections/all`. If a menu is assigned later, it needs its own "Equipment Index" link. The CLI's store auth has no menu scope.
+  - ~~The header has no menu assigned.~~ Resolved: the header uses `main-menu`, which links Drop 001, the Equipment Index, every category, the loadout builder and Field Notes (read from the rendered menu on 2026-09-28; the CLI's store auth has no menu scope).
 - **Deferred:** Markets-aware facet labels, and hardware generations (V1/V2).
-- **Photography:** the Field Notes still show empty thumbnails in search suggestions. The Drop 002 products have had photography since 2026-09-26.
+- ~~**Photography:** the Field Notes still show empty thumbnails in search suggestions.~~ Resolved 2026-09-28: a Field Notes suggestion without an image drops the thumbnail column (`predictive-search__option--text`) instead of reserving an empty frame.
 
 ## Phase 14 commerce and merchandising log
 
@@ -966,3 +966,21 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 - **Deferred (D-047):** loadout tiers beyond 2 and 3+, and "add one more component" prompts.
 - **KOVA Core (Planned):** read the free-shipping threshold from delivery profiles instead of a theme setting.
 - **Deferred:** the Coming state, Markets-aware thresholds, and recently viewed synced to customer accounts.
+
+## Deferred by design
+
+These features would each make KOVA a little better, but the gain to the experience is small next to the time they would take to build and verify. They are **Deferred** on purpose, not forgotten: each is worth doing only if its trigger appears (D-058).
+
+| Feature | Why it waits | What would bring it back |
+|---|---|---|
+| Hardware generations (V1/V2) | Needs a second product model, variant mapping, loadout rules per generation and migration of saved loadouts. There is only one generation today. | A real second generation of a platform. |
+| Markets-aware facet labels and shipping thresholds | Markets and translations aren't enabled, so every shopper sees the same labels and threshold. | A second market or language. |
+| Loadout tiers beyond 2 and 3+ (D-047) | Two tiers already reward building a system. More tiers add rule and copy complexity for a few percent of extra incentive. | Order data showing loadouts cluster at larger sizes. |
+| "Add one more component" prompts | The builder already shows the next tier in its summary and terms. A prompt would repeat that nudge in another place. | Evidence that shoppers stop one module short of a tier. |
+| The Coming product state | Would need scheduled release data and a notify flow. SIGNAL signups already cover "tell me when it drops". | A drop announced before its products are purchasable. |
+| Recently viewed synced to customer accounts | Recent signals work per browser. Syncing needs an app-owned metafield and a merge policy across devices, for a list that mostly matters within one session. | Customers who regularly browse on one device and buy on another. |
+| Equipment registration for gear bought elsewhere | Needs proof of purchase and support handling, for a portfolio store with no third-party retailers. | Real wholesale or retail partners. |
+| Saved-items wishlist | The Field Locker already saves whole loadouts, which is KOVA's own way of keeping things for later. | Shoppers asking to keep single items. |
+| Translated extension strings | The store runs in one language. | A second language. |
+| Free-shipping threshold read from delivery profiles (KOVA Core, **Planned**) | A theme setting already matches the store's one rate. Reading delivery profiles needs app work and a cache. | More than one shipping rate or zone. |
+
