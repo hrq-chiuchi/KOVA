@@ -126,48 +126,83 @@
         <p id="SiteMenuTitle-{{ section.id }}" class="eyebrow">KOVA / Navigation</p>
         <button class="site-menu__close" type="button" data-menu-close>Close</button>
       </div>
-      <nav class="site-menu__nav" aria-label="Menu navigation">
+      {%- liquid
+        assign dialog_drop = section.settings.dialog_drop
+        assign dialog_system = section.settings.dialog_system_page
+        assign dialog_about = section.settings.dialog_about_page
+      -%}
+      <nav class="site-menu__nav{% if section.settings.menu != blank %} site-menu__nav--bar{% endif %}" aria-label="Menu navigation">
         {%- comment -%}
+          The header menu repeats the bar, so it only shows where the bar is hidden (below 62rem, or
+          when no menu is set). The dialog's own links follow: a chosen menu, or the current drop, the
+          system page and the about page. Numbers come from a CSS counter over the visible links.
           Items with children are native disclosures, so they work with the keyboard and without
           JavaScript. The parent link stays reachable as the first entry of its group.
         {%- endcomment -%}
-        {% for link in section.settings.menu.links %}
-          {% if link.links != blank %}
-            <details class="site-menu__group"{% if link.child_active %} open{% endif %}>
-              <summary class="site-menu__link">
-                <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
-              </summary>
-              <ul class="site-menu__sublist" role="list">
-                {% unless link.url == '#' %}
-                  <li>
-                    <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-                      View all<span class="visually-hidden"> {{ link.title | escape }}</span>
-                    </a>
-                  </li>
-                {% endunless %}
-                {% for child in link.links %}
-                  <li>
-                    <a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
-                    {% if child.links != blank %}
-                      <ul class="site-menu__sublist site-menu__sublist--nested" role="list">
-                        {% for grandchild in child.links %}
-                          <li><a href="{{ grandchild.url }}"{% if grandchild.current %} aria-current="page"{% endif %}>{{ grandchild.title | escape }}</a></li>
-                        {% endfor %}
-                      </ul>
-                    {% endif %}
-                  </li>
-                {% endfor %}
-              </ul>
-            </details>
+        <div class="site-menu__list site-menu__list--primary">
+          {% for link in section.settings.menu.links %}
+            {% if link.links != blank %}
+              <details class="site-menu__group"{% if link.child_active %} open{% endif %}>
+                <summary class="site-menu__link">
+                  <span>{{ link.title | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+                </summary>
+                <ul class="site-menu__sublist" role="list">
+                  {% unless link.url == '#' %}
+                    <li>
+                      <a href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                        View all<span class="visually-hidden"> {{ link.title | escape }}</span>
+                      </a>
+                    </li>
+                  {% endunless %}
+                  {% for child in link.links %}
+                    <li>
+                      <a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
+                      {% if child.links != blank %}
+                        <ul class="site-menu__sublist site-menu__sublist--nested" role="list">
+                          {% for grandchild in child.links %}
+                            <li><a href="{{ grandchild.url }}"{% if grandchild.current %} aria-current="page"{% endif %}>{{ grandchild.title | escape }}</a></li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </details>
+            {% else %}
+              <a class="site-menu__link" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                <span>{{ link.title | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+              </a>
+            {% endif %}
           {% else %}
-            <a class="site-menu__link" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
-              <span>{{ link.title | escape }}</span><span aria-hidden="true">{{ forloop.index | prepend: '0' }}</span>
-            </a>
+            <a class="site-menu__link" href="{{ routes.all_products_collection_url }}"><span>Equipment Index</span><span class="site-menu__index" aria-hidden="true"></span></a>
+            <a class="site-menu__link" href="{{ routes.search_url }}"><span>Search</span><span class="site-menu__index" aria-hidden="true"></span></a>
+          {% endfor %}
+        </div>
+        <div class="site-menu__list site-menu__list--feature">
+          {% if section.settings.dialog_menu != blank %}
+            {% for link in section.settings.dialog_menu.links %}
+              <a class="site-menu__link" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                <span>{{ link.title | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+              </a>
+            {% endfor %}
+          {% else %}
+            {% if dialog_drop != blank %}
+              <a class="site-menu__link" href="{{ dialog_drop.url }}"{% if collection.handle == dialog_drop.handle %} aria-current="page"{% endif %}>
+                <span>{{ dialog_drop.title | split: ' / ' | first | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+              </a>
+            {% endif %}
+            {% if dialog_system != blank %}
+              <a class="site-menu__link" href="{{ dialog_system.url }}"{% if page.id == dialog_system.id %} aria-current="page"{% endif %}>
+                <span>{{ dialog_system.title | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+              </a>
+            {% endif %}
+            {% if dialog_about != blank %}
+              <a class="site-menu__link" href="{{ dialog_about.url }}"{% if page.id == dialog_about.id %} aria-current="page"{% endif %}>
+                <span>{{ dialog_about.title | escape }}</span><span class="site-menu__index" aria-hidden="true"></span>
+              </a>
+            {% endif %}
           {% endif %}
-        {% else %}
-          <a class="site-menu__link" href="{{ routes.all_products_collection_url }}"><span>Equipment Index</span><span aria-hidden="true">01</span></a>
-          <a class="site-menu__link" href="{{ routes.search_url }}"><span>Search</span><span aria-hidden="true">02</span></a>
-        {% endfor %}
+        </div>
       </nav>
       <div class="site-menu__utility">
         <p>{{ section.settings.menu_note | escape }}</p>
@@ -303,7 +338,13 @@
   .site-menu__panel { display: flex; width: min(46rem, 100%); height: 100%; padding: var(--ad-page-padding); flex-direction: column; background: rgb(16 16 16 / 93%); border-inline-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); backdrop-filter: blur(24px); }
   .site-menu__top { display: flex; min-height: var(--ad-header-height); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); }
   .site-menu__close { min-width: var(--ad-control-minimum); color: inherit; font-size: var(--ad-text-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-  .site-menu__nav { display: flex; margin-block: auto; flex-direction: column; }
+  .site-menu__nav { display: flex; margin-block: auto; flex-direction: column; counter-reset: site-menu; }
+  .site-menu__list { display: flex; flex-direction: column; }
+  .site-menu__link { counter-increment: site-menu; }
+  .site-menu__index::before { content: counter(site-menu, decimal-leading-zero); }
+  @media (min-width: 62rem) {
+    .site-menu__nav--bar .site-menu__list--primary { display: none; }
+  }
   .site-menu__link { display: flex; padding-block: var(--ad-space-300); align-items: center; justify-content: space-between; border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle); font-family: var(--font-display-family); font-size: clamp(2.75rem, 7vw, 6.5rem); font-weight: var(--font-display-weight); letter-spacing: -0.06em; line-height: 0.88; text-transform: uppercase; }
   .site-menu__link > span:last-child { font-family: var(--font-primary--family); font-size: var(--ad-text-label); letter-spacing: 0.12em; }
   .site-menu__group summary { cursor: pointer; list-style: none; }
@@ -374,14 +415,13 @@
     /* Menu entrance: the panel slides in from its edge, then the links rise in sequence. */
     .site-menu[open]::backdrop { animation: search-command-fade var(--ad-duration-fast) linear; }
     .site-menu[open] .site-menu__panel { animation: site-menu-in var(--ad-duration-base) var(--ad-ease-standard); }
-    .site-menu[open] :is(.site-menu__nav > *, .site-menu__utility) { animation: site-menu-item-in var(--ad-duration-base) var(--ad-ease-standard) both; animation-delay: calc(120ms + var(--menu-step, 0) * 45ms); }
-    .site-menu__nav > :nth-child(2) { --menu-step: 1; }
-    .site-menu__nav > :nth-child(3) { --menu-step: 2; }
-    .site-menu__nav > :nth-child(4) { --menu-step: 3; }
-    .site-menu__nav > :nth-child(5) { --menu-step: 4; }
-    .site-menu__nav > :nth-child(6) { --menu-step: 5; }
-    .site-menu__nav > :nth-child(n + 7),
-    .site-menu__utility { --menu-step: 6; }
+    .site-menu[open] :is(.site-menu__list > *, .site-menu__utility) { animation: site-menu-item-in var(--ad-duration-base) var(--ad-ease-standard) both; animation-delay: calc(120ms + var(--menu-step, 0) * 45ms); }
+    .site-menu__list > :nth-child(2) { --menu-step: 1; }
+    .site-menu__list > :nth-child(3) { --menu-step: 2; }
+    .site-menu__list > :nth-child(4) { --menu-step: 3; }
+    .site-menu__list > :nth-child(5) { --menu-step: 4; }
+    .site-menu__list > :nth-child(n + 6),
+    .site-menu__utility { --menu-step: 5; }
   }
 
   @keyframes site-menu-in {
@@ -429,6 +469,10 @@
     { "type": "range", "id": "logo_width", "label": "Logo width", "min": 80, "max": 300, "step": 10, "unit": "px", "default": 160 },
     { "type": "text", "id": "brand_mark", "label": "Text brand mark", "default": "KOVA" },
     { "type": "link_list", "id": "menu", "label": "Menu" },
+    { "type": "link_list", "id": "dialog_menu", "label": "Menu dialog links", "info": "Shown in the menu dialog after the header menu. Leave blank to show the drop, system page and about page below. The header menu itself only appears in the dialog where the header bar hides it." },
+    { "type": "collection", "id": "dialog_drop", "label": "Menu dialog: current drop" },
+    { "type": "page", "id": "dialog_system_page", "label": "Menu dialog: system page" },
+    { "type": "page", "id": "dialog_about_page", "label": "Menu dialog: about page" },
     { "type": "text", "id": "menu_note", "label": "Menu note", "default": "Independent apparel and objects for after dark." },
     { "type": "checkbox", "id": "show_search", "label": "Show search", "default": true },
     { "type": "link_list", "id": "customer_account_menu", "label": "Customer account menu", "default": "customer-account-main-menu" }

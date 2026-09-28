@@ -42,7 +42,10 @@
     "header": {
       "type": "header",
       "settings": {
-        "menu": "main-menu"
+        "menu": "main-menu",
+        "dialog_drop": "drop-001",
+        "dialog_system_page": "the-kova-system",
+        "dialog_about_page": "about"
       }
     }
   },

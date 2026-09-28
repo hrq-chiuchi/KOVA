@@ -911,3 +911,13 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** a view switch downloads a full page rather than one section. That is heavier than a filter change but lighter than a reload (no script, style or font re-evaluation). If the views ever share one template with a setting, this can return to the Section Rendering API.
 
+## D-060 — The menu dialog carries the brand, not a copy of the bar
+
+**Context:** The menu dialog listed `main-menu`, the same Shop / Equipment / Discover items as the header bar, so on desktop it added nothing. Below 62rem the bar is hidden and the dialog is the only way to reach those items.
+
+**Decision (Section / navigation):** The header gains "Menu dialog links" (a link list) and, when that's blank, three pickers: the current drop, the system page and the about page (set to Drop 001, The KOVA system and About). The dialog lists the header menu first, but only where the bar hides it (below 62rem, or when no header menu is set), then the dialog links. Numbering moved to a CSS counter, so visible items always read 01, 02, 03… The drop's label is the collection title before " / " ("Drop 001"). A new About page (`page.about`, published) uses existing composition blocks and copy limited to what the store does: night-use specification, the Relay Grid system and numbered runs. The footer's coded links add System and About when those pages exist.
+
+**Evidence (headless Chromium against `shopify theme dev`, 2026-09-28):** at 1440px the dialog shows Drop 001 / The KOVA system / About (01–03), with About marked current on the About page. At 390px it shows Shop / Equipment / Discover / Drop 001 / The KOVA system / About (01–06). The About page has no horizontal overflow and no page errors. The group settings were first dropped because `header-group.json` synced before the new schema; pushing the file again fixed it.
+
+**Tradeoff / reconsideration:** the three pickers are a fallback so the dialog works without a new admin menu. A merchant who wants other links creates a menu and picks it under "Menu dialog links"; the pickers are then ignored.
+
