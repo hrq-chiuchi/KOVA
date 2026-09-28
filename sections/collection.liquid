@@ -11,7 +11,7 @@
     {% endif %}
 
     {% paginate collection.products by 24 %}
-      <index-filters class="collection-page__layout" data-section-id="{{ section.id }}">
+      <index-filters class="collection-page__layout" data-section-id="{{ section.id }}" data-view="">
         <aside class="collection-page__tools">
           {% render 'index-filters', results: collection, url: collection.url, count: collection.products_count, id_prefix: section.id %}
         </aside>
@@ -19,7 +19,7 @@
         <div data-filters-swap="results" data-motion-scope>
           {%- capture current_query -%}{% render 'index-query', collection: collection %}{%- endcapture -%}
           <nav class="index-views" aria-label="Collection view">
-            <a href="{{ collection.url }}?{{ current_query | strip }}&view=index">Index</a>
+            <a href="{{ collection.url }}?{{ current_query | strip }}&view=index" data-view-link>Index</a>
             <span aria-current="page">Grid</span>
           </nav>
           {% if collection.products_count > 0 %}

@@ -810,6 +810,8 @@
   // JavaScript; here each change fetches the same URL with `section_id`, swaps every
   // `[data-filters-swap]` region from the response and pushes the URL, so reload, Back and
   // Forward all land on the same filtered state. Below 48rem the form moves into a dialog.
+  // The Index/Grid switch changes template (`?view=`), and section ids are per template, so a view
+  // change loads the target page and swaps the whole section instead (D-059).
   class IndexFilters extends HTMLElement {
     connectedCallback() {
       this.controller?.abort();
@@ -830,6 +832,12 @@
         this.apply();
       }, { signal });
       this.addEventListener('click', (event) => {
+        const viewLink = event.target.closest('[data-view-link]');
+        if (viewLink && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+          event.preventDefault();
+          this.load(viewLink.href, { focus: '.index-views [aria-current]' });
+          return;
+        }
         const link = event.target.closest('[data-filters-link]');
         if (link) {
           event.preventDefault();
@@ -885,6 +893,10 @@
       const request = new AbortController();
       this.request = request;
       const url = new URL(href, window.location.origin);
+      if ((url.searchParams.get('view') || '') !== (this.dataset.view || '')) {
+        this.swapView(url, request, { push, focus });
+        return;
+      }
       const fetchUrl = new URL(url);
       fetchUrl.searchParams.set('section_id', this.dataset.sectionId);
       this.setAttribute('aria-busy', 'true');
@@ -919,6 +931,39 @@
         if (error.name !== 'AbortError') window.location.assign(url);
       } finally {
         if (this.request === request) this.removeAttribute('aria-busy');
+      }
+    }
+
+    async swapView(url, request, { push, focus }) {
+      const section = this.closest('.shopify-section');
+      this.setAttribute('aria-busy', 'true');
+      try {
+        const response = await fetch(url, { signal: request.signal });
+        if (!response.ok || !section) throw new Error('View request failed.');
+        const next = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const nextSection = next.querySelector('index-filters')?.closest('.shopify-section');
+        if (!nextSection) throw new Error('View markup missing.');
+        window.AfterdarkMotion?.destroy(section);
+        window.AfterdarkWebGL?.destroy(section);
+        if (push) window.history.pushState({ indexFilters: true }, '', url);
+        document.title = next.title || document.title;
+        const incoming = document.adoptNode(nextSection);
+        section.replaceWith(incoming);
+        // The masthead is unchanged in substance, so only the new results reveal.
+        const results = incoming.querySelector('[data-filters-swap="results"]');
+        if (results) {
+          window.AfterdarkMotion?.init(results);
+          window.AfterdarkWebGL?.init(results);
+        }
+        const target = focus && incoming.querySelector(focus);
+        if (target) {
+          if (!target.matches('input, select, button, a')) target.setAttribute('tabindex', '-1');
+          target.focus({ preventScroll: true });
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') window.location.assign(url);
+      } finally {
+        if (this.isConnected && this.request === request) this.removeAttribute('aria-busy');
       }
     }
   }
