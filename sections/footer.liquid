@@ -28,6 +28,8 @@
           <a href="{{ link.url }}">{{ link.title | escape }}</a>
         {% else %}
           <a href="{{ routes.all_products_collection_url }}">Shop</a>
+          {%- assign system_page = pages['the-kova-system'] -%}
+          {% if system_page != empty %}<a href="{{ system_page.url }}">System</a>{% endif %}
           <a href="{{ routes.search_url }}">Search</a>
           <a href="{{ routes.cart_url }}">Bag</a>
         {% endfor %}

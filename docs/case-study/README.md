@@ -506,13 +506,17 @@ Items to revisit. None of them blocks Phase 8.
 - **Focal-point imagery (owner: user).** Supply images for composition blocks and set a focal point on at least one in Shopify Files. Then verify that the Image block's `object-position` crop follows it at 390px and 1440px. Until then the path is untested.
 - **Safari (Unavailable).** The development machine runs Linux, and no macOS or iOS device is available. Safari behaviour of the composition blocks and view transitions stays unverified until one is.
 
-**Decisions to return to:**
+**Decisions to return to:** resolved with the user on 2026-09-28 (see below each item).
 
 1. Create "The KOVA system" page with `page.system`, using the copy drafted from catalogue facts:
    - "Every KOVA product page lists the objects it works with, from carry platforms to the small tools that clip to them."
    - "Carry Systems are built on the Relay Grid attachment standard. The Gridlink Pouch Array is listed as working with each of these three."
 2. Assign `collection.story` to Drop 001, or to another collection.
 3. Optionally, enable the Online Store webpage capability on the `edition_profile` metaobject definition and add a metaobject template composed from the KOVA blocks.
+
+- **1 — Implemented (2026-09-28):** "The KOVA system" (`/pages/the-kova-system`, template `page.system`) is published with a short closing body pointing to the loadout builder. The footer's coded links show "System" whenever a page with that handle exists.
+- **2 — Implemented (2026-09-28):** Drop 001 uses `collection.story`. The Index/Grid switch swaps every template section in `<main>`, so going from the story view (two sections) to the index (one) and back keeps a single `<h1>` (D-059).
+- **3 — Deferred by design:** see the table at the end of this document.
 
 ## Phase 9 loadout foundation log
 
@@ -982,5 +986,6 @@ These features would each make KOVA a little better, but the gain to the experie
 | Equipment registration for gear bought elsewhere | Needs proof of purchase and support handling, for a portfolio store with no third-party retailers. | Real wholesale or retail partners. |
 | Saved-items wishlist | The Field Locker already saves whole loadouts, which is KOVA's own way of keeping things for later. | Shoppers asking to keep single items. |
 | Translated extension strings | The store runs in one language. | A second language. |
+| Edition record pages (`edition_profile` webpages) | Edition size, drop code and run details already show on each product page and card. A page per edition would repeat them. | Editions that span several products and need their own story. |
 | Free-shipping threshold read from delivery profiles (KOVA Core, **Planned**) | A theme setting already matches the store's one rate. Reading delivery profiles needs app work and a cache. | More than one shipping rate or zone. |
 

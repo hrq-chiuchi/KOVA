@@ -935,27 +935,32 @@
     }
 
     async swapView(url, request, { push, focus }) {
-      const section = this.closest('.shopify-section');
+      // Alternate templates can add sections (the story masthead), so every template section in
+      // <main> is replaced, not just this one.
+      const main = document.getElementById('MainContent');
       this.setAttribute('aria-busy', 'true');
       try {
         const response = await fetch(url, { signal: request.signal });
-        if (!response.ok || !section) throw new Error('View request failed.');
+        if (!response.ok || !main) throw new Error('View request failed.');
         const next = new DOMParser().parseFromString(await response.text(), 'text/html');
-        const nextSection = next.querySelector('index-filters')?.closest('.shopify-section');
-        if (!nextSection) throw new Error('View markup missing.');
-        window.AfterdarkMotion?.destroy(section);
-        window.AfterdarkWebGL?.destroy(section);
+        const nextMain = next.getElementById('MainContent');
+        if (!nextMain?.querySelector('index-filters')) throw new Error('View markup missing.');
+        window.AfterdarkMotion?.destroy(main);
+        window.AfterdarkWebGL?.destroy(main);
         if (push) window.history.pushState({ indexFilters: true }, '', url);
         document.title = next.title || document.title;
-        const incoming = document.adoptNode(nextSection);
-        section.replaceWith(incoming);
-        // The masthead is unchanged in substance, so only the new results reveal.
-        const results = incoming.querySelector('[data-filters-swap="results"]');
+        // childNodes is live and adopting removes each node from it, so copy the list first.
+        main.replaceChildren(...[...nextMain.childNodes].map((node) => document.adoptNode(node)));
+        // Sections new to this view reveal as on a page load; the index results reveal their items.
+        main.querySelectorAll('.shopify-section').forEach((section) => {
+          if (!section.querySelector('index-filters')) window.AfterdarkMotion?.init(section);
+        });
+        const results = main.querySelector('[data-filters-swap="results"]');
         if (results) {
           window.AfterdarkMotion?.init(results);
           window.AfterdarkWebGL?.init(results);
         }
-        const target = focus && incoming.querySelector(focus);
+        const target = focus && main.querySelector(focus);
         if (target) {
           if (!target.matches('input, select, button, a')) target.setAttribute('tabindex', '-1');
           target.focus({ preventScroll: true });
