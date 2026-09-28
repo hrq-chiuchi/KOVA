@@ -8,6 +8,17 @@
     "theme_support_url": "https://support.shopify.com/"
   },
   {
+    "name": "Brand",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "Square image, at least 180 × 180 px. Leave blank to use the KOVA mark."
+      }
+    ]
+  },
+  {
     "name": "Typography",
     "settings": [
       {

@@ -1,6 +1,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="{{ settings.background_color }}">
+
+{%- comment -%} Merchant favicon wins; the coded KOVA mark is the fallback (D-061). {%- endcomment -%}
+{%- if settings.favicon != blank -%}
+  <link rel="icon" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+  <link rel="apple-touch-icon" href="{{ settings.favicon | image_url: width: 180, height: 180 }}">
+{%- else -%}
+  <link rel="icon" type="image/svg+xml" href="{{ 'favicon.svg' | asset_url }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ 'favicon-32.png' | asset_url }}">
+  <link rel="apple-touch-icon" href="{{ 'apple-touch-icon.png' | asset_url }}">
+{%- endif -%}
 
 {%- liquid
   assign og_title = page_title | default: shop.name
@@ -41,19 +52,19 @@
 {%- if page_image -%}
   <meta
     property="og:image"
-    content="http:{{ page_image | image_url }}"
+    content="https:{{ page_image | image_url: width: 1200 }}"
   >
   <meta
     property="og:image:secure_url"
-    content="https:{{ page_image | image_url }}"
+    content="https:{{ page_image | image_url: width: 1200 }}"
   >
   <meta
     property="og:image:width"
-    content="{{ page_image.width }}"
+    content="{{ page_image.width | at_most: 1200 }}"
   >
   <meta
     property="og:image:height"
-    content="{{ page_image.height }}"
+    content="{{ page_image.height | times: 1.0 | divided_by: page_image.width | times: 1200 | at_most: page_image.height | round }}"
   >
 {%- endif -%}
 
@@ -62,14 +73,74 @@
     {{ product | structured_data }}
   </script>
 
+  {%- liquid
+    assign rating = product.metafields.reviews.rating.value
+    assign rating_count = product.metafields.reviews.rating_count.value | default: 0
+  -%}
+  {%- if rating != blank and rating_count > 0 -%}
+    {%- comment -%}
+      `structured_data` leaves out the standard review metafields, so the rating joins its entity by type and @id (D-062).
+    {%- endcomment -%}
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": {% if product.has_only_default_variant %}"Product"{% else %}"ProductGroup"{% endif %},
+        "@id": {{ product.url | append: '#product' | json }},
+        "name": {{ product.title | json }},
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": {{ rating.rating | json }},
+          "bestRating": {{ rating.scale_max | json }},
+          "worstRating": {{ rating.scale_min | json }},
+          "ratingCount": {{ rating_count | json }}
+        }
+      }
+    </script>
+  {%- endif -%}
+
   <meta
     property="og:price:amount"
-    content="{{ product.price | money_without_currency | strip_html }}"
+    content="{{ product.price | divided_by: 100.0 }}"
   >
   <meta
     property="og:price:currency"
     content="{{ cart.currency.iso_code }}"
   >
+{%- endif -%}
+
+{%- if request.page_type == 'article' -%}
+  <script type="application/ld+json">
+    {{ article | structured_data }}
+  </script>
+{%- endif -%}
+
+{%- if request.page_type == 'index' -%}
+  {%- liquid
+    assign site_url = request.origin | append: routes.root_url
+    if settings.favicon != blank
+      assign org_logo = settings.favicon | image_url: width: 512 | prepend: 'https:'
+    else
+      assign org_logo = 'apple-touch-icon.png' | asset_url | prepend: 'https:'
+    endif
+  -%}
+  {%- comment -%} `structured_data` has no shop output, so the home page states the organization and site itself. {%- endcomment -%}
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": {{ shop.name | json }},
+        "url": {{ site_url | json }},
+        "logo": {{ org_logo | json }}
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": {{ shop.name | json }},
+        "url": {{ site_url | json }}
+      }
+    ]
+  </script>
 {%- endif -%}
 
 <meta
@@ -87,9 +158,10 @@
 
 <title>
   {{ page_title }}
-  {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
-  {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
-  {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+  {%- if current_tags %} | tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+  {%- if current_page != 1 %} | Page {{ current_page }}{% endif -%}
+  {%- assign title_suffix = ' | ' | append: shop.name -%}
+  {%- unless page_title == shop.name or page_title contains title_suffix %}{{ title_suffix }}{% endunless -%}
 </title>
 
 <link

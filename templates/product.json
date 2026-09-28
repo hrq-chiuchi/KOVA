@@ -283,6 +283,296 @@
             "body": "Tonal markings only show up in headlights, which is exactly what I wanted. Rear closure adjusts in small steps.",
             "byline": "Commuter"
           }
+        },
+        "sample_17": {
+          "type": "sample_review",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "rating": 5,
+            "title": "Laptop and wet shell, kept apart",
+            "body": "The 16-inch sleeve hangs above the base, so a soaked jacket in the main chamber never touches the laptop. Sternum strap keeps it steady on the bike with a full load.",
+            "byline": "Architecture student"
+          }
+        },
+        "sample_18": {
+          "type": "sample_review",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "rating": 5,
+            "title": "Long harness, finally",
+            "body": "I'm tall and usually fight short back panels. The Long harness sits right on my back with the sternum strap at chest height.",
+            "byline": "Warehouse night shift"
+          }
+        },
+        "sample_19": {
+          "type": "sample_review",
+          "settings": {
+            "product": "after-dark-utility-backpack",
+            "rating": 3,
+            "title": "Great pack, slow to get into",
+            "body": "Roll-top keeps the rain out, but reaching the bottom means using the side zip or unrolling at a counter. I wanted a faster top pocket.",
+            "byline": "Retail closer"
+          }
+        },
+        "sample_20": {
+          "type": "sample_review",
+          "settings": {
+            "product": "night-shift-cargo-pant",
+            "rating": 5,
+            "title": "Vents make it three-season",
+            "body": "Zip vents at the hem let heat out on the walk home in spring. Ash Gray hides site dust better than black.",
+            "byline": "Electrician"
+          }
+        },
+        "sample_21": {
+          "type": "sample_review",
+          "settings": {
+            "product": "night-shift-cargo-pant",
+            "rating": 3,
+            "title": "Roomier than expected",
+            "body": "The fit is relaxed as described, but the M was wider in the thigh than I wanted. Sized down and the built-in belt took up the rest.",
+            "byline": "Sound technician"
+          }
+        },
+        "sample_22": {
+          "type": "sample_review",
+          "settings": {
+            "product": "dead-channel-utility-hoodie",
+            "rating": 5,
+            "title": "The device sleeve is the detail",
+            "body": "The internal sleeve holds a tablet flat against my chest, so it doesn't swing when I bend. It's cut oversized, so I stayed true to size.",
+            "byline": "Illustrator"
+          }
+        },
+        "sample_23": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 5,
+            "title": "A week of rain, no leaks",
+            "body": "Taped seams stayed dry through a wet week of shift changes. The two-way zip opens from the bottom when I sit on the bike.",
+            "byline": "Paramedic"
+          }
+        },
+        "sample_24": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 5,
+            "title": "Breathes more than I expected",
+            "body": "Walked uphill with a pack and didn't wet out inside. The chest anchors hold a small pouch where I can reach it.",
+            "byline": "Field recordist"
+          }
+        },
+        "sample_25": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 4,
+            "title": "Big hood without a helmet",
+            "body": "The helmet-compatible hood swallows my head without one until I cinch it. Once adjusted it turns with me.",
+            "byline": "Tram driver"
+          }
+        },
+        "sample_26": {
+          "type": "sample_review",
+          "settings": {
+            "product": "blacksite-shell-jacket",
+            "rating": 2,
+            "title": "Too stiff for everyday",
+            "body": "Protection is serious, but the three-layer fabric is loud and stiff for walking the dog. It's built for storms; I needed something softer.",
+            "byline": "Dog walker"
+          }
+        },
+        "sample_27": {
+          "type": "sample_review",
+          "settings": {
+            "product": "gridlink-pouch-array",
+            "rating": 3,
+            "title": "Largest pouch runs small",
+            "body": "The 3.5 L module takes a charger and cables but not my camera with a lens on. The two smaller pouches are perfect.",
+            "byline": "Videographer"
+          }
+        },
+        "sample_28": {
+          "type": "sample_review",
+          "settings": {
+            "product": "touchpoint-field-glove",
+            "rating": 4,
+            "title": "Grip without bulk",
+            "body": "Reinforced palm holds wet railings and handlebars. Stiff for the first week before the fingers broke in.",
+            "byline": "Stagehand"
+          }
+        },
+        "sample_29": {
+          "type": "sample_review",
+          "settings": {
+            "product": "static-5-panel-cap",
+            "rating": 3,
+            "title": "Shallow crown",
+            "body": "Rear closure goes up to 61 cm, which is rare, but the crown sits shallow on me. Good under a hood, less so on its own.",
+            "byline": "Bike messenger"
+          }
+        },
+        "sample_30": {
+          "type": "sample_review",
+          "settings": {
+            "product": "lowlight-courier-14",
+            "rating": 5,
+            "title": "Wet pocket saves the laptop",
+            "body": "The separate wet pocket takes an umbrella or a gym towel, and the padded 14-inch bay stays dry.",
+            "byline": "Early commuter"
+          }
+        },
+        "sample_31": {
+          "type": "sample_review",
+          "settings": {
+            "product": "lowlight-courier-14",
+            "rating": 5,
+            "title": "Stabiliser stops the swing",
+            "body": "The quick-adjust stabiliser locks it to my back when I'm riding, then loosens so I can swing it round at the ticket gate.",
+            "byline": "Cycle commuter"
+          }
+        },
+        "sample_32": {
+          "type": "sample_review",
+          "settings": {
+            "product": "lowlight-courier-14",
+            "rating": 4,
+            "title": "Flat and quiet",
+            "body": "Flap compression keeps it slim when half empty. I'd like one more small pocket under the flap.",
+            "byline": "Designer"
+          }
+        },
+        "sample_33": {
+          "type": "sample_review",
+          "settings": {
+            "product": "lowlight-courier-14",
+            "rating": 3,
+            "title": "Wide strap pad",
+            "body": "Carries well, but with a heavy laptop the strap pad presses on my collarbone. Fine for lighter days.",
+            "byline": "Researcher"
+          }
+        },
+        "sample_34": {
+          "type": "sample_review",
+          "settings": {
+            "product": "relay-modular-vest",
+            "rating": 5,
+            "title": "Carry without a bag",
+            "body": "Eight zones take everything I'd normally put in a sling, and the mesh panels keep my back cooler than a pack.",
+            "byline": "Festival crew"
+          }
+        },
+        "sample_35": {
+          "type": "sample_review",
+          "settings": {
+            "product": "relay-modular-vest",
+            "rating": 3,
+            "title": "Takes time to dial in",
+            "body": "Getting the shoulder and side adjustment right took an evening, and it's bulky over a shell. Once set, it doesn't move.",
+            "byline": "Night hiker"
+          }
+        },
+        "sample_36": {
+          "type": "sample_review",
+          "settings": {
+            "product": "ghostline-packable-poncho",
+            "rating": 5,
+            "title": "Covers me and the pack",
+            "body": "The rear expansion drops over a small daypack with room left. I stay dry to the knee waiting for the night bus.",
+            "byline": "Night bus regular"
+          }
+        },
+        "sample_37": {
+          "type": "sample_review",
+          "settings": {
+            "product": "ghostline-packable-poncho",
+            "rating": 5,
+            "title": "Lives in the bag",
+            "body": "Packs into its own sack, small enough that I stopped checking the forecast.",
+            "byline": "Student"
+          }
+        },
+        "sample_38": {
+          "type": "sample_review",
+          "settings": {
+            "product": "ghostline-packable-poncho",
+            "rating": 5,
+            "title": "Two-way zip is the key",
+            "body": "Unzipping from the bottom lets me reach my pockets without lifting the whole thing. The sleeve snaps keep wind out on the bridge.",
+            "byline": "Market trader"
+          }
+        },
+        "sample_39": {
+          "type": "sample_review",
+          "settings": {
+            "product": "ghostline-packable-poncho",
+            "rating": 3,
+            "title": "Loud in the wind",
+            "body": "It does its job, but in strong wind it flaps and rustles like any poncho. For real storms I'd take a shell.",
+            "byline": "Weekend walker"
+          }
+        },
+        "sample_40": {
+          "type": "sample_review",
+          "settings": {
+            "product": "sector-05-field-flask",
+            "rating": 5,
+            "title": "Opens with gloves on",
+            "body": "The wide cap turns with winter gloves on, which none of my other bottles manage. The square shape doesn't roll off the desk.",
+            "byline": "Lab technician"
+          }
+        },
+        "sample_41": {
+          "type": "sample_review",
+          "settings": {
+            "product": "sector-05-field-flask",
+            "rating": 5,
+            "title": "Rides flat in a pack",
+            "body": "The squared profile sits flat against the laptop sleeve, and the strap clips it outside when the bag is full.",
+            "byline": "Climbing instructor"
+          }
+        },
+        "sample_42": {
+          "type": "sample_review",
+          "settings": {
+            "product": "sector-05-field-flask",
+            "rating": 4,
+            "title": "Hot tea, not for long",
+            "body": "Takes hot drinks fine, but it isn't insulated, so tea is cold within the hour. I knew that going in.",
+            "byline": "Night porter"
+          }
+        },
+        "sample_43": {
+          "type": "sample_review",
+          "settings": {
+            "product": "nullfold-card-wallet",
+            "rating": 5,
+            "title": "Six cards and still thin",
+            "body": "Holds my cards plus a folded note without stretching, and tethered to my keys it can't slip out of a pocket.",
+            "byline": "Bartender"
+          }
+        },
+        "sample_44": {
+          "type": "sample_review",
+          "settings": {
+            "product": "signal-carabiner-system",
+            "rating": 5,
+            "title": "Keys, finally sorted",
+            "body": "The quick-detach clasp lets me hand over the van keys and keep the rest. The braided loop is easy to spot in the bottom of a bag.",
+            "byline": "Delivery driver"
+          }
+        },
+        "sample_45": {
+          "type": "sample_review",
+          "settings": {
+            "product": "signal-carabiner-system",
+            "rating": 4,
+            "title": "Keys only, as it says",
+            "body": "The gate is smooth and it's light, but it's rated for keys and light gear, so don't hang a bottle from it.",
+            "byline": "Stage manager"
+          }
         }
       },
       "block_order": [
@@ -301,7 +591,36 @@
         "sample_13",
         "sample_14",
         "sample_15",
-        "sample_16"
+        "sample_16",
+        "sample_17",
+        "sample_18",
+        "sample_19",
+        "sample_20",
+        "sample_21",
+        "sample_22",
+        "sample_23",
+        "sample_24",
+        "sample_25",
+        "sample_26",
+        "sample_27",
+        "sample_28",
+        "sample_29",
+        "sample_30",
+        "sample_31",
+        "sample_32",
+        "sample_33",
+        "sample_34",
+        "sample_35",
+        "sample_36",
+        "sample_37",
+        "sample_38",
+        "sample_39",
+        "sample_40",
+        "sample_41",
+        "sample_42",
+        "sample_43",
+        "sample_44",
+        "sample_45"
       ]
     }
   },
