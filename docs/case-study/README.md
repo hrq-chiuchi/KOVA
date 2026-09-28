@@ -913,7 +913,7 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 
 **Not verified:**
 
-- **The loadout pricing line.** On 2026-09-25 the KOVA Core cart transform did not merge loadout groups. Both a builder add (2 modules, estimate $417.60) and a direct `/cart/add.js` group stayed as separate lines at full price, with `kova-core-1.1.1` active. This is independent of this branch; the CLI's store auth cannot read cart transforms to diagnose it. The line renders nothing when there is no merged line, so no price is claimed.
+- **The loadout pricing line.** On 2026-09-25 the KOVA Core cart transform did not merge loadout groups. Both a builder add (2 modules, estimate $417.60) and a direct `/cart/add.js` group stayed as separate lines at full price, with `kova-core-1.1.1` active. This is independent of this branch; the CLI's store auth cannot read cart transforms to diagnose it. The line renders nothing when there is no merged line, so no price is claimed. **Resolved 2026-09-27:** the store had no cart transform or validation registered at all (`cartTransforms` was empty when queried as the app), so the deployed functions never ran; they had most likely been removed with an app reinstall or dev-preview cleanup. Re-running `apps/kova-core/scripts/sync-rules.mjs` activated both and wrote the rules. A six-item builder add then became one line at $537.20 (−15%, matching the estimate), and a three-item add showed the −10% pricing line in the drawer. If loadouts stop merging again, first check that `cartTransforms` isn't empty, then re-run the script.
 - **A line going sold out while in the bag** (the per-line error rendering is unchanged from Phase 9).
 - **The non-US Field Supply gate:** the store has one US market, so the dev storefront cannot switch country.
 - Whether the $70 rate condition measures a discounted loadout cart the way `cart.total_price` does. No loadout fixture sits near the threshold, and checkout was not run.
@@ -961,7 +961,7 @@ The phase ships as two pull requests. **PR A** (#8, merged 2026-09-25) covers th
 
 ### Phase 14 backlog
 
-- **Loadout merges (owner: user, then Claude):** find out why `loadout-merge` stopped merging (function activation after the 1.1.x releases is the first suspect), then verify the loadout pricing line.
+- ~~**Loadout merges (owner: user, then Claude).**~~ Resolved 2026-09-27: no cart transform or validation was registered; `sync-rules.mjs` re-created both and the pricing line is verified (see above).
 - **PR B follow-up:** a real-browser SIGNAL signup (new and duplicate email), and a Theme Editor pass for the menu feature block, the announcement bar and the tab.
 - **Deferred (D-047):** loadout tiers beyond 2 and 3+, and "add one more component" prompts.
 - **KOVA Core (Planned):** read the free-shipping threshold from delivery profiles instead of a theme setting.
