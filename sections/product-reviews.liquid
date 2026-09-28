@@ -1,8 +1,7 @@
 {% comment %}
-  Real reviews come only from Shopify's standard `reviews` metafields, which review apps populate, and
-  review-app blocks. Until those exist, merchants can add Review blocks (type `sample_review`, D-051). They
-  render as reviews but never feed the rating summary or structured data, and they disappear as soon as real ratings
-  or a review app are present.
+  The rating summary reads Shopify's standard `reviews` metafields, which review apps populate. Review blocks
+  (type `sample_review`, D-051) list the written reviews; `seed-reviews.mjs` in KOVA Core writes the metafields
+  from them so the summary and structured data match what is listed (D-062). A review-app block replaces the list.
 {% endcomment %}
 {% liquid
   assign rating = product.metafields.reviews.rating.value
@@ -35,7 +34,7 @@
 
       {% if rating != blank and rating_count > 0 %}
         {% liquid
-          assign scale = rating.scale_max | default: 5
+          assign scale = rating.scale_max | default: 5 | round
           assign percent = rating.rating | times: 100.0 | divided_by: scale
         %}
         <div class="product-reviews__summary">
@@ -56,7 +55,7 @@
           {% if block.type == '@app' %}{% render block %}{% endif %}
         {% endfor %}
       </div>
-    {% elsif rating_count == 0 and sample_count > 0 %}
+    {% elsif sample_count > 0 %}
       <ol class="product-reviews__list" role="list">
         {% for block in section.blocks %}
           {% if block.type == 'sample_review' %}

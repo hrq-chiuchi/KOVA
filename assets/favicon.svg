@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- KOVA mark. Raw values mirror tokens neutral-1000 (#080808) and acid-500 (#dfff00); a standalone icon cannot read CSS variables. -->
+  <rect width="64" height="64" fill="#080808"/>
+  <path fill="#dfff00" d="M12 12h12v40H12zM24 30 36 12h16L37 32l16 20H37L24 36z"/>
+</svg>
