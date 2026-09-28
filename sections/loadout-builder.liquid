@@ -4,8 +4,8 @@
 
   On a product page the section finds the loadout whose platforms include the product and locks the
   platform to it; for any other product it renders nothing. On a page it uses the chosen loadout and
-  starts with a platform step. The client-side checks mirror `judgeGroup` in
-  apps/kova-core/shared/loadout-rules.ts, but the functions stay authoritative.
+  starts with a platform step. The client-side verdict (assets/loadout-verdict.js) is tested against
+  `judgeGroup` in apps/kova-core/shared/loadout-rules.ts, but the functions stay authoritative.
 
   With a Field Locker URL set, "Save to Field Locker" links a valid build to the KOVA Core account
   page, which saves it to the customer (D-031). The link format mirrors
@@ -79,8 +79,23 @@
         data-loadout-handle="{{ loadout.system.handle }}"
         {% if locked_platform != blank %}data-locked{% endif %}
       >
+        {% comment %}
+          One `Loadout` entry in the shape scripts/sync-rules.mjs compiles for the functions, with the same
+          defaults, so assets/loadout-verdict.js can apply the rules `judgeGroup` enforces.
+        {% endcomment %}
         <script type="application/json" data-loadout-rules>
           {
+            "platforms": [{% for platform in loadout.platforms.value %}"gid://shopify/Product/{{ platform.id }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+            "slots": [
+              {%- for slot in slots -%}
+                {
+                  "key": {{ slot.key.value | json }},
+                  "products": [{% for module in slot.products.value %}"gid://shopify/Product/{{ module.id }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+                  "required": {% if slot.required.value %}true{% else %}false{% endif %},
+                  "max": {{ slot.max_items.value | default: 1 | json }}
+                }{% unless forloop.last %},{% endunless %}
+              {%- endfor -%}
+            ],
             "minModules": {{ min_modules | json }},
             "tiers": [
               { "modules": 2, "percent": {{ tier_two | json }} },

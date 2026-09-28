@@ -587,8 +587,9 @@
 
   // Builds a KOVA loadout and adds it as one group. Every line carries the same `_kova_loadout` id
   // and its `_kova_slot`; the KOVA Core cart transform merges a valid group into one priced line
-  // and the validation refuses an invalid one. These checks mirror `judgeGroup` in
-  // apps/kova-core/shared/loadout-rules.ts so customers see problems before the request.
+  // and the validation refuses an invalid one. The verdict comes from assets/loadout-verdict.js, which
+  // is tested against `judgeGroup` in apps/kova-core/shared/loadout-rules.ts, so customers see the
+  // functions' decision before the request.
   class LoadoutBuilder extends HTMLElement {
     connectedCallback() {
       this.controller?.abort();
@@ -682,30 +683,28 @@
       };
     }
 
-    problem({ platform, modules }) {
+    // Returns `{ problem, percent }`: the shared verdict, with the problem worded for this form.
+    verdict({ platform, modules }) {
       const platformFieldset = this.querySelector('[data-platform-fieldset]');
-      if (!platform) return { message: 'Choose a platform.', target: platformFieldset };
-      if (platform.disabled) return { message: `${platform.dataset.title} is sold out.`, target: platformFieldset };
-      for (const fieldset of this.querySelectorAll('[data-slot-fieldset][data-required]')) {
-        if (!fieldset.querySelector('[data-loadout-choice]:checked')) {
-          return { message: `Choose a ${fieldset.dataset.slotLabel.toLowerCase()} module.`, target: fieldset };
-        }
-      }
-      const minimum = Number(this.rules.minModules) || 0;
-      if (modules.length < minimum) {
-        const missing = minimum - modules.length;
-        return {
-          message: `Choose ${missing} more module${missing === 1 ? '' : 's'}. A loadout needs at least ${minimum}.`,
-          target: this.querySelector('[data-slot-fieldset]'),
-        };
-      }
-      return null;
-    }
-
-    percentFor(count) {
-      return (this.rules.tiers || [])
-        .filter((tier) => count >= tier.modules)
-        .reduce((best, tier) => Math.max(best, tier.percent), 0);
+      if (!platform) return { problem: { message: 'Choose a platform.', target: platformFieldset }, percent: 0 };
+      if (platform.disabled) return { problem: { message: `${platform.dataset.title} is sold out.`, target: platformFieldset }, percent: 0 };
+      const productId = (input) => `gid://shopify/Product/${input.value}`;
+      const judge = window.KovaLoadoutVerdict?.judge;
+      if (!judge) return { problem: null, percent: 0 };
+      const { problem, percent } = judge(this.rules, productId(platform), modules.map((input) => ({ slot: input.dataset.slot, productId: productId(input) })));
+      if (!problem) return { problem: null, percent };
+      const fieldset = problem.slot ? this.querySelector(`[data-slot-fieldset][data-slot-key="${CSS.escape(problem.slot)}"]`) : null;
+      const messages = {
+        platform: 'This platform cannot start this loadout.',
+        required: `Choose a ${fieldset?.dataset.slotLabel.toLowerCase() || 'required'} module.`,
+        minimum: `Choose ${problem.missing} more module${problem.missing === 1 ? '' : 's'}. A loadout needs at least ${problem.minimum}.`,
+        max: `${fieldset?.dataset.slotLabel || 'This slot'} is full.`,
+        slot: 'This module does not fit this loadout.',
+      };
+      return {
+        problem: { message: messages[problem.code], target: fieldset || this.querySelector(problem.code === 'platform' ? '[data-platform-fieldset]' : '[data-slot-fieldset]') },
+        percent: 0,
+      };
     }
 
     formatMoney(cents) {
@@ -749,8 +748,7 @@
       }));
 
       const separate = lines.reduce((sum, input) => sum + this.variantOf(input).price, 0);
-      const problem = this.problem(state);
-      const percent = problem ? 0 : this.percentFor(state.modules.length);
+      const { problem, percent } = this.verdict(state);
       this.querySelector('[data-summary-count]').textContent = String(state.modules.length);
       this.querySelector('[data-summary-separate]').textContent = lines.length ? this.formatMoney(separate) : '—';
       this.querySelector('[data-summary-percent]').textContent = percent ? `−${percent}%` : '—';
@@ -768,7 +766,7 @@
       event.preventDefault();
       if (this.busy) return;
       const state = this.state();
-      const problem = this.problem(state);
+      const { problem } = this.verdict(state);
       if (problem) {
         this.status.textContent = problem.message;
         problem.target?.focus();

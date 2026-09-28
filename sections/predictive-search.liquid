@@ -43,12 +43,13 @@
           {{ 'search.command.field_notes' | t }} <span>{{ resources.articles.size | prepend: '0' | slice: -2, 2 }}</span>
         </p>
         {% for article in resources.articles %}
-          <a class="predictive-search__option" id="PredictiveArticle-{{ article.id }}" href="{{ article.url }}" role="option" aria-selected="false" tabindex="-1">
-            <span class="predictive-search__thumb">
-              {% if article.image %}
+          {% comment %} Field Notes rarely carry an image, so the thumbnail column is dropped rather than left empty. {% endcomment %}
+          <a class="predictive-search__option{% unless article.image %} predictive-search__option--text{% endunless %}" id="PredictiveArticle-{{ article.id }}" href="{{ article.url }}" role="option" aria-selected="false" tabindex="-1">
+            {% if article.image %}
+              <span class="predictive-search__thumb">
                 {{ article.image | image_url: width: 120 | image_tag: loading: 'lazy', alt: '', width: 60, height: 75 }}
-              {% endif %}
-            </span>
+              </span>
+            {% endif %}
             <span class="predictive-search__title">{{ article.title | escape }}</span>
             <span class="predictive-search__meta"><span>{{ article.published_at | date: '%Y.%m.%d' }}</span></span>
           </a>
@@ -107,6 +108,7 @@
   .predictive-search__option:hover,
   .predictive-search__option[aria-selected='true'] { background: var(--ad-color-background-primary); box-shadow: inset 2px 0 0 var(--color-accent); }
   .predictive-search__option[aria-selected='true'] .predictive-search__title { color: var(--color-accent); }
+  .predictive-search__option--text { grid-template-columns: minmax(0, 1fr) auto; }
   .predictive-search__option--all { grid-template-columns: minmax(0, 1fr) auto; border-block-end: 0; }
   .predictive-search__thumb { display: block; overflow: hidden; inline-size: 2.5rem; aspect-ratio: 4 / 5; background: var(--ad-color-background-primary); }
   .predictive-search__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -118,6 +120,8 @@
     .predictive-search__option { grid-template-columns: 2.5rem minmax(0, 1fr); align-content: center; gap: var(--ad-space-50) var(--ad-space-300); }
     .predictive-search__option .predictive-search__thumb { grid-row: span 2; }
     .predictive-search__option .predictive-search__meta { grid-column: 2; }
+    .predictive-search__option--text { grid-template-columns: minmax(0, 1fr); }
+    .predictive-search__option--text .predictive-search__meta { grid-column: 1; }
     .predictive-search__option--all { grid-template-columns: minmax(0, 1fr) auto; }
     .predictive-search__option--all .predictive-search__meta { grid-column: auto; }
     .predictive-search__title { white-space: normal; }
