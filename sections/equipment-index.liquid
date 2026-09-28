@@ -46,7 +46,7 @@
     {% endif %}
 
     {% paginate collection.products by 48 %}
-      <index-filters class="equipment-index__layout" data-section-id="{{ section.id }}">
+      <index-filters class="equipment-index__layout" data-section-id="{{ section.id }}" data-view="{{ view_param }}">
         <aside class="equipment-index__tools" aria-label="Filter the index">
           {% render 'index-filters', results: collection, url: collection.url, count: collection.products_count, view: view_param, id_prefix: section.id %}
         </aside>
@@ -55,9 +55,9 @@
           <nav class="index-views" aria-label="Index view">
             {% if layout == 'rows' %}
               <span aria-current="page">Index</span>
-              <a href="{{ other_url }}">Grid</a>
+              <a href="{{ other_url }}" data-view-link>Grid</a>
             {% else %}
-              <a href="{{ other_url }}">Index</a>
+              <a href="{{ other_url }}" data-view-link>Index</a>
               <span aria-current="page">Grid</span>
             {% endif %}
           </nav>

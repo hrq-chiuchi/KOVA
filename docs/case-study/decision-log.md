@@ -901,3 +901,13 @@ D-001 through D-008 were accepted in Phase 0 (2026-09-20). Phase 1 source realiz
 
 **Tradeoff / reconsideration:** Revisit an item when its trigger appears, for example a second market, a real V2 product or order data about loadout sizes, rather than on a schedule.
 
+## D-059 — The Index/Grid switch swaps the section in place
+
+**Context:** Filters update the Equipment Index in place (D-036), but the Index/Grid switch was a plain link between two templates (`?view=`), so it reloaded the whole page. The in-place filter path uses the Section Rendering API with the section's id, and those ids are specific to each template (`template--…__main`), so one view can't request another view's section. For collections other than the Equipment Index the two views are even different section types (`collection` and `equipment-index`).
+
+**Decision (Commerce component / progressive enhancement):** each `index-filters` element carries `data-view`, the `?view=` value that produced it. When a target URL's view differs (a `data-view-link` click, or Back/Forward to another view), `IndexFilters` loads the target page with a normal GET, takes the `.shopify-section` holding its `index-filters`, and replaces the current section. Motion and WebGL are destroyed on the old section and started on the new results only, so the masthead doesn't replay. Focus moves to the active view label, the URL is pushed, and the title follows. Same-view filter changes keep the Section Rendering API path. Modified clicks (new tab) and failures fall back to normal navigation, and without JavaScript the links work as before.
+
+**Evidence (headless Chromium against `shopify theme dev`, 2026-09-28):** on `/collections/all` and `/collections/outerwear`, Index → Grid → Index, Back and Forward all swapped in place (a `window` marker survived every step) and rendered the right rows or cards. A Type filter applied in the swapped-in grid narrowed it to 8 cards through the section path. No page errors.
+
+**Tradeoff / reconsideration:** a view switch downloads a full page rather than one section. That is heavier than a filter change but lighter than a reload (no script, style or font re-evaluation). If the views ever share one template with a setting, this can return to the Section Rendering API.
+
