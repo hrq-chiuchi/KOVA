@@ -18,3 +18,7 @@ release
 
 # Source brand imagery (uploaded to Shopify Files)
 BRAND/
+
+# Local agent instructions (kept out of the repository)
+AGENTS.md
+CLAUDE.md
