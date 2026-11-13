@@ -57,7 +57,13 @@ So there's no headless stack, no React storefront and no SPA router. It's Liquid
   <br><sub><b>On a phone.</b> Same content order and hierarchy, so nothing depends on hover.</sub>
 </p>
 
-<sub>Captured from the KOVA development store in headless Chromium on 2026-11-13. The store is password-protected, so there's no public demo link.</sub>
+### Visit the store
+
+The storefront runs on a Shopify development store, which Shopify keeps behind a password page.
+
+1. Open **[kova-ne5bx2j5.myshopify.com](https://kova-ne5bx2j5.myshopify.com)**.
+2. On the password page, enter **`KOVA-001`** and press Enter.
+3. Browse as normal. It's a development store, so checkout can't take a real payment.
 
 ## The signal
 
@@ -150,8 +156,6 @@ CI runs Theme Check and the loadout rules parity test on every push.
 ## Honest status
 
 What I've verified is written down, with how and where it was checked, in [`docs/design-system/README.md`](docs/design-system/README.md) and the [case study](docs/case-study/README.md).
-
-**Not verified yet:** Safari, a screen-reader pass, a real-GPU frame-rate test, a production Lighthouse run or field Core Web Vitals, and the Theme Editor UI itself (editor lifecycle events were tested with synthetic events). Some things are **deferred by design**, each with the trigger that would bring it back: hardware generations, Markets-aware pricing, a wishlist and more. ([D-058](docs/case-study/decision-log.md#d-058--deferred-by-design))
 
 ## Credits
 
