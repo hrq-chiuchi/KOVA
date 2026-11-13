@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/favicon.svg" alt="KOVA mark" width="72">
+  <img src="./docs/media/banner.webp" alt="KOVA: Built for after dark. Night equipment on a native Shopify theme." width="100%">
 </p>
 
 <h1 align="center">KOVA</h1>
@@ -29,6 +29,35 @@ KOVA is a portfolio project of mine. The brand is fictional: modular apparel and
 I wanted to answer one question. **Can a storefront look like a film title sequence and still be a real Shopify theme?** That means merchant editing in the Theme Editor, JSON templates, native cart and checkout, keyboard access, and a reduced-motion mode that is designed, not bolted on.
 
 So there's no headless stack, no React storefront and no SPA router. It's Liquid, vanilla JavaScript and CSS on Online Store 2.0, with motion layered on top as progressive enhancement. Switch GSAP off and you can still browse, pick a variant, build a loadout and check out.
+
+## See it
+
+<p align="center">
+  <img src="./docs/media/entry.gif" alt="Signal Acquisition: the first-visit entry reads ACQUIRING SIGNAL, locks, and tears away to reveal the real home hero" width="100%">
+  <br><sub><b>Signal Acquisition.</b> The first-visit entry locks on the real hero, then tears away. It plays once per session.</sub>
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/media/hero.gif" alt="Kinetic hero: image layers drop along the pointer path behind the BUILT FOR AFTER DARK headline"><br><sub><b>Kinetic hero.</b> Image layers drop along the pointer path.</sub></td>
+    <td width="50%"><img src="./docs/media/transition.gif" alt="A product card resolves through a pixelated WebGL reveal, then the page changes with an RGB-split View Transition"><br><sub><b>WebGL reveal and corrupted-signal transition.</b> One shared WebGL context, then a native cross-document View Transition.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/media/product.webp" alt="Blacksite Shell Jacket product page with size, colour and quantity controls and the add to bag button"><br><sub><b>Product page.</b> Identity, price, variants and the checkout path stay plain and readable.</sub></td>
+    <td><img src="./docs/media/loadout.webp" alt="Loadout builder with a backpack, two organizers and a flask selected, showing a 15% loadout discount and an estimated price of $447.10"><br><sub><b>Loadout builder.</b> Platform plus modules, priced live, added as one cart group.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/media/equipment-index.webp" alt="Equipment Index listing products as numbered rows with type, system, status and price columns"><br><sub><b>Equipment Index.</b> Faceted metafield filters, index or grid view.</sub></td>
+    <td><img src="./docs/media/drop-001.webp" alt="Drop 001 / Field Test collection page with a crew photograph"><br><sub><b>Drop 001.</b> Story-led collection template.</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="./docs/media/mobile.webp" alt="Four phone screenshots: home hero, product page, loadout builder and Equipment Index" width="100%">
+  <br><sub><b>On a phone.</b> Same content order and hierarchy, so nothing depends on hover.</sub>
+</p>
+
+<sub>Captured from the KOVA development store in headless Chromium on 2026-11-13. The store is password-protected, so there's no public demo link.</sub>
 
 ## The signal
 
@@ -76,6 +105,14 @@ These are the parts I'm proudest of. Each one links to the decision behind it.
 ```
 
 Everything new is classified before it's built: Foundation, Token, Primitive, Commerce component, Theme block, Section, Template, Motion behaviour, or Art-direction exception. Snippets are for implementation reuse. Theme blocks exist only where a merchant should actually compose something. ([D-002](docs/case-study/decision-log.md#d-002--use-an-explicit-system-taxonomy), [D-022](docs/case-study/decision-log.md#d-022--compose-art-direction-from-snippets-opinionated-theme-blocks-and-one-section))
+
+### Design-system field reference
+
+[`design-system/index.html`](design-system/index.html) is a standalone reference for foundations, typography, primitives, commerce anatomy and motion. It reads `assets/tokens.css` directly, so it can't drift from the theme. Open it straight from disk. ([D-063](docs/case-study/decision-log.md#d-063--the-design-system-reference-consumes-the-code-mapping))
+
+<p align="center">
+  <img src="./docs/media/design-system.webp" alt="Design-system field reference page headed BUILT FOR THE HOURS BETWEEN with a numbered section index" width="100%">
+</p>
 
 ### KOVA Core
 
