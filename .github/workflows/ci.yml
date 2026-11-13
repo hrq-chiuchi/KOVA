@@ -2,18 +2,19 @@ name: CI
 on: [push]
 permissions:
   contents: read
-  # theme-check-action reports results as a check run, which needs write access.
-  checks: write
 jobs:
   theme-check:
     name: Theme Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Theme Check
-        uses: shopify/theme-check-action@v2
+      - uses: actions/setup-node@v4
         with:
-          token: ${{ github.token }}
+          node-version: 22
+      # Run the pinned CLI directly. shopify/theme-check-action@v2 installs the latest CLI and
+      # crashes on its object-shaped JSON output ("e.filter is not a function").
+      - name: Theme Check
+        run: npx --yes @shopify/cli@5.0.1 theme check --fail-level error
   loadout-parity:
     # The storefront builder's verdict (assets/loadout-verdict.js) must match the KOVA Core functions.
     name: Loadout rules parity
