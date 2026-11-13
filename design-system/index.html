@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080808">
+    <title>KOVA Design System / Field Reference</title>
+    <meta name="description" content="A code-side field reference for KOVA foundations, tokens, primitives, commerce components, and motion behavior.">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/tokens.css">
+    <style>
+      /*
+       * Documentation surface only. Canonical values live in
+       * design-system/tokens/*.tokens.json and map through assets/tokens.css.
+       */
+      :root {
+        color-scheme: dark;
+        --color-background: var(--ad-color-background-primary);
+        --color-foreground: var(--ad-color-text-primary);
+        --color-accent: var(--ad-color-action-primary);
+        --font-primary--family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        --font-display-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+        --font-display-weight: 700;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--color-background);
+        color: var(--color-foreground);
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(var(--ad-color-border-subtle) var(--ad-border-hairline), transparent var(--ad-border-hairline)),
+          linear-gradient(90deg, var(--ad-color-border-subtle) var(--ad-border-hairline), transparent var(--ad-border-hairline)),
+          var(--color-background);
+        background-size: var(--ad-space-800) var(--ad-space-800);
+        color: var(--color-foreground);
+        font-family: var(--font-primary--family);
+        font-size: var(--ad-text-body);
+        line-height: 1.5;
+        text-rendering: optimizeLegibility;
+      }
+
+      button,
+      input,
+      select {
+        color: inherit;
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      :focus-visible {
+        outline: var(--ad-border-strong) solid var(--color-accent);
+        outline-offset: var(--ad-space-50);
+      }
+
+      ::selection {
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .skip-link {
+        position: fixed;
+        z-index: 20;
+        inset: var(--ad-space-300) auto auto var(--ad-space-300);
+        translate: 0 -200%;
+        padding: var(--ad-space-200) var(--ad-space-300);
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transition: translate var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .skip-link:focus {
+        translate: 0;
+      }
+
+      .eyebrow,
+      .meta-label,
+      .status,
+      .token-name,
+      .side-nav,
+      .button,
+      .field-label,
+      .specimen-note {
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        line-height: 1.2;
+        text-transform: uppercase;
+      }
+
+      .eyebrow,
+      .meta-label,
+      .specimen-note {
+        color: var(--ad-color-text-muted);
+      }
+
+      .shell {
+        display: grid;
+        min-height: 100svh;
+        grid-template-columns: minmax(14rem, 18vw) minmax(0, 1fr);
+      }
+
+      .sidebar {
+        position: sticky;
+        z-index: 10;
+        inset-block-start: 0;
+        display: flex;
+        height: 100svh;
+        padding: var(--ad-space-400);
+        flex-direction: column;
+        border-inline-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        background: color-mix(in srgb, var(--color-background) 94%, transparent);
+        backdrop-filter: blur(var(--ad-space-200));
+      }
+
+      .brand {
+        display: flex;
+        min-height: var(--ad-header-height);
+        align-items: flex-start;
+        justify-content: space-between;
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+      }
+
+      .brand-mark {
+        font-family: var(--font-display-family);
+        font-size: 2.2rem;
+        letter-spacing: -0.06em;
+        line-height: 0.8;
+        text-decoration: none;
+      }
+
+      .brand-index {
+        color: var(--color-accent);
+        font-size: var(--ad-text-label);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .side-nav {
+        display: grid;
+        margin-block: auto;
+        gap: var(--ad-space-50);
+        list-style: none;
+        padding: 0;
+      }
+
+      .side-nav a {
+        display: grid;
+        min-height: var(--ad-control-minimum);
+        padding: var(--ad-space-100) 0;
+        align-items: center;
+        grid-template-columns: var(--ad-space-500) 1fr auto;
+        color: var(--ad-color-text-muted);
+        text-decoration: none;
+        transition: color var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .side-nav a::after {
+        width: var(--ad-space-100);
+        height: var(--ad-space-100);
+        border-radius: var(--ad-radius-pill);
+        background: currentcolor;
+        content: "";
+        opacity: 0;
+        scale: 0;
+        transition: opacity var(--ad-duration-fast) var(--ad-ease-standard), scale var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .side-nav a:hover,
+      .side-nav a[aria-current="true"] {
+        color: var(--color-foreground);
+      }
+
+      .side-nav a[aria-current="true"]::after {
+        background: var(--color-accent);
+        opacity: 1;
+        scale: 1;
+      }
+
+      .side-footer {
+        display: grid;
+        gap: var(--ad-space-200);
+      }
+
+      .side-footer p {
+        margin: 0;
+      }
+
+      .status {
+        display: inline-flex;
+        width: fit-content;
+        min-height: var(--ad-space-500);
+        padding-inline: var(--ad-space-100);
+        align-items: center;
+        border: var(--ad-border-hairline) solid var(--color-accent);
+        border-radius: var(--ad-radius-pill);
+        color: var(--color-accent);
+      }
+
+      .mobile-bar {
+        display: none;
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      .section {
+        position: relative;
+        min-height: 70svh;
+        padding: var(--ad-section-space) var(--ad-page-padding);
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        scroll-margin-block-start: var(--ad-space-600);
+      }
+
+      .section--hero {
+        display: grid;
+        min-height: 100svh;
+        padding-block: var(--ad-space-500);
+        grid-template-rows: auto 1fr auto;
+      }
+
+      .section-kicker,
+      .section-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ad-space-300);
+      }
+
+      .section-kicker p,
+      .section-footer p {
+        margin: 0;
+      }
+
+      .section-no {
+        color: var(--color-accent);
+        font-size: var(--ad-text-label);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.14em;
+      }
+
+      .hero-grid {
+        display: grid;
+        padding-block: var(--ad-space-700);
+        align-items: center;
+        gap: var(--ad-space-600);
+        grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        overflow-wrap: break-word;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: var(--font-display-family);
+        font-weight: var(--font-display-weight);
+        letter-spacing: -0.055em;
+        line-height: 0.86;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 10ch;
+        margin-block: var(--ad-space-400);
+        font-size: clamp(4rem, 10vw, 10rem);
+      }
+
+      h2 {
+        max-width: 12ch;
+        font-size: var(--ad-text-title);
+      }
+
+      h3 {
+        font-size: clamp(1.5rem, 3vw, 3rem);
+      }
+
+      .hero-intro {
+        max-width: 43rem;
+        margin: 0;
+        color: var(--ad-color-text-muted);
+        font-size: var(--ad-text-lead);
+      }
+
+      .hero-intro strong {
+        color: var(--color-foreground);
+        font-weight: 500;
+      }
+
+      .signal-plate {
+        position: relative;
+        display: grid;
+        overflow: hidden;
+        min-height: 32rem;
+        place-items: center;
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        background: var(--ad-color-background-elevated);
+        isolation: isolate;
+      }
+
+      .signal-plate::before,
+      .signal-plate::after {
+        position: absolute;
+        content: "";
+        pointer-events: none;
+      }
+
+      .signal-plate::before {
+        z-index: -1;
+        width: 70%;
+        aspect-ratio: 1;
+        border: var(--ad-border-strong) solid var(--color-accent);
+        border-radius: 50%;
+        box-shadow: 0 0 0 var(--ad-space-300) var(--ad-color-background-elevated), 0 0 0 calc(var(--ad-space-300) + var(--ad-border-hairline)) var(--ad-color-border-subtle);
+      }
+
+      .signal-plate::after {
+        inset: 0;
+        background: repeating-linear-gradient(0deg, transparent 0 var(--ad-space-100), var(--ad-color-border-subtle) var(--ad-space-100) calc(var(--ad-space-100) + var(--ad-border-hairline)));
+        mix-blend-mode: screen;
+      }
+
+      .signal-glyph {
+        color: var(--color-accent);
+        font-family: var(--font-display-family);
+        font-size: clamp(7rem, 15vw, 14rem);
+        letter-spacing: -0.12em;
+        line-height: 0.7;
+        rotate: -8deg;
+      }
+
+      .signal-meta {
+        position: absolute;
+        inset: var(--ad-space-300);
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+
+      .signal-meta span:last-child {
+        writing-mode: vertical-rl;
+      }
+
+      .section-header {
+        display: grid;
+        margin-block-end: var(--ad-space-700);
+        gap: var(--ad-space-500);
+        grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.55fr);
+      }
+
+      .section-summary {
+        max-width: 38rem;
+        margin: 0;
+        align-self: end;
+        color: var(--ad-color-text-muted);
+        font-size: var(--ad-text-lead);
+      }
+
+      .section-summary strong {
+        color: var(--color-foreground);
+        font-weight: 500;
+      }
+
+      .token-grid {
+        display: grid;
+        border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        border-inline-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .token-card {
+        position: relative;
+        min-width: 0;
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        border-inline-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+      }
+
+      .token-swatch {
+        min-height: 10rem;
+        background: var(--swatch);
+      }
+
+      .token-swatch--border {
+        background:
+          linear-gradient(45deg, var(--ad-color-background-primary) 25%, transparent 25% 75%, var(--ad-color-background-primary) 75%),
+          linear-gradient(45deg, var(--ad-color-background-primary) 25%, var(--ad-color-background-elevated) 25% 75%, var(--ad-color-background-primary) 75%);
+        background-position: 0 0, var(--ad-space-100) var(--ad-space-100);
+        background-size: var(--ad-space-300) var(--ad-space-300);
+      }
+
+      .token-swatch--border::after {
+        display: block;
+        height: 100%;
+        background: var(--swatch);
+        content: "";
+      }
+
+      .token-copy {
+        display: grid;
+        width: 100%;
+        padding: var(--ad-space-300);
+        border: 0;
+        background: var(--color-background);
+        cursor: pointer;
+        gap: var(--ad-space-50);
+        text-align: start;
+      }
+
+      .token-copy:hover .token-name,
+      .token-copy[data-copied="true"] .token-name {
+        color: var(--color-accent);
+      }
+
+      .token-value {
+        overflow: hidden;
+        color: var(--ad-color-text-muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: var(--ad-text-label);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .type-stack {
+        display: grid;
+        border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+      }
+
+      .type-row {
+        display: grid;
+        padding-block: var(--ad-space-500);
+        align-items: start;
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        gap: var(--ad-space-400);
+        grid-template-columns: minmax(8rem, 0.25fr) minmax(0, 1fr);
+      }
+
+      .type-specimen {
+        margin: 0;
+      }
+
+      .type-specimen--display,
+      .type-specimen--title {
+        font-family: var(--font-display-family);
+        font-weight: var(--font-display-weight);
+        letter-spacing: -0.055em;
+        line-height: 0.84;
+        text-transform: uppercase;
+      }
+
+      .type-specimen--display {
+        font-size: var(--ad-text-display);
+      }
+
+      .type-specimen--title {
+        font-size: var(--ad-text-title);
+      }
+
+      .type-specimen--lead {
+        max-width: 42rem;
+        font-size: var(--ad-text-lead);
+      }
+
+      .type-specimen--body {
+        max-width: 38rem;
+        color: var(--ad-color-text-muted);
+      }
+
+      .type-specimen--label {
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .spacing-scale {
+        display: grid;
+        margin-block-start: var(--ad-space-700);
+        gap: var(--ad-space-200);
+      }
+
+      .space-row {
+        display: grid;
+        min-height: var(--ad-control-minimum);
+        align-items: center;
+        gap: var(--ad-space-300);
+        grid-template-columns: var(--ad-space-700) minmax(0, 1fr) var(--ad-space-600);
+      }
+
+      .space-bar {
+        width: min(var(--space-width), 100%);
+        height: var(--ad-space-100);
+        background: var(--color-accent);
+      }
+
+      .showcase {
+        display: grid;
+        gap: var(--ad-space-400);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .panel {
+        position: relative;
+        padding: var(--ad-space-500);
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        background: color-mix(in srgb, var(--ad-color-background-elevated) 82%, transparent);
+      }
+
+      .panel--inverse {
+        background: var(--ad-color-background-inverse);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .panel-head {
+        display: flex;
+        margin-block-end: var(--ad-space-500);
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ad-space-300);
+      }
+
+      .panel-head p {
+        margin: 0;
+      }
+
+      .control-stack {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--ad-space-200);
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: var(--ad-control-minimum);
+        padding: var(--ad-space-200) var(--ad-space-400);
+        align-items: center;
+        justify-content: center;
+        border: var(--ad-border-hairline) solid currentcolor;
+        border-radius: var(--ad-radius-pill);
+        background: transparent;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color var(--ad-duration-fast) var(--ad-ease-standard), color var(--ad-duration-fast) var(--ad-ease-standard), border-color var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .button:hover {
+        background: var(--color-foreground);
+        color: var(--color-background);
+      }
+
+      .button--accent {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .button--accent:hover {
+        background: transparent;
+        color: var(--color-accent);
+      }
+
+      .button[disabled] {
+        cursor: not-allowed;
+        opacity: 0.4;
+      }
+
+      .icon-button {
+        display: inline-grid;
+        width: var(--ad-control-minimum);
+        height: var(--ad-control-minimum);
+        padding: 0;
+        place-items: center;
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        border-radius: var(--ad-radius-pill);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .icon-button:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--ad-space-100);
+      }
+
+      .badge {
+        display: inline-flex;
+        min-height: var(--ad-space-500);
+        padding-inline: var(--ad-space-100);
+        align-items: center;
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .badge--accent {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .badge--critical {
+        border-color: var(--ad-color-action-critical);
+        color: var(--ad-color-action-critical);
+      }
+
+      .form-grid {
+        display: grid;
+        gap: var(--ad-space-400);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: var(--ad-space-100);
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        min-height: var(--ad-control-minimum);
+        padding: var(--ad-space-200);
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        border-radius: var(--ad-radius-none);
+        background: transparent;
+      }
+
+      .field input:hover,
+      .field select:hover {
+        border-color: var(--color-foreground);
+      }
+
+      .field-hint {
+        margin: 0;
+        color: var(--ad-color-text-muted);
+        font-size: var(--ad-text-label);
+      }
+
+      .switch-row {
+        display: flex;
+        min-height: var(--ad-control-minimum);
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ad-space-300);
+      }
+
+      .switch {
+        position: relative;
+        display: inline-flex;
+        width: var(--ad-space-700);
+        min-height: var(--ad-control-minimum);
+        padding: var(--ad-space-50);
+        align-items: center;
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        border-radius: var(--ad-radius-pill);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .switch::after {
+        width: var(--ad-space-500);
+        height: var(--ad-space-500);
+        border-radius: 50%;
+        background: var(--ad-color-text-muted);
+        content: "";
+        transition: translate var(--ad-duration-fast) var(--ad-ease-standard), background-color var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .switch[aria-checked="true"]::after {
+        background: var(--color-accent);
+        translate: var(--ad-space-400);
+      }
+
+      .commerce-grid {
+        display: grid;
+        align-items: start;
+        gap: var(--ad-space-600);
+        grid-template-columns: minmax(17rem, 0.7fr) minmax(0, 1.3fr);
+      }
+
+      .product-card {
+        min-width: 0;
+      }
+
+      .product-media {
+        position: relative;
+        display: grid;
+        overflow: hidden;
+        aspect-ratio: 4 / 5;
+        place-items: center;
+        background:
+          radial-gradient(circle at 50% 38%, var(--ad-color-neutral-700), transparent 48%),
+          var(--ad-color-background-elevated);
+        color: var(--ad-color-text-primary);
+      }
+
+      .product-media svg {
+        width: 78%;
+        height: 78%;
+        filter: drop-shadow(0 var(--ad-space-400) var(--ad-space-300) var(--ad-color-background-primary));
+      }
+
+      .product-index,
+      .product-badge {
+        position: absolute;
+        inset-block-start: var(--ad-space-300);
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .product-index {
+        inset-inline-start: var(--ad-space-300);
+      }
+
+      .product-badge {
+        inset-inline-end: var(--ad-space-300);
+        padding: var(--ad-space-50) var(--ad-space-100);
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .product-details {
+        display: flex;
+        padding-block: var(--ad-space-300);
+        align-items: start;
+        justify-content: space-between;
+        gap: var(--ad-space-300);
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+      }
+
+      .product-details p {
+        margin: 0;
+      }
+
+      .product-title {
+        font-weight: 700;
+      }
+
+      .product-price {
+        margin-block-start: var(--ad-space-50) !important;
+        color: var(--ad-color-text-muted);
+      }
+
+      .anatomy-list {
+        margin: 0;
+        list-style: none;
+        padding: 0;
+        counter-reset: anatomy;
+      }
+
+      .anatomy-list li {
+        display: grid;
+        padding-block: var(--ad-space-400);
+        border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        gap: var(--ad-space-300);
+        grid-template-columns: var(--ad-space-600) minmax(0, 1fr) auto;
+        counter-increment: anatomy;
+      }
+
+      .anatomy-list li::before {
+        color: var(--color-accent);
+        content: "0" counter(anatomy);
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.14em;
+      }
+
+      .anatomy-list p {
+        margin: 0;
+        color: var(--ad-color-text-muted);
+      }
+
+      .anatomy-list strong {
+        display: block;
+        margin-block-end: var(--ad-space-50);
+        color: var(--color-foreground);
+        font-weight: 600;
+      }
+
+      .anatomy-type {
+        align-self: start;
+        color: var(--ad-color-text-muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: var(--ad-text-label);
+      }
+
+      .motion-demo {
+        display: grid;
+        gap: var(--ad-space-300);
+      }
+
+      .motion-row {
+        display: grid;
+        min-height: var(--ad-space-700);
+        padding: var(--ad-space-300);
+        align-items: center;
+        border: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        gap: var(--ad-space-300);
+        grid-template-columns: minmax(7rem, 0.25fr) minmax(0, 1fr) auto;
+      }
+
+      .motion-track {
+        overflow: hidden;
+        height: var(--ad-space-100);
+        background: var(--ad-color-border-subtle);
+      }
+
+      .motion-track::after {
+        display: block;
+        width: 35%;
+        height: 100%;
+        background: var(--color-accent);
+        content: "";
+        animation: signal-pass var(--motion-duration) var(--ad-ease-standard) infinite alternate;
+      }
+
+      .motion-value {
+        color: var(--ad-color-text-muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: var(--ad-text-label);
+      }
+
+      @keyframes signal-pass {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(285%); }
+      }
+
+      .principle-list {
+        display: grid;
+        border-block-start: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+      }
+
+      .principle {
+        display: grid;
+        padding-block: var(--ad-space-600);
+        border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+        gap: var(--ad-space-400);
+        grid-template-columns: var(--ad-space-700) minmax(12rem, 0.5fr) minmax(0, 1fr);
+      }
+
+      .principle > span {
+        color: var(--color-accent);
+        font-size: var(--ad-text-label);
+        font-weight: 800;
+        letter-spacing: 0.14em;
+      }
+
+      .principle h3 {
+        font-size: clamp(1.7rem, 3vw, 3.2rem);
+      }
+
+      .principle p {
+        max-width: 42rem;
+        margin: 0;
+        color: var(--ad-color-text-muted);
+      }
+
+      .page-footer {
+        display: grid;
+        min-height: 55svh;
+        padding: var(--ad-section-space) var(--ad-page-padding) var(--ad-space-500);
+        align-content: space-between;
+        background: var(--color-accent);
+        color: var(--ad-color-text-inverse);
+      }
+
+      .footer-wordmark {
+        margin: 0;
+        font-family: var(--font-display-family);
+        font-size: clamp(5rem, 18vw, 18rem);
+        font-weight: var(--font-display-weight);
+        letter-spacing: -0.07em;
+        line-height: 0.7;
+        text-transform: uppercase;
+      }
+
+      .footer-meta {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--ad-space-400);
+      }
+
+      .footer-meta p {
+        max-width: 42rem;
+        margin: 0;
+      }
+
+      .toast {
+        position: fixed;
+        z-index: 30;
+        inset: auto var(--ad-space-400) var(--ad-space-400) auto;
+        padding: var(--ad-space-200) var(--ad-space-300);
+        border: var(--ad-border-hairline) solid var(--color-accent);
+        background: var(--color-background);
+        color: var(--color-accent);
+        opacity: 0;
+        pointer-events: none;
+        translate: 0 var(--ad-space-200);
+        transition: opacity var(--ad-duration-fast) var(--ad-ease-standard), translate var(--ad-duration-fast) var(--ad-ease-standard);
+      }
+
+      .toast[data-visible="true"] {
+        opacity: 1;
+        translate: 0;
+      }
+
+      .motion-off *,
+      .motion-off *::before,
+      .motion-off *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      @media (max-width: 68rem) {
+        .shell {
+          display: block;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-bar {
+          position: sticky;
+          z-index: 10;
+          inset-block-start: 0;
+          display: flex;
+          min-height: var(--ad-header-height);
+          padding-inline: var(--ad-page-padding);
+          align-items: center;
+          justify-content: space-between;
+          border-block-end: var(--ad-border-hairline) solid var(--ad-color-border-subtle);
+          background: color-mix(in srgb, var(--color-background) 94%, transparent);
+          backdrop-filter: blur(var(--ad-space-200));
+        }
+
+        .mobile-bar .brand-mark {
+          font-size: 1.8rem;
+        }
+
+        .mobile-nav {
+          display: flex;
+          overflow-x: auto;
+          max-width: 65vw;
+          gap: var(--ad-space-300);
+          scrollbar-width: none;
+        }
+
+        .mobile-nav a {
+          flex: none;
+          color: var(--ad-color-text-muted);
+          font-size: var(--ad-text-label);
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-decoration: none;
+          text-transform: uppercase;
+        }
+
+        .mobile-nav a[aria-current="true"] {
+          color: var(--color-accent);
+        }
+
+        .section--hero {
+          min-height: calc(100svh - var(--ad-header-height));
+        }
+      }
+
+      @media (max-width: 52rem) {
+        .hero-grid,
+        .section-header,
+        .commerce-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-grid {
+          align-content: center;
+        }
+
+        .signal-plate {
+          min-height: 20rem;
+        }
+
+        .token-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .showcase {
+          grid-template-columns: 1fr;
+        }
+
+        .section-header {
+          margin-block-end: var(--ad-space-600);
+        }
+
+        .type-row {
+          grid-template-columns: 1fr;
+        }
+
+        .type-specimen--display {
+          font-size: clamp(4rem, 22vw, 8rem);
+        }
+
+        .principle {
+          grid-template-columns: var(--ad-space-600) minmax(0, 1fr);
+        }
+
+        .principle p {
+          grid-column: 2;
+        }
+      }
+
+      @media (max-width: 34rem) {
+        .section {
+          padding-block: var(--ad-space-700);
+        }
+
+        .section--hero {
+          padding-block: var(--ad-space-400);
+        }
+
+        .section-kicker,
+        .section-footer,
+        .footer-meta {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        h1 {
+          font-size: clamp(3.6rem, 19vw, 6rem);
+        }
+
+        .token-grid,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .token-swatch {
+          min-height: var(--ad-space-800);
+        }
+
+        .panel {
+          padding: var(--ad-space-300);
+        }
+
+        .motion-row {
+          grid-template-columns: 1fr auto;
+        }
+
+        .motion-track {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+
+        .anatomy-list li {
+          grid-template-columns: var(--ad-space-500) minmax(0, 1fr);
+        }
+
+        .anatomy-type {
+          grid-column: 2;
+        }
+
+        .space-row {
+          grid-template-columns: var(--ad-space-600) minmax(0, 1fr);
+        }
+
+        .space-row .token-value {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to system content</a>
+
+    <div class="mobile-bar" aria-label="Mobile system navigation">
+      <a class="brand-mark" href="#overview" aria-label="KOVA design system home">KOVA</a>
+      <nav class="mobile-nav" aria-label="Design system sections">
+        <a href="#foundations">Tokens</a>
+        <a href="#typography">Type</a>
+        <a href="#components">UI</a>
+        <a href="#commerce">Commerce</a>
+        <a href="#motion">Motion</a>
+      </nav>
+    </div>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="Design system navigation">
+        <div class="brand">
+          <a class="brand-mark" href="#overview" aria-label="KOVA design system home">KOVA</a>
+          <span class="brand-index">DS / 01</span>
+        </div>
+
+        <nav aria-label="Design system sections">
+          <ol class="side-nav">
+            <li><a href="#overview"><span>01</span><span>Overview</span></a></li>
+            <li><a href="#foundations"><span>02</span><span>Foundations</span></a></li>
+            <li><a href="#typography"><span>03</span><span>Typography</span></a></li>
+            <li><a href="#components"><span>04</span><span>Primitives</span></a></li>
+            <li><a href="#commerce"><span>05</span><span>Commerce</span></a></li>
+            <li><a href="#motion"><span>06</span><span>Motion</span></a></li>
+            <li><a href="#principles"><span>07</span><span>Principles</span></a></li>
+          </ol>
+        </nav>
+
+        <div class="side-footer">
+          <span class="status">Implemented</span>
+          <p class="specimen-note">Code-side reference<br>29 / 09 / 2026</p>
+        </div>
+      </aside>
+
+      <main id="main" tabindex="-1">
+        <section class="section section--hero" id="overview" aria-labelledby="overview-title">
+          <div class="section-kicker">
+            <p class="eyebrow">Afterdark Supply / KOVA</p>
+            <span class="section-no">01 — Overview</span>
+          </div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="eyebrow">Field reference / Transmission 001</p>
+              <h1 id="overview-title">Built for the hours between.</h1>
+              <p class="hero-intro"><strong>A compact systemized core for a cinematic Shopify storefront.</strong> Stable tokens, readable commerce, deliberate grid breaks, and motion that never owns the transaction.</p>
+            </div>
+
+            <div class="signal-plate" aria-hidden="true">
+              <span class="signal-glyph">K</span>
+              <div class="signal-meta eyebrow">
+                <span>Signal locked</span>
+                <span>35.6895° N / 139.6917° E</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-footer">
+            <p class="specimen-note">Foundations → Primitives → Commerce → Motion</p>
+            <p class="specimen-note">Native Shopify / Progressive enhancement</p>
+          </div>
+        </section>
+
+        <section class="section" id="foundations" aria-labelledby="foundations-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">02 — Foundations / Token</p>
+              <h2 id="foundations-title">Signals, not decoration.</h2>
+            </div>
+            <p class="section-summary">The palette is intentionally narrow. <strong>Acid marks action.</strong> Signal orange is reserved for critical states. Neutral surfaces carry everything else.</p>
+          </div>
+
+          <div class="token-grid" aria-label="Color token specimens">
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-neutral-1000)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-neutral-1000">
+                <span class="token-name">Neutral / 1000</span>
+                <span class="token-value">#080808</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-neutral-850)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-neutral-850">
+                <span class="token-name">Neutral / 850</span>
+                <span class="token-value">#191919</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-neutral-0)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-neutral-0">
+                <span class="token-name">Neutral / 0</span>
+                <span class="token-value">#F4F3ED</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-acid-500)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-acid-500">
+                <span class="token-name">Acid / 500</span>
+                <span class="token-value">#DFFF00</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-signal-500)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-signal-500">
+                <span class="token-name">Signal / 500</span>
+                <span class="token-value">#FF4F2E</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-text-muted)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-text-muted">
+                <span class="token-name">Text / Muted</span>
+                <span class="token-value">Semantic alias</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch" style="--swatch: var(--ad-color-background-inverse)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-background-inverse">
+                <span class="token-name">Background / Inverse</span>
+                <span class="token-value">Semantic alias</span>
+              </button>
+            </article>
+            <article class="token-card">
+              <div class="token-swatch token-swatch--border" style="--swatch: var(--ad-color-border-subtle)"></div>
+              <button class="token-copy" type="button" data-copy="--ad-color-border-subtle">
+                <span class="token-name">Border / Subtle</span>
+                <span class="token-value">20% neutral / 0</span>
+              </button>
+            </article>
+          </div>
+
+          <div class="spacing-scale" aria-labelledby="spacing-title">
+            <p class="eyebrow" id="spacing-title">Spacing / Primitive scale</p>
+            <div class="space-row"><span class="token-name">100</span><span class="space-bar" style="--space-width: var(--ad-space-100)"></span><span class="token-value">0.5rem</span></div>
+            <div class="space-row"><span class="token-name">300</span><span class="space-bar" style="--space-width: var(--ad-space-300)"></span><span class="token-value">1rem</span></div>
+            <div class="space-row"><span class="token-name">500</span><span class="space-bar" style="--space-width: var(--ad-space-500)"></span><span class="token-value">2rem</span></div>
+            <div class="space-row"><span class="token-name">700</span><span class="space-bar" style="--space-width: var(--ad-space-700)"></span><span class="token-value">4.5rem</span></div>
+            <div class="space-row"><span class="token-name">900</span><span class="space-bar" style="--space-width: var(--ad-space-900)"></span><span class="token-value">9rem</span></div>
+          </div>
+        </section>
+
+        <section class="section" id="typography" aria-labelledby="typography-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">03 — Foundation / Typography</p>
+              <h2 id="typography-title">Type holds the frame.</h2>
+            </div>
+            <p class="section-summary">Display text behaves like image and architecture. Reading text stays controlled, high contrast, and direct.</p>
+          </div>
+
+          <div class="type-stack">
+            <article class="type-row">
+              <p class="meta-label">Display<br><span class="token-value">Fluid / 0.84</span></p>
+              <p class="type-specimen type-specimen--display">KOVA</p>
+            </article>
+            <article class="type-row">
+              <p class="meta-label">Title<br><span class="token-value">Fluid / 0.90</span></p>
+              <p class="type-specimen type-specimen--title">Nocturnal equipment for continuous movement.</p>
+            </article>
+            <article class="type-row">
+              <p class="meta-label">Lead<br><span class="token-value">Fluid / 1.50</span></p>
+              <p class="type-specimen type-specimen--lead">Every object is built as part of a modular field system—layered, compatible, and ready for the night shift.</p>
+            </article>
+            <article class="type-row">
+              <p class="meta-label">Body<br><span class="token-value">16px / 1.50</span></p>
+              <p class="type-specimen type-specimen--body">Keep product identity, price, options, quantity, cart state, and checkout path immediately legible. Atmosphere can create tension; commerce must resolve it.</p>
+            </article>
+            <article class="type-row">
+              <p class="meta-label">Label<br><span class="token-value">11px / +1.5px</span></p>
+              <p class="type-specimen type-specimen--label">Transmission 001 / Signal locked / 22:48</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="components" aria-labelledby="components-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">04 — Primitive / Interaction</p>
+              <h2 id="components-title">Controls with intent.</h2>
+            </div>
+            <p class="section-summary">Controls meet the 44px minimum target, expose visible focus, and carry meaning without depending on motion.</p>
+          </div>
+
+          <div class="showcase">
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow">Action / Dark surface</p>
+                <span class="status">Implemented</span>
+              </div>
+              <div class="control-stack">
+                <button class="button button--accent" type="button">Acquire object</button>
+                <button class="button" type="button">View field note</button>
+                <button class="button" type="button" disabled>Unavailable</button>
+                <button class="icon-button" type="button" aria-label="Add item">
+                  <span aria-hidden="true">＋</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="panel panel--inverse">
+              <div class="panel-head">
+                <p class="eyebrow" style="color: inherit">Action / Inverse surface</p>
+                <span class="specimen-note" style="color: inherit">Contrast mode</span>
+              </div>
+              <div class="control-stack">
+                <button class="button" type="button">Open system</button>
+                <button class="icon-button" type="button" aria-label="Move forward">
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow">Status / Lifecycle</p>
+                <span class="specimen-note">Resolved in Liquid</span>
+              </div>
+              <div class="badges">
+                <span class="badge badge--accent">Low supply</span>
+                <span class="badge">Archive</span>
+                <span class="badge">Sold out</span>
+                <span class="badge badge--critical">Error</span>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow">Preference / Motion</p>
+                <span class="specimen-note">User controlled</span>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <strong>Decorative motion</strong>
+                  <p class="field-hint">Page remains functional when off.</p>
+                </div>
+                <button class="switch" type="button" role="switch" aria-checked="true" aria-label="Toggle decorative motion"></button>
+              </div>
+            </article>
+
+            <article class="panel" style="grid-column: 1 / -1">
+              <div class="panel-head">
+                <p class="eyebrow">Field / Native form</p>
+                <span class="specimen-note">Keyboard ready</span>
+              </div>
+              <form class="form-grid" action="#" onsubmit="return false">
+                <label class="field">
+                  <span class="field-label">Signal address</span>
+                  <input type="email" placeholder="operator@example.com" autocomplete="email">
+                  <span class="field-hint">Status messages occupy stable space.</span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Operating environment</span>
+                  <select>
+                    <option>Night transit</option>
+                    <option>Wet weather</option>
+                    <option>Urban carry</option>
+                  </select>
+                  <span class="field-hint">Native control remains the fallback.</span>
+                </label>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="commerce" aria-labelledby="commerce-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">05 — Commerce component</p>
+              <h2 id="commerce-title">Product before effect.</h2>
+            </div>
+            <p class="section-summary"><strong>The card is always a real route.</strong> Responsive media, product state, price, and a clear action survive without WebGL or JavaScript.</p>
+          </div>
+
+          <div class="commerce-grid">
+            <article class="product-card" aria-labelledby="specimen-product-title">
+              <div class="product-media">
+                <span class="product-index" aria-hidden="true">01</span>
+                <span class="product-badge">Specimen</span>
+                <svg viewBox="0 0 320 400" role="img" aria-label="Abstract outline of a modular shell jacket">
+                  <path d="M110 44 73 70 34 149l35 23 20-34v206h142V138l20 34 35-23-39-79-37-26-26 25h-48Z" fill="var(--ad-color-neutral-1000)" stroke="currentColor" stroke-width="2"/>
+                  <path d="m136 69 24 48 24-48M160 117v227M91 181h48v62H91zm90 0h48v62h-48zM69 172l18 14m164-14-18 14" fill="none" stroke="var(--ad-color-acid-500)" stroke-width="2"/>
+                  <path d="M107 44c8 33 23 57 53 73 30-16 45-40 53-73" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <div class="product-details">
+                <div>
+                  <p class="product-title" id="specimen-product-title">Blacksite Shell Jacket</p>
+                  <p class="product-price">Price bound from Shopify</p>
+                </div>
+                <button class="button" type="button">Options</button>
+              </div>
+            </article>
+
+            <div>
+              <p class="eyebrow">Editorial product card / Anatomy</p>
+              <ol class="anatomy-list">
+                <li><div><strong>Responsive media</strong><p>Primary and alternate product images remain canonical DOM content.</p></div><span class="anatomy-type">Primitive</span></li>
+                <li><div><strong>Lifecycle state</strong><p>Archive, sold out, and low supply resolve through one shared snippet.</p></div><span class="anatomy-type">State</span></li>
+                <li><div><strong>Identity + price</strong><p>Readable name and Shopify price stay visible outside animation.</p></div><span class="anatomy-type">Commerce</span></li>
+                <li><div><strong>Progressive action</strong><p>Single variants add directly; products with options route to the PDP.</p></div><span class="anatomy-type">Action</span></li>
+                <li><div><strong>Decorative reveal</strong><p>One bounded WebGL context enhances the card and safely falls back.</p></div><span class="anatomy-type">Motion</span></li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="motion" aria-labelledby="motion-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">06 — Motion behavior</p>
+              <h2 id="motion-title">Move like a signal.</h2>
+            </div>
+            <p class="section-summary">Directional, brief, and tied to a state. Transform and opacity first. Reduced motion removes loops, parallax, and scrub dependencies.</p>
+          </div>
+
+          <div class="motion-demo" aria-label="Motion duration specimens">
+            <div class="motion-row" style="--motion-duration: var(--ad-duration-fast)">
+              <span class="token-name">Fast</span><span class="motion-track" aria-hidden="true"></span><span class="motion-value">180ms</span>
+            </div>
+            <div class="motion-row" style="--motion-duration: var(--ad-duration-base)">
+              <span class="token-name">Base</span><span class="motion-track" aria-hidden="true"></span><span class="motion-value">420ms</span>
+            </div>
+            <div class="motion-row" style="--motion-duration: var(--ad-duration-reveal)">
+              <span class="token-name">Reveal</span><span class="motion-track" aria-hidden="true"></span><span class="motion-value">900ms</span>
+            </div>
+            <div class="motion-row" style="--motion-duration: var(--ad-duration-cinematic)">
+              <span class="token-name">Cinematic</span><span class="motion-track" aria-hidden="true"></span><span class="motion-value">1400ms</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="principles" aria-labelledby="principles-title">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">07 — Operating principles</p>
+              <h2 id="principles-title">System core. Directed edges.</h2>
+            </div>
+            <p class="section-summary">Consistency protects meaning. Exceptions create atmosphere only when they remain local, accessible, and deliberate.</p>
+          </div>
+
+          <div class="principle-list">
+            <article class="principle"><span>01</span><h3>Commerce never waits.</h3><p>Navigation, product discovery, variant selection, add-to-cart, cart, and checkout work independently of decorative scripts.</p></article>
+            <article class="principle"><span>02</span><h3>Native scroll is canonical.</h3><p>Motion may respond to the browser's scroll position, but it never replaces or hijacks scrolling.</p></article>
+            <article class="principle"><span>03</span><h3>Motion has an exit.</h3><p>Every section initializes once, cleans itself up, and has a reduced-motion equivalent that preserves hierarchy.</p></article>
+            <article class="principle"><span>04</span><h3>Break the grid locally.</h3><p>Oversized type, crop, overlap, and asymmetry belong to authored compositions—not generic component APIs.</p></article>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <div>
+            <p class="eyebrow" style="color: inherit">End transmission / DS-01</p>
+            <p class="footer-wordmark">KOVA</p>
+          </div>
+          <div class="footer-meta">
+            <p>This page documents the implemented code-side system. Canonical token values remain in <strong>design-system/tokens/*.tokens.json</strong>.</p>
+            <a class="button" href="#overview">Return to top ↑</a>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <p class="toast specimen-note" role="status" aria-live="polite">Token name copied</p>
+
+    <script>
+      (() => {
+        const body = document.body;
+        const sections = [...document.querySelectorAll('main section[id]')];
+        const navLinks = [...document.querySelectorAll('nav a[href^="#"]')];
+        const toast = document.querySelector('.toast');
+        const motionToggle = document.querySelector('.switch');
+        let toastTimer;
+
+        const setCurrentSection = (id) => {
+          navLinks.forEach((link) => {
+            const isCurrent = link.hash === `#${id}`;
+            if (isCurrent) link.setAttribute('aria-current', 'true');
+            else link.removeAttribute('aria-current');
+          });
+        };
+
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver((entries) => {
+            const visible = entries
+              .filter((entry) => entry.isIntersecting)
+              .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+            if (visible) setCurrentSection(visible.target.id);
+          }, { rootMargin: '-20% 0px -55%', threshold: [0.1, 0.4, 0.7] });
+          sections.forEach((section) => observer.observe(section));
+        } else {
+          setCurrentSection('overview');
+        }
+
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const token = button.dataset.copy;
+            const value = `var(${token})`;
+            let copied = false;
+            try {
+              if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(value);
+                copied = true;
+              }
+            } catch {}
+            if (!copied) {
+              const fallback = document.createElement('textarea');
+              fallback.value = value;
+              fallback.setAttribute('readonly', '');
+              fallback.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+              body.append(fallback);
+              fallback.select();
+              copied = document.execCommand('copy');
+              fallback.remove();
+            }
+            if (copied) button.dataset.copied = 'true';
+            toast.textContent = copied ? `${token} copied` : token;
+            toast.dataset.visible = 'true';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+              toast.dataset.visible = 'false';
+              button.removeAttribute('data-copied');
+            }, 1800);
+          });
+        });
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        motionToggle.setAttribute('aria-checked', String(!reducedMotion));
+        if (reducedMotion) body.classList.add('motion-off');
+
+        motionToggle.addEventListener('click', () => {
+          const enabled = motionToggle.getAttribute('aria-checked') === 'true';
+          motionToggle.setAttribute('aria-checked', String(!enabled));
+          body.classList.toggle('motion-off', enabled);
+        });
+      })();
+    </script>
+  </body>
+</html>
